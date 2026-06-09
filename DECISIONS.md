@@ -11,3 +11,12 @@ One line per architectural choice. Append, don't rewrite history.
 - 2026-06-09 — `/host` and `/play` pages load their screens via `next/dynamic` with `ssr: false`; playroomkit touches browser globals at import time.
 - 2026-06-09 — `qrcode.react` for the join QR; renders SVG locally, no network call.
 - 2026-06-09 — No Zustand/Redux, no DB, no auth, no Electron in the prototype (per spec §2).
+- 2026-06-09 — Ink compiled at build time by `scripts/compile-stories.mjs` using inkjs's bundled compiler (`inkjs/full`); authoring needs only a text editor, Inky optional.
+- 2026-06-09 — All inkjs imports confined to `lib/ink/storylet.ts`, mirroring the Playroom rule.
+- 2026-06-09 — Stat-gated choices use a tag INSIDE the choice brackets: `* [Force the door # needs: body 3]` (a tag after the bracket binds to the post-choice content, not the choice). The game shows-but-disables; ink itself doesn't gate.
+- 2026-06-09 — Storylets set an `outcome` string var; the host resolve screen renders "<name> <outcome>". Flags are `flag_*` booleans diffed out after each run.
+- 2026-06-09 — Picks and storylet results are PLAYER state tagged with the night number; the host derives the room view. One writer per key — no concurrent writes to a shared map.
+- 2026-06-09 — Mid-storylet ink saves go to the phone's localStorage (key per room+night), not synced state: survives a phone refresh, costs nothing to sync. Stats/flags survive disconnects via Playroom's reconnectGracePeriod (3 min).
+- 2026-06-09 — Host refresh recovery: the host stores its room code in localStorage (2 h window) and rejoins the same room, where Playroom still holds all shared state.
+- 2026-06-09 — The finale knot runs on the party's AVERAGE stats so ending thresholds don't scale with player count.
+- 2026-06-09 — Phase transitions live in `lib/game/state.ts` and are only ever called by the host screen; phones render shared state and never transition.

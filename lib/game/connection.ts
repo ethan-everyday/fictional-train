@@ -5,22 +5,36 @@
  *
  * Everything multiplayer goes through here so that if Playroom's pricing or
  * limits ever bite, the swap to Colyseus (or anything else) touches one file.
- * Components import hooks and actions from this module, never from
+ * Components import hooks and actions from /lib/game, never from
  * "playroomkit" directly.
  */
 
 import {
   getRoomCode,
+  getState,
   insertCoin,
   myPlayer,
+  resetPlayersStates,
+  resetStates,
+  setState,
+  useMultiplayerState,
   usePlayersList,
   usePlayersState,
+  usePlayerState,
   type PlayerState,
 } from "playroomkit";
 
 // Player-state keys. Keep them here so host and phone can't drift apart.
-const KEY_NAME = "name";
-const KEY_PING = "ping";
+export const KEY_NAME = "name";
+export const KEY_PING = "ping";
+export const KEY_STATS = "stats";
+export const KEY_FLAGS = "flags";
+export const KEY_PICK = "pick";
+export const KEY_RESULT = "result";
+export const KEY_VOTE = "vote";
+
+/** How long Playroom keeps a disconnected player's slot + state alive. */
+const RECONNECT_GRACE_MS = 3 * 60 * 1000;
 
 export interface Ping {
   count: number;
@@ -34,11 +48,17 @@ let coinInserted: Promise<void> | null = null;
 /**
  * Open a room as the host screen (the TV/laptop). The host is a "stream
  * screen", not a player: it never appears in the players list.
+ * Pass a room code to rejoin an existing room after a host refresh.
  * Resolves to the room code phones use to join.
  */
-export async function startHost(): Promise<string> {
+export async function startHost(rejoinCode?: string): Promise<string> {
   if (!coinInserted) {
-    coinInserted = insertCoin({ streamMode: true, skipLobby: true });
+    coinInserted = insertCoin({
+      streamMode: true,
+      skipLobby: true,
+      roomCode: rejoinCode?.trim().toUpperCase() || undefined,
+      reconnectGracePeriod: RECONNECT_GRACE_MS,
+    });
   }
   await coinInserted;
   const code = getRoomCode();
@@ -47,13 +67,16 @@ export async function startHost(): Promise<string> {
 }
 
 /**
- * Join an existing room as a phone player.
+ * Join an existing room as a phone player. Safe to call after a phone
+ * refresh: Playroom restores the same player slot within the grace period,
+ * so existing stats/flags survive.
  */
 export async function joinRoom(roomCode: string, name: string): Promise<void> {
   if (!coinInserted) {
     coinInserted = insertCoin({
       skipLobby: true,
       roomCode: roomCode.trim().toUpperCase(),
+      reconnectGracePeriod: RECONNECT_GRACE_MS,
     });
   }
   await coinInserted;
@@ -94,6 +117,45 @@ export function usePings(): { player: PlayerState; ping: Ping | null }[] {
     player,
     ping: (state as Ping | undefined) ?? null,
   }));
+}
+
+// --- Shared (room-wide) state. The host writes, everyone reads. ---
+
+export function useShared<T>(key: string, defaultValue: T) {
+  return useMultiplayerState<T>(key, defaultValue);
+}
+
+export function getShared<T>(key: string): T | undefined {
+  return getState(key) as T | undefined;
+}
+
+export function setShared<T>(key: string, value: T): void {
+  setState(key, value, true);
+}
+
+// --- This phone's own player state. ---
+
+/** Only call from components rendered after joinRoom resolved. */
+export function useMyState<T>(key: string, defaultValue: T) {
+  return usePlayerState<T>(myPlayer(), key, defaultValue);
+}
+
+export function getMyState<T>(key: string): T | undefined {
+  return myPlayer().getState(key) as T | undefined;
+}
+
+export function setMyState<T>(key: string, value: T): void {
+  myPlayer().setState(key, value, true);
+}
+
+export function getMyId(): string {
+  return myPlayer().id;
+}
+
+/** Wipe all game state but keep player names; used by "back to lobby". */
+export async function resetRoom(): Promise<void> {
+  await resetStates();
+  await resetPlayersStates([KEY_NAME]);
 }
 
 export type { PlayerState };

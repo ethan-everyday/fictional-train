@@ -3,12 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "stories": "node scripts/compile-stories.mjs",
+    "predev": "npm run stories",
     "dev": "next dev",
+    "prebuild": "npm run stories",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
+    "inkjs": "^2.4.0",
     "next": "14.2.35",
     "playroomkit": "^0.0.96",
     "qrcode.react": "^4.2.0",
