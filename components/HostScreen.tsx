@@ -121,13 +121,60 @@ export default function HostScreen() {
     );
   }
   if (!roomCode) {
-    return (
-      <Centered>
-        <p className="animate-pulse text-3xl text-zinc-400">Opening room…</p>
-      </Centered>
-    );
+    return <ConnectingScreen />;
   }
   return <HostGame roomCode={roomCode} />;
+}
+
+/**
+ * Connecting to Playroom takes an unknowable 1–10 s, so the bar eases toward
+ * 95% and the real arrival of the room code swaps this screen out. A hung
+ * connection hits HostScreen's 15 s timeout and lands on the error screen.
+ */
+function ConnectingScreen() {
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    const started = Date.now();
+    const id = setInterval(
+      () => setElapsed((Date.now() - started) / 1000),
+      100,
+    );
+    return () => clearInterval(id);
+  }, []);
+
+  const progress = Math.min(95, 100 * (1 - Math.exp(-elapsed / 3)));
+  const line =
+    elapsed < 1.5
+      ? "Lighting the lanterns…"
+      : elapsed < 4
+        ? "Waking the innkeep…"
+        : elapsed < 8
+          ? "Sending word to the castle…"
+          : "Still working — the roads are muddy tonight…";
+
+  return (
+    <Centered>
+      <div className="fade-up flex w-full max-w-md flex-col items-center gap-6 text-center">
+        <p className="text-sm font-bold uppercase tracking-[0.4em] text-amber-400/80">
+          Seven Nights
+        </p>
+        <h1 className="text-4xl font-black tracking-tight">Opening the room</h1>
+        <div
+          className="h-3 w-full overflow-hidden rounded-full border border-zinc-800 bg-zinc-900"
+          role="progressbar"
+          aria-valuenow={Math.round(progress)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-amber-600 to-amber-400 transition-[width] duration-200 ease-out"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <p className="text-zinc-400">{line}</p>
+      </div>
+    </Centered>
+  );
 }
 
 function readSavedRoom(): string | null {
