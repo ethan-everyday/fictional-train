@@ -5,6 +5,11 @@
 /.next/
 /out/
 
+# game server state + e2e artifacts
+/.seven-nights/
+/test-results/
+/playwright-report/
+
 # production
 /build
 

@@ -149,7 +149,7 @@ export default function StoryletPlayer({
   }
 
   return (
-    <div className="flex min-h-screen flex-col p-6">
+    <main className="flex min-h-screen flex-col p-6">
       <p className="mb-4 text-center text-sm font-bold uppercase tracking-widest text-amber-400">
         {locationDef(location).name}
       </p>
@@ -201,7 +201,7 @@ export default function StoryletPlayer({
         </button>
       )}
       <div ref={bottomRef} />
-    </div>
+    </main>
   );
 }
 

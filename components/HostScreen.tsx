@@ -6,10 +6,12 @@ import { DeltaChips } from "@/components/PlayScreen";
 import {
   kickPlayer,
   playerColor,
+  playerConnected,
   playerName,
   startHost,
   usePings,
   usePlayers,
+  useServerConnection,
   type PlayerState,
 } from "@/lib/game/connection";
 import {
@@ -85,12 +87,12 @@ export default function HostScreen() {
         setError(e.message);
       },
     );
-    // Playroom can hang silently (stale session, no internet). Route a
-    // never-resolving connect into the error screen and its recovery button.
+    // Route a never-resolving connect into the error screen. With the
+    // self-hosted server this should only happen if the server died.
     const timeout = setTimeout(() => {
       if (!settled) {
         setError(
-          "timed out after 15 s. Check the internet connection — the room lives in Playroom's cloud.",
+          "timed out after 15 s. The game server isn't answering — is the Seven Nights window (start-game.bat) still running?",
         );
       }
     }, 15_000);
@@ -103,8 +105,8 @@ export default function HostScreen() {
         <div className="flex flex-col items-center gap-6 text-center">
           <p className="text-2xl text-red-400">Could not open a room: {error}</p>
           <p className="max-w-md text-zinc-400">
-            This usually means a stale saved room or a kicked session is stuck
-            in this browser's storage.
+            If the game window is running, this is usually stale saved data in
+            this browser.
           </p>
           <button
             onClick={() => {
@@ -236,11 +238,19 @@ function HostGame({ roomCode }: { roomCode: string }) {
     }
   }, [phase, players, night, deadline, now]);
 
-  // storylets: resolve once every connected assigned player has reported.
+  // storylets: resolve once every assigned player still attached to the
+  // server has reported. A phone that dies for good (past the server's
+  // reconnect grace) stops blocking the night automatically.
   useEffect(() => {
     if (phase !== "storylets" || !assignments) return;
     const assigned = players.filter((p) => assignments[p.id]);
-    if (assigned.length > 0 && assigned.every((p) => playerResult(p, night))) {
+    const present = assigned.filter((p) => playerConnected(p));
+    const reported = (p: PlayerState) => playerResult(p, night) !== null;
+    if (
+      assigned.length > 0 &&
+      assigned.some(reported) &&
+      present.every(reported)
+    ) {
       once(`resolve-${night}`, beginResolve);
     }
   }, [phase, players, assignments, night]);
@@ -268,10 +278,17 @@ function HostGame({ roomCode }: { roomCode: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 
+  const online = useServerConnection();
+
   const screen = renderPhase();
   return (
     <>
       {screen}
+      {!online && (
+        <div className="fixed inset-x-0 top-0 z-20 bg-red-950/90 py-2 text-center text-sm font-bold text-red-200">
+          Lost the game server — reconnecting…
+        </div>
+      )}
       {phase !== "lobby" && (
         <div className="fixed bottom-4 right-4 z-10 flex items-center gap-2">
           {soundBlocked && (
@@ -449,16 +466,22 @@ function LobbyScreen({
           {players.map((player) => {
             const ping = pingByPlayer.get(player.id) ?? null;
             const waved = ping !== null && now - ping.at < PING_FLASH_MS;
+            const away = !playerConnected(player);
             return (
               <li
                 key={`${player.id}-${ping?.count ?? 0}`}
                 className={`flex items-center justify-between rounded-xl border border-zinc-800 px-6 py-3 text-2xl ${
                   waved ? "ping-flash" : ""
-                }`}
+                } ${away ? "opacity-50" : ""}`}
               >
                 <span className="flex items-center gap-4 font-bold">
                   <PlayerDot player={player} />
                   {playerName(player)}
+                  {away && (
+                    <span className="text-base font-normal text-zinc-500">
+                      reconnecting…
+                    </span>
+                  )}
                 </span>
                 <span className="flex items-center gap-4">
                   {waved && (
@@ -598,17 +621,25 @@ function StoryletsScreen({
       <ul className="flex w-full max-w-3xl flex-col gap-4">
         {assigned.map((p) => {
           const done = playerResult(p, night) !== null;
+          const away = !playerConnected(p);
           const loc = locationDef(assignments![p.id] as never);
           return (
             <li
               key={p.id}
-              className="flex items-center justify-between rounded-xl border border-zinc-800 px-6 py-4 text-2xl"
+              className={`flex items-center justify-between rounded-xl border border-zinc-800 px-6 py-4 text-2xl ${
+                away ? "opacity-50" : ""
+              }`}
             >
               <span className="flex items-center gap-4">
                 <PlayerDot player={p} />
                 <span>
                   <span className="font-bold">{playerName(p)}</span>
                   <span className="text-zinc-400"> is at {loc.name}…</span>
+                  {away && !done && (
+                    <span className="ml-3 text-base text-red-400/80">
+                      (phone lost — reconnecting?)
+                    </span>
+                  )}
                 </span>
               </span>
               <span

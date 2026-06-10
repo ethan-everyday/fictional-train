@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import StoryletPlayer from "@/components/StoryletPlayer";
 import {
   getMyId,
@@ -17,6 +17,7 @@ import {
   sendPing,
   useMyState,
   usePlayers,
+  useServerConnection,
 } from "@/lib/game/connection";
 import {
   DEFAULT_STATS,
@@ -46,16 +47,42 @@ type Status = "form" | "joining" | "joined";
 
 export default function PlayScreen() {
   // Rendered with ssr:false, so window is safe at first render.
-  const codeFromUrl = (
-    new URLSearchParams(window.location.search).get("room") ?? ""
-  ).toUpperCase();
+  const params = new URLSearchParams(window.location.search);
+  const codeFromUrl = (params.get("room") ?? "").toUpperCase();
+  const wasKicked = params.get("kicked") === "1";
 
   const [roomCode, setRoomCode] = useState(
     codeFromUrl || localStorage.getItem("7n:last-room") || "",
   );
   const [name, setName] = useState(localStorage.getItem("7n:last-name") ?? "");
   const [status, setStatus] = useState<Status>("form");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    wasKicked ? "The host removed you from the game." : null,
+  );
+
+  // A refresh mid-game should not need a tap: if this tab was already in a
+  // game (per-tab player id exists) and we're not arriving at a *different*
+  // room via QR, rejoin silently.
+  const autoTried = useRef(false);
+  useEffect(() => {
+    if (autoTried.current) return;
+    autoTried.current = true;
+    if (wasKicked) return;
+    let hadSession = false;
+    try {
+      hadSession = sessionStorage.getItem("7n:player-id") !== null;
+    } catch {}
+    const lastRoom = localStorage.getItem("7n:last-room") ?? "";
+    const lastName = localStorage.getItem("7n:last-name") ?? "";
+    if (!hadSession || !lastRoom || !lastName) return;
+    if (codeFromUrl && codeFromUrl !== lastRoom) return; // scanning a new room
+    setStatus("joining");
+    joinRoom(lastRoom, lastName).then(
+      () => setStatus("joined"),
+      () => setStatus("form"),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleJoin(e: FormEvent) {
     e.preventDefault();
@@ -121,6 +148,7 @@ export default function PlayScreen() {
 // --- Everything below renders only after the room join resolved. ---
 
 function PhoneGame({ room }: { room: string }) {
+  const online = useServerConnection();
   const [phase] = usePhase();
   const [night] = useNight();
   const [stats, setStats] = useMyState<PlayerStats | null>(KEY_STATS, null);
@@ -192,6 +220,19 @@ function PhoneGame({ room }: { room: string }) {
   const effectiveStats = stats ?? DEFAULT_STATS;
   const activeEvent = useActiveEvent(night);
 
+  const screen = renderPhase();
+  return (
+    <>
+      {!online && (
+        <div className="fixed inset-x-0 top-0 z-20 bg-red-950/90 py-2 text-center text-sm font-bold text-red-200">
+          Connection lost — reconnecting…
+        </div>
+      )}
+      {screen}
+    </>
+  );
+
+  function renderPhase() {
   switch (phase) {
     case "lobby":
       return <PhoneLobby stats={effectiveStats} />;
@@ -239,6 +280,7 @@ function PhoneGame({ room }: { room: string }) {
       return (
         <PhoneEpilogue stats={effectiveStats} flags={flags} history={history} />
       );
+    }
   }
 }
 
