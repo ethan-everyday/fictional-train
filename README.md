@@ -9,9 +9,12 @@ This repo is the **Phase 1 prototype** — see the spec for the full picture.
 The whole prototype loop is in: lobby → night intro → choose location (60 s
 soft timer) → private storylets on phones → resolve on the big screen → ×7
 nights → finale (three Ink endings off the party's average stats) → vote →
-epilogue scoreboard. Story content is generic placeholder writing in
-`stories/main.ink` — six locations, one stat-gated choice each, flags that
-echo across locations.
+epilogue scoreboard. Setting: grounded medieval — seven nights before the
+Michaelmas Fair in the village of Hollowbrook. Seven locations (church,
+tavern, market, farms, castle, slums, docks), each with its own people
+(the priest, the innkeep and gamblers, the Shire Reeve, the lord, the
+foreign traders…), stat-gated and flag-gated choices, and a week that
+remembers what you did.
 
 Reconnection basics: a phone refresh mid-storylet resumes where it was (ink
 state in localStorage, stats via Playroom's grace period); a host refresh
@@ -84,12 +87,13 @@ Ground rules: multiplayer goes through `/lib/game`, Ink goes through
 Edit `stories/main.ink` (plain text; Inky optional — the build compiles it).
 The contract per storylet knot:
 
-- The game writes `mind/body/charm/shadow` in before the knot runs and reads
-  them back out at the end. Change them with `~ charm = charm + 1`.
+- The game writes `intelligence/strength/agility/craft/will/wealth` in before
+  the knot runs and reads them back out at the end (clamped 0–5). Change them
+  with `~ craft = craft + 1`; wealth can also be spent: `~ wealth = wealth - 1`.
 - Set `~ outcome = "..."` to one short line; the host shows "<name> <outcome>".
 - `flag_*` booleans become persistent story flags on the player.
 - Gate a choice with a tag *inside* the brackets:
-  `* [Arm-wrestle the blacksmith # needs: body 3]` — shown but disabled until
+  `* [Join the harvest line # needs: strength 3]` — shown but disabled until
   the stat meets the bar.
 - Three read-only context vars are written in before the knot runs:
   `night` (1–7), `visits` (previous nights this player spent at this

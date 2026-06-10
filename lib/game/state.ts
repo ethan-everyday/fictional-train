@@ -122,22 +122,13 @@ export function playerHistory(p: PlayerState): NightRecord[] {
 
 /** The party's average stats; the finale and drama triggers both use this. */
 export function averageStats(all: PlayerStats[]): PlayerStats {
-  const sum = all.reduce(
-    (acc, s) => ({
-      mind: acc.mind + s.mind,
-      body: acc.body + s.body,
-      charm: acc.charm + s.charm,
-      shadow: acc.shadow + s.shadow,
-    }),
-    { mind: 0, body: 0, charm: 0, shadow: 0 },
-  );
   const n = Math.max(1, all.length);
-  return {
-    mind: Math.round(sum.mind / n),
-    body: Math.round(sum.body / n),
-    charm: Math.round(sum.charm / n),
-    shadow: Math.round(sum.shadow / n),
-  };
+  const out = { ...DEFAULT_STATS };
+  for (const stat of Object.keys(out) as (keyof PlayerStats)[]) {
+    const sum = all.reduce((acc, s) => acc + (s[stat] ?? 0), 0);
+    out[stat] = Math.round(sum / n);
+  }
+  return out;
 }
 
 export function startGame(players: PlayerState[]): void {

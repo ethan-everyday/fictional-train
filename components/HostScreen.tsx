@@ -494,7 +494,7 @@ function ChooseScreen({
           {secondsLeft}s
         </span>
       </header>
-      <div className="grid flex-1 grid-cols-3 gap-5">
+      <div className="grid flex-1 grid-cols-4 gap-5">
         {LOCATIONS.map((loc) => {
           const isClosed = loc.id === closed;
           const here = players.filter((p) => playerPick(p, night) === loc.id);

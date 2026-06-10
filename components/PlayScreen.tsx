@@ -25,6 +25,7 @@ import {
   nightIntro,
   STAT_CAP,
   STAT_LABELS,
+  STAT_SHORT,
 } from "@/lib/game/constants";
 import {
   useActiveEvent,
@@ -500,8 +501,8 @@ export function DeltaChips({ deltas }: { deltas: PlayerStats }) {
         <span
           key={chip}
           className={`rounded-full px-3 py-1 text-sm font-bold ${
-            chip.includes("Shadow") && chip.startsWith("+")
-              ? "bg-purple-500/20 text-purple-300"
+            chip.startsWith("-")
+              ? "bg-rose-500/20 text-rose-300"
               : "bg-emerald-500/20 text-emerald-300"
           }`}
         >
@@ -515,20 +516,18 @@ export function DeltaChips({ deltas }: { deltas: PlayerStats }) {
 function StatsBar({ stats, big }: { stats: PlayerStats; big?: boolean }) {
   return (
     <div
-      className={`flex gap-4 rounded-xl border border-zinc-800 bg-zinc-900/60 px-5 py-3 ${
-        big ? "text-lg" : "text-sm"
+      className={`flex gap-3 rounded-xl border border-zinc-800 bg-zinc-900/60 px-4 py-3 ${
+        big ? "text-base" : "text-xs"
       }`}
     >
-      {(Object.keys(STAT_LABELS) as StatId[]).map((s) => (
+      {(Object.keys(STAT_SHORT) as StatId[]).map((s) => (
         <span key={s} className="text-center">
           <span className="block font-mono font-bold text-zinc-100">
             {stats[s]}
             <span className="text-zinc-600">/{STAT_CAP}</span>
           </span>
-          <span
-            className={s === "shadow" ? "text-purple-400" : "text-zinc-500"}
-          >
-            {STAT_LABELS[s]}
+          <span className={s === "wealth" ? "text-amber-400" : "text-zinc-500"}>
+            {STAT_SHORT[s]}
           </span>
         </span>
       ))}

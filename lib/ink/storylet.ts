@@ -15,9 +15,17 @@ import { Story } from "inkjs";
 import type { PlayerStats, StatId, UiChoice } from "@/lib/game/types";
 import { STAT_CAP, STAT_LABELS } from "@/lib/game/constants";
 
-const STAT_IDS: StatId[] = ["mind", "body", "charm", "shadow"];
+const STAT_IDS: StatId[] = [
+  "intelligence",
+  "strength",
+  "agility",
+  "craft",
+  "will",
+  "wealth",
+];
 const FLAG_PREFIX = "flag_";
-const NEEDS_TAG = /^needs:\s*(mind|body|charm|shadow)\s+(\d+)\s*$/i;
+const NEEDS_TAG =
+  /^needs:\s*(intelligence|strength|agility|craft|will|wealth)\s+(\d+)\s*$/i;
 
 export type StoryletStep =
   | { kind: "paragraph"; text: string }
@@ -129,12 +137,11 @@ export class StoryletSession {
 
   /** Stat changes relative to where the storylet started. */
   deltas(finalStats: PlayerStats): PlayerStats {
-    return {
-      mind: finalStats.mind - this.startStats.mind,
-      body: finalStats.body - this.startStats.body,
-      charm: finalStats.charm - this.startStats.charm,
-      shadow: finalStats.shadow - this.startStats.shadow,
-    };
+    const out = {} as PlayerStats;
+    for (const stat of STAT_IDS) {
+      out[stat] = finalStats[stat] - this.startStats[stat];
+    }
+    return out;
   }
 
   private readStats(): PlayerStats {

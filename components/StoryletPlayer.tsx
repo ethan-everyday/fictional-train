@@ -211,8 +211,9 @@ function readSave(saveKey: string): SaveBlob | null {
     if (!raw) return null;
     const blob = JSON.parse(raw) as SaveBlob;
     if (!blob.inkState || !Array.isArray(blob.revealed)) return null;
-    // A blob without startStats would make every delta NaN downstream.
-    if (typeof blob.startStats?.mind !== "number") return null;
+    // A blob without startStats (or one from the pre-medieval stat schema)
+    // would make every delta NaN downstream.
+    if (typeof blob.startStats?.will !== "number") return null;
     return blob;
   } catch {
     return null;

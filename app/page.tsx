@@ -21,10 +21,10 @@ export default function Home() {
             NIGHTS
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-zinc-400">
-            The village of Hollowbrook has {NIGHT_COUNT} nights,{" "}
-            {LOCATIONS.length} places to spend them, and more secrets than it
-            will admit to. The big screen tells the story. Your phones decide
-            how it goes.
+            Seven nights before the Michaelmas Fair, when the lord reckons all
+            accounts. {LOCATIONS.length} places to spend them, a village full
+            of people to win over — or cross. The big screen tells the story.
+            Your phones decide how it goes.
           </p>
         </header>
 
@@ -47,17 +47,17 @@ export default function Home() {
           <Step
             n={1}
             title="Choose"
-            text="Each night, pick where in Hollowbrook to spend it — the tavern, the church, the woods…"
+            text="Each night, pick where in Hollowbrook to spend it — the tavern, the castle, the docks…"
           />
           <Step
             n={2}
             title="Live it"
-            text="Your phone deals you a private storylet. What you did out there is your business."
+            text="Your phone deals you a private storylet: the innkeep, the gamblers, the lord, the foreign traders. What you did out there is your business."
           />
           <Step
             n={3}
             title="Face the morning"
-            text="The big screen tells everyone what the night did to each of you. Seven nights decide the ending."
+            text="The big screen tells everyone what the night did to each of you. Seven nights decide how fair day goes."
           />
         </section>
 

@@ -1,299 +1,343 @@
-// SEVEN NIGHTS — generic placeholder storylets (M3/M4 stubs).
-// Replace this with real writing in Phase 2; the structure is the contract.
+// SEVEN NIGHTS — Hollowbrook, the week before the Michaelmas Fair.
+// Grounded medieval: no magic, just a village, its people, and seven nights
+// of positioning before the lord reckons accounts at the fair.
 //
 // Contract with /lib/ink/storylet.ts:
-//   - mind/body/charm/shadow are written in before a knot runs and read
-//     back out when it ends.
+//   - intelligence/strength/agility/craft/will/wealth are written in before
+//     a knot runs and read back out when it ends (clamped 0..5 by the game).
 //   - Every storylet must set `outcome` to ONE short line, lowercase start,
 //     readable as "<player name> <outcome>" on the host resolve screen.
 //   - Globals named flag_* are booleans; any that end up true become story
 //     flags on the player and are passed back in on later nights.
-//   - Tag a choice with "# needs: body 3" to show it disabled until the
+//   - Tag a choice with "# needs: strength 3" to show it disabled until the
 //     stat meets the bar. The game enforces it; ink does not.
+//   - night (1-7), visits (previous nights here), event (drama event id or
+//     "") are read-only context. Each night is a FRESH story: sequences,
+//     cycles, and read counts do NOT carry between nights.
 
-VAR mind = 2
-VAR body = 2
-VAR charm = 2
-VAR shadow = 0
+VAR intelligence = 2
+VAR strength = 2
+VAR agility = 2
+VAR craft = 2
+VAR will = 2
+VAR wealth = 1
 VAR outcome = ""
 
-// Read-only context the game writes in before each knot (see README):
-//   night  = 1..7
-//   visits = previous nights THIS player spent at THIS location (0 = first)
-//   event  = current drama event id, or "" on an ordinary night
-// NOTE: each night runs as a FRESH story — sequences, cycles, and read
-// counts do NOT carry between nights. Only stats, flag_*, and these vars do.
 VAR night = 1
 VAR visits = 0
 VAR event = ""
 
-VAR flag_met_the_stranger = false
-VAR flag_owes_the_landlady = false
 VAR flag_blessed = false
-VAR flag_found_the_locket = false
-VAR flag_knows_the_password = false
-VAR flag_marked_by_the_manor = false
-
-// ---------------------------------------------------------------- TAVERN
-
-=== storylet_tavern ===
-{visits == 0: The Crooked Lantern is packed wall to wall, and the air smells of spilled cider and wet dog. | The Lantern's regulars nod as you come in. You have a usual seat now, which is either belonging or a warning.}
-{event == "dark_tide": Half the room is harbor crew tonight, drinking like the sea owes them money. The boats won't go out, and nobody will say the word for why.}
-{event == "lantern_festival": The festival has spilled in from the square; somebody is standing on a table conducting the room in a song that has no fixed words.}
-The landlady catches your eye and tilts her head toward an empty stool. In the corner booth, someone in a travel cloak is buying drinks for anyone who'll talk.
-* [Buy a round for the whole room]
-    You put your coins on the bar like a magician revealing a card. The room cheers your name. Twice.
-    ~ charm = charm + 1
-    ~ flag_owes_the_landlady = true
-    The landlady pours with a smile and quietly writes what you now owe her in a little black book.
-    ~ outcome = "bought the whole tavern a round and is now beloved, broke, and in the landlady's little black book."
-    -> END
-* [Nurse a small beer and eavesdrop]
-    You find the one seat where every conversation in the room overlaps, and you listen.
-    The cloaked stranger is asking about the Vane Manor — who owns it now, who has keys, who'd miss a lantern from the gatehouse. And they're paying in silver.
-    ~ mind = mind + 1
-    ~ flag_met_the_stranger = true
-    Before you leave, the stranger looks straight at you and raises a glass.
-    ~ outcome = "spent the night listening, and learned a stranger is paying silver for secrets about the manor."
-    -> END
-* [Arm-wrestle the blacksmith # needs: body 3]
-    The blacksmith's grip is like a bench vice, and her grin says she knows it.
-    You win by a knuckle. The room goes absolutely feral.
-    ~ body = body + 1
-    ~ charm = charm + 1
-    ~ outcome = "beat the blacksmith at arm-wrestling and will be dining out on the story for a year."
-    -> END
-* {flag_owes_the_landlady} [Work a shift behind the bar to pay your debt]
-    The landlady hands you an apron without a word. Six hours of pouring, mopping, and hearing every secret in the village twice, and she crosses one line out of the little black book.
-    ~ body = body + 1
-    ~ mind = mind + 1
-    ~ outcome = "worked off a debt behind the bar and earned the landlady's rarest currency: a nod."
-    -> END
-* {flag_met_the_stranger} [Find the stranger's corner booth again]
-    The booth is empty, but the stranger's tab is still open — and the landlady lets slip they settle it in manor silverware, always an hour before the harbor bell.
-    ~ mind = mind + 1
-    ~ shadow = shadow + 1
-    ~ outcome = "staked out the stranger's booth and connected the silver, the manor, and the harbor bell."
-    -> END
-* {night >= 5} [Ask the landlady what the seventh night really is # needs: charm 4]
-    She doesn't answer until the room empties, and then only with the candle between you pinched out.
-    What she tells you takes four sentences. You will not repeat any of them, and you understand the week very differently now.
-    ~ mind = mind + 1
-    ~ shadow = shadow + 1
-    ~ outcome = "got the landlady to say out loud what the seventh night is, and rather wishes the candle had stayed lit."
-    -> END
+VAR flag_owes_the_innkeep = false
+VAR flag_in_with_the_gamblers = false
+VAR flag_reeves_favor = false
+VAR flag_poacher = false
+VAR flag_friend_of_the_poor = false
+VAR flag_lords_eye = false
+VAR flag_traders_friend = false
+VAR flag_dockside_password = false
 
 // ---------------------------------------------------------------- CHURCH
+// NPC: the Priest.
 
 === storylet_church ===
-{visits == 0: The Old Church is empty except for a hundred lit candles nobody admits to lighting. | The candles are lit again tonight — and one of them, you'd swear, has been set out where you knelt last time.}
-{flag_blessed: The verger nods at you like an old friend. | The verger watches you from the shadows by the font, deciding what sort of visitor you are.}
-* [Kneel and sit with your thoughts]
-    The quiet rearranges something in you. An hour passes like a held breath, and you leave lighter.
-    ~ mind = mind + 1
+{visits == 0: The church is cold, candle-bright, and smells of beeswax and old stone. The priest looks up from his ledger of tithes as if he has been expecting you specifically. | The priest nods you in like a regular. Your candle from last time is still burning, which is either devotion or thrift.}
+The fair is coming, and the priest is a man with opinions about what the village owes — to God, to the lord, and to him, in roughly that order.
+* [Keep the vigil through the small hours # needs: will 3]
+    You kneel until your knees stop complaining and your head goes quiet. The priest wakes you at dawn with bread and the rare compliment of saying nothing at all.
+    ~ will = will + 1
     ~ flag_blessed = true
-    ~ outcome = "sat alone with a hundred candles and came out calmer than anyone in Hollowbrook has a right to be."
+    ~ outcome = "kept the night vigil at the church and walked out at dawn steadier than anyone in Hollowbrook."
     -> END
-* [Help the verger snuff and reset the candles]
-    It's careful, repetitive work, up and down ladders. The verger talks the whole time — births, debts, grudges, and which graves get fresh flowers from nobody.
-    ~ body = body + 1
-    ~ mind = mind + 1
-    ~ outcome = "spent the night on ladders helping the verger, and now knows where Hollowbrook keeps its grudges."
+* [Help the priest balance the tithe ledger]
+    The ledger is a battlefield of crossings-out. You find the missing shillings in an hour — half of them under a candle stain, half of them in the butcher's column, twice.
+    ~ intelligence = intelligence + 1
+    ~ craft = craft + 1
+    ~ outcome = "untangled the priest's tithe ledger and now knows exactly who in Hollowbrook short-changes God."
     -> END
-* [Pocket the silver candle-snuffer # needs: shadow 2]
-    It's heavier than it looks, and it sings a little, sliding into your coat.
-    Outside, you'd swear one of the gargoyles turned its head to watch you go.
-    ~ shadow = shadow + 1
-    ~ outcome = "left the church with a silver candle-snuffer and the uncomfortable attention of a gargoyle."
+* [Slip a hand toward the alms box # needs: agility 3]
+    The box is old, the lock older. Your fingers are quicker than both. Outside, you tell yourself the poor box was always meant for the poor, and tonight that's you.
+    ~ wealth = wealth + 1
+    ~ outcome = "left the church with the alms box lighter and a very specific new entry on the confession backlog."
     -> END
-* {flag_marked_by_the_manor} [Confess what happened at the manor]
-    The verger listens without blinking, then fetches a ledger older than the church and adds your name to a very short list.
-    "You'll want a candle," the verger says, and lights it personally. The weight you've been carrying eases, a little.
-    ~ mind = mind + 1
+* {flag_poacher} [Confess the business with the lord's deer]
+    The priest hears you out, sighs like a man who has heard far worse, and sets a penance of exactly one honest day's work. "The reeve counts hides," he adds mildly. "I'd burn yours."
+    ~ will = will + 1
     ~ flag_blessed = true
-    ~ outcome = "confessed about the manor, joined a short list in a very old ledger, and left a candle burning."
+    ~ outcome = "confessed to poaching, got off with a penance, and received one extremely practical piece of advice."
+    -> END
+
+// ---------------------------------------------------------------- TAVERN
+// NPCs: the Innkeep and the Gamblers.
+
+=== storylet_tavern ===
+{visits == 0: The tavern is packed to the rafters, and the innkeep runs the room like a drover runs cattle — nothing moves without her noticing. | The innkeep has your cup down before you reach the bar. Being known here is its own kind of credit.}
+{event == "kings_levy": Tonight the talk is all of the levy men up at the castle, and everyone with two coins is drinking like they'd rather be holding one.}
+{event == "fair_eve": Fair folk have claimed the long table and are paying in coin nobody recognises, which the innkeep accepts with deep suspicion and great speed.}
+In the corner, the gamblers' dice knock against the table like a slow heartbeat.
+* [Stand a round for the room]
+    You put your coin on the bar like a lord. The room cheers your name twice and forgets it once. The innkeep pours, smiles, and opens her slate book to a fresh line with your name on it.
+    ~ wealth = wealth - 1
+    ~ will = will + 1
+    ~ flag_owes_the_innkeep = true
+    ~ outcome = "stood the whole tavern a round and went on the innkeep's slate, beloved and slightly poorer."
+    -> END
+* [Sit in with the gamblers # needs: wealth 2]
+    The dice are bone and the stakes are real.
+    {shuffle:
+    -   You play tight, watch the table, and rise two pennies the richer. The gamblers note your face with something like respect.
+        ~ wealth = wealth + 1
+        ~ flag_in_with_the_gamblers = true
+        ~ outcome = "sat with the gamblers, rose richer, and earned a nod that will be worth more than the pennies."
+    -   The dice run cold and your stake runs out. The innkeep covers your last call and writes it down without being asked.
+        ~ wealth = wealth - 1
+        ~ flag_owes_the_innkeep = true
+        ~ outcome = "lost to the gamblers and finished the night on the innkeep's slate, which everyone saw."
+    }
+    -> END
+* [Work the taps for the innkeep]
+    Six hours of pouring, mopping, and hearing every secret in the parish told twice at volume. The innkeep pays in coin and in the better currency of taking your side from now on.
+    ~ strength = strength + 1
+    ~ wealth = wealth + 1
+    ~ outcome = "worked the tavern taps till closing and now hears about things in Hollowbrook before they happen."
+    -> END
+* {flag_friend_of_the_poor} [Take the seat the peasants saved you at the gamblers' table]
+    Word has come up from the slums that you're good for it, and the gamblers deal you in on reputation alone — no stake asked.
+    You play careful, win small, and learn how the table really works: who folds to whom, and why.
+    ~ intelligence = intelligence + 1
+    ~ flag_in_with_the_gamblers = true
+    ~ outcome = "was dealt into the gamblers' table on the slums' word alone, and read the whole room while winning small."
+    -> END
+* {flag_owes_the_innkeep} [Work off the slate]
+    The innkeep hands you an apron without a word. By closing time the line through your name is the most satisfying thing you've earned all week.
+    ~ strength = strength + 1
+    ~ will = will + 1
+    ~ flag_owes_the_innkeep = false
+    ~ outcome = "worked the slate clean at the tavern and earned the innkeep's rarest coin: a nod."
     -> END
 
 // ---------------------------------------------------------------- MARKET
+// NPCs: the Butcher, the Armourer, the stallholders.
 
 === storylet_market ===
-{visits == 0: The Night Market only opens after dark, which everyone agrees is normal and fine. | The market knows you now. Two stallholders wave; a third quietly puts something under the counter as you pass.}
-{event == "dark_tide": The fish stalls stand empty and wet. The tide came up the channel wrong tonight, and the market is pretending very hard not to smell it.}
-{event == "lantern_festival": Festival lanterns hang between the stalls, and for once the unlabelled-goods table has a queue.}
-Stalls sell lamp oil, bad knives, excellent pies, and one table at the end sells things with no labels at all.
-* [Haggle for one of the unlabelled things]
-    The stallholder names a price. You laugh. They name another. You weep theatrically.
-    Twenty minutes later you own a small brass box that hums when the church bell rings.
-    ~ charm = charm + 1
-    ~ outcome = "haggled the unlabelled-goods stall into the ground and won a small humming brass box."
+{visits == 0: Market day never quite ends in fair week; half the stalls trade by lantern light. The butcher and the armourer hold the two best pitches and an old, loud rivalry. | The stallholders know your face now. Prices drop a penny when you approach, which is how you know they've gone up for everyone else.}
+{event == "kings_levy": The levy men's arrival has every till in the market suddenly, theatrically empty. The real cashboxes went under floorboards an hour ago.}
+{event == "fair_eve": Fair wagons line the square, and the armourer has polished every blade on the stall twice. Tomorrow's customers are tonight's gossip.}
+* [Haul carcasses for the butcher]
+    The butcher pays fair, swears constantly, and teaches you more about anatomy in one evening than a barber-surgeon learns in a year.
+    ~ strength = strength + 1
+    ~ wealth = wealth + 1
+    ~ outcome = "hauled sides of beef for the butcher all evening and was paid in coin, sausage, and profanity."
     -> END
-* [Work a shift hauling crates for pie money]
-    The pie is genuinely outstanding. Your back will forgive you eventually.
-    ~ body = body + 1
-    ~ outcome = "hauled crates all night and was paid in what is honestly the best pie in the county."
+* [Mind the armourer's stall while he drinks # needs: craft 3]
+    The armourer waves you at the stall and disappears toward the tavern. You sell two knives, turn away a man who holds a sword like a broom, and re-rivet a strap he'd have charged double for.
+    ~ craft = craft + 1
+    ~ wealth = wealth + 1
+    ~ outcome = "ran the armourer's stall solo for a night and sold steel better than the armourer does sober."
     -> END
-* [Charm the stallholders into talking # needs: charm 3]
-    You drift stall to stall like you own the cobbles, and the market opens up to you.
-    By midnight you know what the stranger bought here, and that they paid for it with manor silverware.
-    ~ mind = mind + 1
-    ~ flag_met_the_stranger = true
-    ~ outcome = "charmed half the market and learned the stranger has been spending the manor's silverware."
+* [Work the stalls for gossip]
+    You drift pitch to pitch, buying nothing, hearing everything. By midnight you know what the fair will charge, what the reeve is asking about, and which two stallholders are secretly one business.
+    ~ intelligence = intelligence + 1
+    ~ outcome = "spent the night trading gossip across the market stalls and now holds a map of who owes whom."
     -> END
-
-// ----------------------------------------------------------------- WOODS
-
-=== storylet_woods ===
-{visits == 0: The Whispering Woods do whisper, though it might just be the wind. Might. | The woods remember you. The whispering starts before you're even under the branches, and it sounds pleased.}
-The path you came in on is not, on reflection, where you left it.
-* [Follow the whispering deeper in]
-    You walk until the trees stop pretending and the whispering becomes one voice, very politely asking you to leave.
-    You leave. Briskly.
-    ~ shadow = shadow + 1
-    ~ outcome = "went too deep into the woods and was asked to leave by something extremely polite."
+* {night >= 4} [Commission something fine for fair day # needs: wealth 4]
+    Real coin opens the armourer's back room: the good steel, the work he doesn't put on the stall. What you order makes him raise both eyebrows and start sketching.
+    ~ wealth = wealth - 1
+    ~ craft = craft + 1
+    ~ flag_lords_eye = true
+    ~ outcome = "commissioned a piece from the armourer's back room fine enough that word of it reached the castle by morning."
     -> END
-* [Search the old ranger hut]
-    Under a loose floorboard you find a locket. Inside is a portrait of the Vane Manor as it looked new — and someone has scratched out the windows.
-    ~ mind = mind + 1
-    ~ flag_found_the_locket = true
-    ~ outcome = "found a locket in the ranger hut with the manor painted inside, all its windows scratched out."
-    -> END
-* [Climb the watch-oak to get your bearings # needs: body 3]
-    From the top of the oldest tree you can see all of Hollowbrook: the harbor lights, the dark market, and one window glowing in the supposedly empty manor.
-    ~ body = body + 1
-    ~ mind = mind + 1
-    ~ outcome = "climbed the great watch-oak and spotted a light burning in the empty manor."
-    -> END
-* {flag_met_the_stranger} [Track the stranger's bootprints off the path]
-    The prints are fresh, with a long, sure stride — heading straight for the manor's back wall, where they simply stop. No gate. No ladder. No prints coming back.
-    ~ shadow = shadow + 1
-    ~ mind = mind + 1
-    ~ outcome = "tracked the stranger's bootprints to the manor's back wall, where they stopped like the ground had opened."
+* {flag_traders_friend} [Take first pick of the foreign goods]
+    The traders' boy finds you before their crates even reach the stalls. What you buy at dockside prices, you could sell at fair prices — and everyone at the market knows it.
+    ~ wealth = wealth + 1
+    ~ intelligence = intelligence + 1
+    ~ outcome = "bought foreign goods before they touched a stall and is suddenly a person the market is polite to."
     -> END
 
-// ---------------------------------------------------------------- HARBOR
+// ----------------------------------------------------------------- FARMS
+// NPCs: the Shire Reeve and the peasant farmers.
 
-=== storylet_harbor ===
-{visits == 0: The Harbor at night is rope, salt, and lanterns that swing without wind. | The harbor's night crew has stopped going quiet when you walk the quay. That took exactly {visits + 1} nights.}
-A crew is unloading a boat with no name, fast and quiet, and they're a pair of hands short.
-* [Join the crew, no questions asked]
-    You haul crates that clink in a way fish do not. At the end the foreman pays double and taps her nose.
-    She also teaches you the knock they use on the warehouse door.
-    ~ body = body + 1
-    ~ shadow = shadow + 1
-    ~ flag_knows_the_password = true
-    ~ outcome = "spent the night unloading a nameless boat, asked no questions, and learned the smugglers' knock."
+=== storylet_farms ===
+{visits == 0: The farms run to the river in long dark strips, and the harvest is in its last, aching week. The Shire Reeve walks the field edges with his ledger, counting what the lord is owed. | The farmers wave you in from the lane now. The reeve pretends not to notice you, which from the reeve is warmth.}
+{event == "kings_levy": The reeve's rounds have doubled since the levy men arrived — every haystack in the parish is being counted twice tonight.}
+* [Join the harvest line till dark # needs: strength 3]
+    Scythe, sheaf, swing, repeat. The farmers sing the counting songs and you learn them by the third field. Honest coin, honest back-ache.
+    ~ strength = strength + 1
+    ~ wealth = wealth + 1
+    ~ outcome = "swung a scythe in the harvest line till dark and got paid like a farmhand and fed like family."
     -> END
-* [Swap stories with the old lighthouse keeper]
-    The keeper trades a story for a story. Yours are decent; the keeper's are about what the light is actually for, and they are not decent at all.
-    ~ charm = charm + 1
-    ~ mind = mind + 1
-    ~ outcome = "traded stories with the lighthouse keeper and rather wishes some of them could be untraded."
+* [Help the reeve square his ledger]
+    The reeve's arithmetic is sound but his handwriting fights back. You sit with him at the field-gate table and bring order to the lord's numbers.
+    ~ intelligence = intelligence + 1
+    ~ flag_reeves_favor = true
+    ~ outcome = "spent the night squaring the Shire Reeve's harvest ledger and is now, officially, useful."
     -> END
-* [Read the tide ledgers in the harbormaster's hut # needs: mind 3]
-    Columns of arrivals, departures, cargo. Except one boat that arrives every seventh night and never, on paper, leaves.
-    ~ mind = mind + 1
-    ~ outcome = "read the tide ledgers and found a boat that arrives every seventh night and never leaves."
+* [Take a deer from the lord's wood # needs: agility 3]
+    The lord's wood is full of the lord's deer, and the lord, notably, is not here. One clean shot, one quiet drag, one very good week of eating ahead.
+    ~ agility = agility + 1
+    ~ wealth = wealth + 1
+    ~ flag_poacher = true
+    ~ outcome = "took a deer from the lord's wood without a sound, and is now a poacher with excellent prospects."
     -> END
-* {flag_knows_the_password} [Use the smugglers' knock on the warehouse door]
-    Two slow, three quick. The door opens on crates, charts, and a second harbor that exists only after dark — and nobody inside questions you for a second.
-    You memorise what you can and leave before anyone thinks to.
-    ~ mind = mind + 1
-    ~ shadow = shadow + 1
-    ~ outcome = "gave the warehouse the smugglers' knock, walked it like an old hand, and left knowing far too much."
-    -> END
-
-// ----------------------------------------------------------------- MANOR
-
-=== storylet_manor ===
-// Late-week dispatch: nights 6–7 play a different manor entirely. This is
-// the reference pattern for big per-night swings (vs. one-line {visits} or
-// {night} variations).
-{night >= 6: -> storylet_manor_endweek}
-{visits == 0: The Vane Manor has been empty for thirty years, which doesn't explain the footprints on the drive or the warm chimney. | The manor's gate hangs open a little wider than last time — wider for you specifically, is the impression you can't shake.}
-{flag_met_the_stranger: You think of the stranger from the tavern, paying silver for exactly this address.}
-* [Knock on the front door like a civilised person]
-    The door opens before your second knock. Nobody is behind it.
-    A tray waits in the hall with one cup of tea, still steaming. You drink it. It's perfect. You leave a coin.
-    ~ charm = charm + 1
-    ~ outcome = "knocked at the empty manor, was served a perfect cup of tea by nobody, and politely paid for it."
-    -> END
-* [Study the grounds from the gate]
-    You count windows, doors, the gaps in the wall. The footprints on the drive go in. None come out.
-    ~ mind = mind + 1
-    ~ outcome = "cased the manor from the gate and noticed the footprints on the drive only go one way."
-    -> END
-* [Slip in through the cellar hatch # needs: shadow 2]
-    Inside it smells of dust and fresh bread, in that order. On the cellar wall, someone has written tallies — seven marks, struck through, over and over.
-    Something upstairs crosses the floor with confidence. You add a mark of your own and get out.
-    ~ shadow = shadow + 1
-    ~ flag_marked_by_the_manor = true
-    ~ outcome = "broke into the manor cellar, found seven tally marks struck through, and unwisely added an eighth."
-    -> END
-* {flag_found_the_locket} [Hold the ranger's locket up at the gate]
-    The gate, which was locked, is suddenly not. At the end of the drive the front door stands open, exactly as wide as a welcome.
-    You don't go in. But all night the manor's one lit window stays on you like an eye that has finally remembered your face.
-    ~ mind = mind + 1
-    ~ flag_marked_by_the_manor = true
-    ~ outcome = "showed the manor the locket with its own portrait inside, and the manor unlocked its gate in answer."
+* {flag_blessed} [Bring the priest's word to the reeve]
+    The priest's note is short, but the reeve reads it twice and looks at you differently. Whatever it says, the church's good word is the one currency the reeve doesn't discount.
+    ~ will = will + 1
+    ~ flag_reeves_favor = true
+    ~ outcome = "arrived at the farms carrying the priest's word, and the Shire Reeve's ledger opened on a friendlier page."
     -> END
 
-=== storylet_manor_endweek ===
-By the {night == 6: sixth | seventh} night the manor has stopped pretending. Every window is lit, the gate stands open, and someone — something — has swept the drive.
-Whatever lives here is expecting the village.
-* [Walk up the drive and ring the bell]
-    The door opens on warmth and a long table set for exactly as many guests as Hollowbrook has residents.
-    Nobody is in the chairs. Yet. You count the places twice and leave before you find your own name card.
-    ~ charm = charm + 1
-    ~ mind = mind + 1
-    ~ outcome = "rang the manor's bell on the open-door night and found the table set for the whole village."
+// ---------------------------------------------------------------- CASTLE
+// NPC: the Lord. Nights 6–7 play the fair's-eve court instead.
+
+=== storylet_castle ===
+{night >= 6: -> storylet_castle_eve}
+{visits == 0: The castle is small as castles go and knows it, which makes the gate guards twice as proud. Inside, the lord is preparing for the fair the way other men prepare for war. | The gate guards know you now and wave you through with only ceremonial reluctance.}
+* [Serve at the lord's table]
+    You carry, pour, and above all listen. Lords talk over servants like furniture, and tonight the furniture learns what the fair's taxes will be before the reeve does.
+    ~ intelligence = intelligence + 1
+    ~ outcome = "served at the lord's table and came away knowing the fair's tax terms a day before the village."
     -> END
-* [Watch the lit windows from the wall]
-    Shapes cross the windows in pairs, like dancers. One of them stops, mid-figure, and looks directly at you.
-    It waves.
-    ~ mind = mind + 1
-    ~ shadow = shadow + 1
-    ~ outcome = "watched the manor's bright windows from the wall, and something mid-dance stopped to wave."
+* [Train in the yard with the garrison]
+    The sergeant works you until your arms ring. At the end he grunts, which the other soldiers assure you is the highest honour the yard awards.
+    ~ strength = strength + 1
+    ~ will = will + 1
+    ~ outcome = "trained with the castle garrison till the sergeant grunted approval, which is apparently a knighthood."
     -> END
-* [Heave the iron gate shut # needs: body 4]
-    The gate is older than the village and it does not want to close. You close it anyway.
-    From inside the house, very faintly: applause.
-    ~ body = body + 1
-    ~ outcome = "heaved the manor's iron gate shut against whatever the last nights are bringing — and was applauded for it."
+* [Petition the lord directly # needs: will 3]
+    The hall goes quiet the way halls do. You state your business plainly, without flowering it, and the lord — visibly braced for grovelling — leans forward instead.
+    ~ will = will + 1
+    ~ flag_lords_eye = true
+    ~ outcome = "petitioned the lord to his face without flinching, and the lord has remembered the name."
     -> END
-* {flag_marked_by_the_manor} [Answer the invitation you know is yours]
-    You added a mark to that cellar wall once. The front door knows it; it opens before your foot finds the first step.
-    Inside, one chair at the long table has been pulled out. You sit. The week makes a terrible kind of sense from this seat, and the tea, again, is perfect.
-    ~ shadow = shadow + 1
-    ~ mind = mind + 1
-    ~ outcome = "accepted the manor's invitation, sat at the set table, and came back knowing what the tally marks count."
+* {flag_reeves_favor} [Let the reeve present you at court]
+    The Shire Reeve introduces you as "the useful one," which from the reeve is a eulogy. The lord asks your name and uses it twice. People at court notice whom the lord names.
+    ~ will = will + 1
+    ~ flag_lords_eye = true
+    ~ outcome = "was presented at court by the Shire Reeve and got the lord to use their name twice in one evening."
+    -> END
+
+=== storylet_castle_eve ===
+The castle on fair's eve is all torches and tally-clerks. Tomorrow the lord holds court at the fair; tonight the great hall is where the week's accounts are truly settled.
+* [Stand the night watch on the walls # needs: will 4]
+    The sergeant gives you the wall above the gate, the post he gives to men he trusts. You watch the fair fires come alight across the river, one by one, until dawn.
+    ~ will = will + 1
+    ~ outcome = "stood the fair's-eve night watch above the castle gate, trusted with the one post that matters."
+    -> END
+* [Help the clerks close the year's accounts]
+    The hall's long table disappears under rolls and ribbons. By midnight you're the one the clerks pass the disputed entries to, and by dawn you know what the whole valley is worth.
+    ~ intelligence = intelligence + 1
+    ~ craft = craft + 1
+    ~ outcome = "closed the year's accounts with the lord's clerks and now knows the worth of every field in the valley."
+    -> END
+* [Carry the lord's fair-day proclamation to the village # needs: agility 4]
+    Seven stops, one night, no torch. You run the proclamation from the castle gate to every notice post in Hollowbrook and are back before the wax on the last seal is cool.
+    ~ agility = agility + 1
+    ~ will = will + 1
+    ~ outcome = "ran the lord's proclamation to every post in the village in one night and beat the dawn home."
+    -> END
+* {flag_lords_eye} [Take the seat the lord offers you at the high table]
+    The steward, very quietly, sets a place for you above the salt. The lord talks to you about the fair, the levy, and — once, briefly — what comes after. You answer honestly. It lands.
+    ~ will = will + 1
+    ~ wealth = wealth + 1
+    ~ outcome = "dined above the salt at the lord's own invitation on fair's eve, and answered the lord like an equal."
+    -> END
+
+// ----------------------------------------------------------------- SLUMS
+// NPCs: the peasants who hold the lanes together.
+
+=== storylet_slums ===
+{visits == 0: The slums lean against the town wall like they're holding it up, which in a sense they are. Nobody here pretends the fair will change anything, which makes it the most honest place in Hollowbrook. | The lanes open for you now. Somebody's child runs ahead shouting your name, which is the slums' version of a herald.}
+* [Give what coin you can spare # needs: wealth 2]
+    No speeches. You find the family whose roof came down and put coin in the mother's hand directly, the way it should be done. The lanes see everything; the lanes saw that.
+    ~ wealth = wealth - 1
+    ~ will = will + 1
+    ~ flag_friend_of_the_poor = true
+    ~ outcome = "gave coin where it was needed in the slums, quietly, and the lanes will not forget it."
+    -> END
+* [Mend roofs with the wall-side families]
+    Half the lane's roofs are thatch over hope. You work until dark with borrowed tools, and the family whose ridge-pole you reset feeds you like a returning soldier.
+    ~ craft = craft + 1
+    ~ flag_friend_of_the_poor = true
+    ~ outcome = "spent the night mending roofs in the slums and ate the best meal in Hollowbrook by way of wages."
+    -> END
+* [Sit and listen to the lanes # needs: intelligence 3]
+    The slums know everything first: which merchant is ruined, which guard takes coin, what the levy men actually came for. You sit on the wall steps and let it all come to you.
+    ~ intelligence = intelligence + 1
+    ~ outcome = "sat on the wall steps all night and heard the version of Hollowbrook's week that turns out to be true."
+    -> END
+* {flag_lords_eye} [Hear the petition the lanes want carried to the lord]
+    They know the lord knows your name; that's why they've queued. You take their case — the well, the wall tax, the bailiff with the heavy hands — and promise only what you can carry.
+    ~ will = will + 1
+    ~ intelligence = intelligence + 1
+    ~ outcome = "took up the slums' petition to carry to the lord, and made no promise that can't be kept."
+    -> END
+
+// ----------------------------------------------------------------- DOCKS
+// NPCs: the Foreign Traders and the dockworkers.
+
+=== storylet_docks ===
+{visits == 0: The docks work later than the law strictly imagines, and the foreign traders' ship sits low in the water with goods for the fair. The dockworkers move like men paid by the crate, because they are. | The dockworkers hail you by name down the quay. The foreign traders' factor remembers your face, which is his entire job.}
+{event == "fair_eve": Everything must be off the ship before the fair opens, and the quay is bedlam — double pay, no questions, lanterns everywhere.}
+* [Haul cargo till the tide turns # needs: strength 3]
+    Crate after crate after crate. The dockworkers test you for one hour and then treat you as one of their own for the rest, which includes the second, unlisted pay packet.
+    ~ strength = strength + 1
+    ~ wealth = wealth + 1
+    ~ outcome = "hauled fair cargo with the dockworkers till the tide turned and was paid once on the books and once off."
+    -> END
+* [Talk trade with the foreign factor # needs: intelligence 3]
+    The factor speaks four languages and prices in all of them. You keep up. By the end he's showing you the manifest nobody at the fair will see, mostly for the pleasure of being followed.
+    ~ intelligence = intelligence + 1
+    ~ flag_traders_friend = true
+    ~ outcome = "matched wits with the foreign traders' factor over a manifest and was adopted as a kindred spirit."
+    -> END
+* [Take the night-work nobody describes]
+    Certain crates come off after the harbourmaster's lantern goes dark, and the crew is short a pair of quiet hands. You ask nothing. At the end, the foreman teaches you the knock on the boathouse door.
+    ~ agility = agility + 1
+    ~ wealth = wealth + 1
+    ~ flag_dockside_password = true
+    ~ outcome = "worked the docks' unlisted shift without one question and learned the boathouse knock for it."
+    -> END
+* {flag_dockside_password} [Use the boathouse knock]
+    Two slow, three quick. Inside is the trade beneath the trade: fair goods that never see a toll, and men genuinely pleased to see you. You leave with coin and a standing invitation.
+    ~ wealth = wealth + 1
+    ~ agility = agility + 1
+    ~ outcome = "answered the boathouse with the right knock and now stands inside Hollowbrook's other economy."
+    -> END
+* {night >= 5} [Stake coin in the traders' fair-day cargo # needs: wealth 4]
+    The factor offers shares in the last shipment — fair-day prices, dockside risk. You count your coin twice and put it down.
+    ~ wealth = wealth + 1
+    ~ intelligence = intelligence + 1
+    ~ flag_traders_friend = true
+    ~ outcome = "staked real coin in the foreign traders' fair-day cargo and earned a merchant's handshake on the quay."
     -> END
 
 // ---------------------------------------------------------------- FINALE
 // The host runs this knot once with the party's AVERAGE stats and no flags.
-// Three endings, picked from the week's overall shape.
+// Three endings, picked from the week's overall shape. Choice-free by
+// contract (the validator enforces it).
 
 === finale ===
-Seven nights, spent. Hollowbrook counts its spoons, its secrets, and its visitors, and decides what kind of week it has been.
+Fair day. The lord's table goes up on the green at dawn, the foreign traders' stall draws a crowd by terce, and Hollowbrook — washed, mended, and rehearsed — presents the week it has had.
 {
-- shadow >= 3: -> finale_shadow
-- charm >= mind and charm >= body: -> finale_charm
-- else: -> finale_steady
+- wealth >= 3: -> finale_prosperity
+- will >= 3: -> finale_steadfast
+- else: -> finale_quiet
 }
 
-=== finale_shadow ===
-It has been a dark week, on balance. Doors are bolted that never used to be. The gargoyle on the church roof now faces the village, and the manor's chimney smokes openly, as if it no longer cares who sees.
-Whatever was waiting in Hollowbrook, this week fed it. The boat with no name will need extra hands again on the next seventh night — and it already has your names.
-THE LONG NIGHT BEGINS.
+=== finale_prosperity ===
+It has been a profitable week, and the fair knows it. The village's coin moves the market, the traders talk of coming back twice a year, and the lord's clerks record the best reckoning in a decade — with several of your names in the margins.
+Money changes a village. By spring there will be glass in windows that had shutters, and the lanes will argue forever about whether that was the week Hollowbrook was made or sold.
+THE FAIR MAKES HOLLOWBROOK RICH.
 -> END
 
-=== finale_charm ===
-It has been, against all odds, a charming week. The tavern has new songs with your names in them, the market held a feast on credit, and even the manor left its gate open with a pot of tea on the wall.
-Hollowbrook's troubles are still out there in the dark. But the village faces them grinning, arm in arm, and that has always been worth more than silver.
-THE BRIGHT WEEK ENDS IN SONG.
+=== finale_steadfast ===
+It has been a steady, unbending week, and fair day shows the shape of it. The reckoning is honest, the petitions get heard, and when the levy men try one last squeeze at the gate, the village answers with one voice and the lord — remarkably — backs it.
+Nobody gets rich. But the well gets dug, the bailiff gets replaced, and Hollowbrook walks out of fair week owning itself a little more than it did.
+THE VILLAGE STANDS ITS GROUND.
 -> END
 
-=== finale_steady ===
-It has been a steady, watchful week. Ledgers read, ladders climbed, candles counted, lockets pocketed. Hollowbrook doesn't feel saved, exactly, but it feels seen — and things that prefer the dark hate being seen.
-The seventh-night boat slips its moorings empty. The manor's light goes out, almost politely. For now.
-THE VILLAGE KEEPS ITS WATCH.
+=== finale_quiet ===
+It has been a quiet week, all told — work done, debts moved around, nothing that will make a ballad. The fair comes, dazzles, takes its coin, and folds away into wagons by the following dusk.
+But quiet weeks are what villages are made of, and the ledger of small kindnesses and small grudges you've all written this week will still be open next Michaelmas.
+THE WHEEL OF THE YEAR TURNS.
 -> END

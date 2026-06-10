@@ -15,8 +15,9 @@ import { readFileSync } from "node:fs";
 import { Story } from "inkjs";
 
 // Keep in sync with NEEDS_TAG in lib/ink/storylet.ts.
-const NEEDS_TAG = /^needs:\s*(mind|body|charm|shadow)\s+(\d+)\s*$/i;
-const STAT_IDS = ["mind", "body", "charm", "shadow"];
+const NEEDS_TAG =
+  /^needs:\s*(intelligence|strength|agility|craft|will|wealth)\s+(\d+)\s*$/i;
+const STAT_IDS = ["intelligence", "strength", "agility", "craft", "will", "wealth"];
 const REQUIRED_GLOBALS = [...STAT_IDS, "outcome", "night", "visits", "event"];
 
 /** STAT_CAP from lib/game/constants.ts; a gate above it can never be met. */

@@ -10,20 +10,29 @@ export type GamePhase =
   | "epilogue";
 
 export type LocationId =
-  | "tavern"
   | "church"
+  | "tavern"
   | "market"
-  | "woods"
-  | "harbor"
-  | "manor";
+  | "farms"
+  | "castle"
+  | "slums"
+  | "docks";
 
-export type StatId = "mind" | "body" | "charm" | "shadow";
+export type StatId =
+  | "intelligence"
+  | "strength"
+  | "agility"
+  | "craft"
+  | "will"
+  | "wealth";
 
 export interface PlayerStats {
-  mind: number;
-  body: number;
-  charm: number;
-  shadow: number;
+  intelligence: number;
+  strength: number;
+  agility: number;
+  craft: number;
+  will: number;
+  wealth: number;
 }
 
 /** A phone's location pick, tagged with the night so stale picks are ignored. */

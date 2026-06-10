@@ -11,16 +11,25 @@ function compile(src: string): unknown {
 }
 
 const VARS = `
-VAR mind = 2
-VAR body = 2
-VAR charm = 2
-VAR shadow = 0
+VAR intelligence = 2
+VAR strength = 2
+VAR agility = 2
+VAR craft = 2
+VAR will = 2
+VAR wealth = 1
 VAR outcome = ""
 VAR flag_x = false
 VAR flag_y = false
 `;
 
-const STATS: PlayerStats = { mind: 2, body: 2, charm: 2, shadow: 0 };
+const STATS: PlayerStats = {
+  intelligence: 2,
+  strength: 2,
+  agility: 2,
+  craft: 2,
+  will: 2,
+  wealth: 1,
+};
 
 function stepToChoices(session: StoryletSession, stats: PlayerStats) {
   for (let i = 0; i < 50; i++) {
@@ -37,7 +46,7 @@ Intro line.
 * [Easy choice]
     ~ outcome = "did the easy thing."
     -> END
-* [Hard choice # needs: body 3]
+* [Hard choice # needs: strength 3]
     ~ outcome = "did the hard thing."
     -> END
 `);
@@ -49,23 +58,23 @@ Intro line.
     expect(step.choices[0].disabled).toBe(false);
     expect(step.choices[0].requirement).toBeNull();
     expect(step.choices[1].disabled).toBe(true);
-    expect(step.choices[1].requirement).toBe("Needs Body 3");
+    expect(step.choices[1].requirement).toBe("Needs Strength 3");
   });
 
   it("enables the gate once the stat meets the bar", () => {
-    const strong = { ...STATS, body: 3 };
+    const strong = { ...STATS, strength: 3 };
     const session = StoryletSession.begin(content, "test_knot", strong, []);
     const step = stepToChoices(session, strong);
     if (step.kind !== "choices") throw new Error("expected choices");
     expect(step.choices[1].disabled).toBe(false);
-    expect(step.choices[1].requirement).toBe("Needs Body 3");
+    expect(step.choices[1].requirement).toBe("Needs Strength 3");
   });
 
   it("parses the needs tag case-insensitively", () => {
     const c = compile(`${VARS}
 === k ===
 Line.
-* [Go # NEEDS: BODY 3]
+* [Go # NEEDS: STRENGTH 3]
     -> END
 `);
     const session = StoryletSession.begin(c, "k", STATS, []);
@@ -78,7 +87,7 @@ Line.
     const c = compile(`${VARS}
 === k ===
 Line.
-* [Go # needs body 3]
+* [Go # needs strength 3]
     -> END
 `);
     const session = StoryletSession.begin(c, "k", STATS, []);
@@ -132,7 +141,7 @@ describe("save/restore", () => {
 === k ===
 Before the choice.
 * [Take it]
-    ~ charm = charm + 1
+    ~ craft = craft + 1
     ~ outcome = "took it."
     -> END
 `);
@@ -151,12 +160,14 @@ Before the choice.
     const end = stepToChoices(restored, STATS);
     if (end.kind !== "end") throw new Error("expected end");
     expect(end.outcome).toBe("took it.");
-    expect(end.finalStats.charm).toBe(3);
+    expect(end.finalStats.craft).toBe(3);
     expect(restored.deltas(end.finalStats)).toEqual({
-      mind: 0,
-      body: 0,
-      charm: 1,
-      shadow: 0,
+      intelligence: 0,
+      strength: 0,
+      agility: 0,
+      craft: 1,
+      will: 0,
+      wealth: 0,
     });
   });
 });
@@ -213,8 +224,8 @@ describe("stat clamping", () => {
     const content = compile(`${VARS}
 === k ===
 Excess.
-~ body = body + 9
-~ shadow = shadow - 9
+~ strength = strength + 9
+~ wealth = wealth - 9
 ~ outcome = "overdid it."
 -> END
 `);
@@ -222,8 +233,8 @@ Excess.
     session.step(STATS); // paragraph
     const end = session.step(STATS);
     if (end.kind !== "end") throw new Error("expected end");
-    expect(end.finalStats.body).toBe(5);
-    expect(end.finalStats.shadow).toBe(0);
+    expect(end.finalStats.strength).toBe(5);
+    expect(end.finalStats.wealth).toBe(0);
   });
 });
 
