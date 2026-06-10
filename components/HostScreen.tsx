@@ -47,6 +47,15 @@ import {
 } from "@/lib/game/state";
 import { getStoryContent } from "@/lib/ink/loadStory";
 import { runToEnd } from "@/lib/ink/storylet";
+import {
+  audioUnlocked,
+  isMuted,
+  playAmbient,
+  setMuted,
+  stinger,
+  stopAmbient,
+  unlockAudio,
+} from "@/lib/audio/sound";
 import type { PlayerStats, StatId } from "@/lib/game/types";
 
 // How long a ping keeps a player's row lit on the lobby screen.
@@ -189,7 +198,58 @@ function HostGame({ roomCode }: { roomCode: string }) {
     }
   }, [phase, players, assignments, night]);
 
-  switch (phase) {
+  // --- Audio. The lobby's BEGIN click unlocks it; a host refresh mid-game
+  // has no gesture yet, so a failed resume shows the "enable sound" pill.
+  const [soundBlocked, setSoundBlocked] = useState(false);
+  const resumeTried = useRef(false);
+  useEffect(() => {
+    if (phase === "lobby" || audioUnlocked() || resumeTried.current) return;
+    resumeTried.current = true;
+    unlockAudio().then((ok) => {
+      if (ok && phase !== "finale" && phase !== "epilogue") playAmbient();
+      else if (!ok) setSoundBlocked(true);
+    });
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase === "night-intro") stinger(activeEvent ? "drama" : "night");
+    else if (phase === "resolve") stinger("resolve");
+    else if (phase === "finale") {
+      stopAmbient();
+      stinger("finale");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
+
+  const screen = renderPhase();
+  return (
+    <>
+      {screen}
+      {phase !== "lobby" && (
+        <div className="fixed bottom-4 right-4 z-10 flex items-center gap-2">
+          {soundBlocked && (
+            <button
+              onClick={() => {
+                unlockAudio().then((ok) => {
+                  if (ok) {
+                    setSoundBlocked(false);
+                    playAmbient();
+                  }
+                });
+              }}
+              className="rounded-full border border-amber-500/60 bg-zinc-900 px-4 py-2 text-sm font-bold text-amber-400"
+            >
+              Sound off — tap to enable
+            </button>
+          )}
+          <MuteButton />
+        </div>
+      )}
+    </>
+  );
+
+  function renderPhase() {
+    switch (phase) {
     case "lobby":
       return <LobbyScreen roomCode={roomCode} players={players} />;
     case "night-intro":
@@ -240,7 +300,25 @@ function HostGame({ roomCode }: { roomCode: string }) {
       return <FinaleScreen players={players} />;
     case "epilogue":
       return <EpilogueScreen players={players} />;
+    }
   }
+}
+
+function MuteButton() {
+  const [muted, setMutedState] = useState(() => isMuted());
+  return (
+    <button
+      onClick={() => {
+        setMuted(!muted);
+        setMutedState(!muted);
+      }}
+      title={muted ? "Unmute" : "Mute"}
+      aria-label={muted ? "Unmute" : "Mute"}
+      className="rounded-full border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-400 hover:border-zinc-500"
+    >
+      {muted ? "🔇" : "🔊"}
+    </button>
+  );
 }
 
 /** Week progress: one dot per night, lit up to the current one. */
@@ -360,7 +438,14 @@ function LobbyScreen({
         </ul>
         {players.length > 0 && (
           <button
-            onClick={() => startGame(players)}
+            onClick={() => {
+              // This click is the user gesture that unlocks autoplay for the
+              // whole session; the ambient bed starts here.
+              unlockAudio().then((ok) => {
+                if (ok) playAmbient();
+              });
+              startGame(players);
+            }}
             className="mx-auto mt-8 block rounded-xl bg-amber-500 px-12 py-4 text-2xl font-black text-zinc-950 hover:bg-amber-400"
           >
             BEGIN THE WEEK

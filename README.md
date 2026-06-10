@@ -54,6 +54,14 @@ Import the repo once at vercel.com/new (framework auto-detects, no env vars);
 every push then gets a URL. Open `<deploy-url>/host` on the big screen and
 scan from anywhere.
 
+## Sound (optional)
+
+The host screen plays an ambient bed + stingers if you drop files into
+`public/audio/`: `ambient.mp3` (loops), `stinger-night.mp3`,
+`stinger-drama.mp3`, `stinger-resolve.mp3`, `stinger-finale.mp3`. Missing
+files are silently skipped — the repo ships silent. Phones never play sound.
+Mute toggle bottom-right of the host screen.
+
 ## Layout
 
 ```
