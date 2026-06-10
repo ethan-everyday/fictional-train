@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { DeltaChips } from "@/components/PlayScreen";
 import {
+  kickPlayer,
   playerColor,
   playerName,
   startHost,
@@ -57,19 +58,53 @@ export default function HostScreen() {
   useEffect(() => {
     // Rejoin our last room after a host refresh; Playroom keeps the room
     // (and all shared state) alive, so the game resumes where it was.
-    startHost(readSavedRoom() ?? undefined).then((code) => {
-      localStorage.setItem(
-        HOST_ROOM_KEY,
-        JSON.stringify({ code, at: Date.now() }),
-      );
-      setRoomCode(code);
-    }, (e: Error) => setError(e.message));
+    let settled = false;
+    startHost(readSavedRoom() ?? undefined).then(
+      (code) => {
+        settled = true;
+        localStorage.setItem(
+          HOST_ROOM_KEY,
+          JSON.stringify({ code, at: Date.now() }),
+        );
+        setRoomCode(code);
+      },
+      (e: Error) => {
+        settled = true;
+        setError(e.message);
+      },
+    );
+    // Playroom can hang silently (stale session, no internet). Route a
+    // never-resolving connect into the error screen and its recovery button.
+    const timeout = setTimeout(() => {
+      if (!settled) {
+        setError(
+          "timed out after 15 s. Check the internet connection — the room lives in Playroom's cloud.",
+        );
+      }
+    }, 15_000);
+    return () => clearTimeout(timeout);
   }, []);
 
   if (error) {
     return (
       <Centered>
-        <p className="text-2xl text-red-400">Could not open a room: {error}</p>
+        <div className="flex flex-col items-center gap-6 text-center">
+          <p className="text-2xl text-red-400">Could not open a room: {error}</p>
+          <p className="max-w-md text-zinc-400">
+            This usually means a stale saved room or a kicked session is stuck
+            in this browser's storage.
+          </p>
+          <button
+            onClick={() => {
+              localStorage.clear();
+              sessionStorage.clear();
+              window.location.reload();
+            }}
+            className="rounded-xl bg-amber-500 px-8 py-3 text-lg font-bold text-zinc-950 hover:bg-amber-400"
+          >
+            Clear saved data &amp; open a fresh room
+          </button>
+        </div>
       </Centered>
     );
   }
@@ -114,6 +149,12 @@ function HostGame({ roomCode }: { roomCode: string }) {
     fn();
   }
 
+  // "Back to the lobby" starts a second game with the same night numbers, so
+  // the guard keys must reset or no transition ever fires again.
+  useEffect(() => {
+    if (phase === "lobby") fired.current.clear();
+  }, [phase]);
+
   // night-intro: title card, then on to choosing.
   useEffect(() => {
     if (phase !== "night-intro") return;
@@ -150,8 +191,9 @@ function HostGame({ roomCode }: { roomCode: string }) {
     case "night-intro":
       return (
         <Centered>
-          <div className="text-center">
-            <h1 className="text-8xl font-black tracking-tight">
+          <div className="fade-up text-center">
+            <NightDots night={night} />
+            <h1 className="mt-6 text-8xl font-black tracking-tight">
               NIGHT {night}
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-2xl text-zinc-400">
@@ -180,6 +222,22 @@ function HostGame({ roomCode }: { roomCode: string }) {
     case "epilogue":
       return <EpilogueScreen players={players} />;
   }
+}
+
+/** Week progress: one dot per night, lit up to the current one. */
+function NightDots({ night }: { night: number }) {
+  return (
+    <div className="flex justify-center gap-2" aria-label={`Night ${night} of ${NIGHT_COUNT}`}>
+      {Array.from({ length: NIGHT_COUNT }, (_, i) => (
+        <span
+          key={i}
+          className={`h-2.5 w-2.5 rounded-full ${
+            i < night ? "bg-amber-400" : "bg-zinc-800"
+          }`}
+        />
+      ))}
+    </div>
+  );
 }
 
 /** Re-render every `intervalMs`; returns the current time. 0 = off. */
@@ -218,6 +276,19 @@ function LobbyScreen({
           {roomCode}
         </p>
         <p className="text-lg text-zinc-500">{joinUrl}</p>
+        <button
+          onClick={() => {
+            // Full wipe, not just our saved room: Playroom keeps its own
+            // session state in storage, and a stale/kicked identity makes
+            // the next insertCoin hang forever on "Opening room".
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.reload();
+          }}
+          className="mt-3 text-sm text-zinc-600 underline hover:text-zinc-400"
+        >
+          Start a fresh room
+        </button>
       </header>
 
       <div className="rounded-2xl bg-white p-4">
@@ -245,7 +316,25 @@ function LobbyScreen({
                   <PlayerDot player={player} />
                   {playerName(player)}
                 </span>
-                {waved && <span className="font-mono text-amber-400">waves!</span>}
+                <span className="flex items-center gap-4">
+                  {waved && (
+                    <span className="font-mono text-amber-400">waves!</span>
+                  )}
+                  <button
+                    onClick={() => {
+                      if (
+                        window.confirm(`Kick ${playerName(player)} from the game?`)
+                      ) {
+                        kickPlayer(player);
+                      }
+                    }}
+                    title={`Kick ${playerName(player)}`}
+                    aria-label={`Kick ${playerName(player)}`}
+                    className="rounded-lg border border-zinc-700 px-3 py-1 text-base font-bold text-zinc-500 hover:border-red-500 hover:text-red-400"
+                  >
+                    Kick
+                  </button>
+                </span>
               </li>
             );
           })}
@@ -285,9 +374,12 @@ function ChooseScreen({
   return (
     <main className="flex min-h-screen flex-col gap-8 p-10">
       <header className="flex items-baseline justify-between">
-        <h1 className="text-4xl font-black">
-          Night {night} · Where is everyone going?
-        </h1>
+        <div className="flex items-baseline gap-6">
+          <h1 className="text-4xl font-black">
+            Night {night} · Where is everyone going?
+          </h1>
+          <NightDots night={night} />
+        </div>
         <span
           className={`font-mono text-4xl font-bold ${
             secondsLeft <= 10 ? "text-red-400" : "text-zinc-400"
@@ -341,6 +433,7 @@ function StoryletsScreen({
   const assigned = players.filter((p) => assignments?.[p.id]);
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-10 p-10">
+      <NightDots night={night} />
       <h1 className="text-5xl font-black text-zinc-300">
         Night {night} unfolds…
       </h1>
@@ -372,6 +465,20 @@ function StoryletsScreen({
       <p className="text-zinc-500">
         Their phones know things this screen doesn't.
       </p>
+      <button
+        onClick={() => {
+          if (
+            window.confirm(
+              "End the night now? Players still mid-story won't get an outcome.",
+            )
+          ) {
+            beginResolve();
+          }
+        }}
+        className="rounded-lg border border-zinc-800 px-5 py-2 text-sm text-zinc-600 hover:border-zinc-600 hover:text-zinc-400"
+      >
+        A phone died? End the night without them →
+      </button>
     </main>
   );
 }
@@ -412,9 +519,12 @@ function ResolveScreen({
 
   return (
     <main className="flex min-h-screen flex-col gap-8 p-10">
-      <h1 className="text-center text-4xl font-black text-zinc-300">
-        Night {night} · What happened out there
-      </h1>
+      <div className="flex flex-col items-center gap-4">
+        <NightDots night={night} />
+        <h1 className="text-center text-4xl font-black text-zinc-300">
+          Night {night} · What happened out there
+        </h1>
+      </div>
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5">
         {results.slice(0, shown).map(({ player, result }) => (
           <div
@@ -609,7 +719,7 @@ function EpilogueScreen({ players }: { players: PlayerState[] }) {
         onClick={() => backToLobby()}
         className="rounded-xl border border-zinc-700 px-10 py-4 text-xl font-bold text-zinc-300 hover:border-zinc-500"
       >
-        Back to the lobby
+        Play another week →
       </button>
     </main>
   );

@@ -60,7 +60,13 @@ export async function startHost(rejoinCode?: string): Promise<string> {
       reconnectGracePeriod: RECONNECT_GRACE_MS,
     });
   }
-  await coinInserted;
+  try {
+    await coinInserted;
+  } catch (err) {
+    // A cached rejected promise would brick every retry until a reload.
+    coinInserted = null;
+    throw err;
+  }
   const code = getRoomCode();
   if (!code) throw new Error("Playroom did not return a room code");
   return code;
@@ -79,8 +85,22 @@ export async function joinRoom(roomCode: string, name: string): Promise<void> {
       reconnectGracePeriod: RECONNECT_GRACE_MS,
     });
   }
-  await coinInserted;
+  try {
+    await coinInserted;
+  } catch (err) {
+    // A cached rejected promise would brick every retry until a reload.
+    coinInserted = null;
+    throw err;
+  }
   myPlayer().setState(KEY_NAME, name.trim(), true);
+}
+
+/**
+ * Remove a player from the room (host action). Playroom drops their slot and
+ * shared state; if their phone is still open it falls back to the join form.
+ */
+export async function kickPlayer(player: PlayerState): Promise<void> {
+  await player.kick();
 }
 
 /** Send a PING from this phone; the host screen renders it. */
@@ -96,14 +116,27 @@ export function sendPing(): void {
 export function playerName(player: PlayerState): string {
   return (
     (player.getState(KEY_NAME) as string | undefined) ||
-    player.getProfile().name ||
+    player.getProfile()?.name ||
     "???"
   );
 }
 
+// Fallback palette for players Playroom didn't assign a profile colour to.
+// We join with skipLobby, which skips avatar selection, so getProfile().color
+// can be undefined. Picked by a hash of the player id so a given player keeps
+// the same colour across re-renders instead of flickering.
+const FALLBACK_COLORS = [
+  "#f59e0b", "#ef4444", "#10b981", "#3b82f6",
+  "#a855f7", "#ec4899", "#14b8a6", "#f97316",
+];
+
 /** Profile colour Playroom assigned this player (hex string). */
 export function playerColor(player: PlayerState): string {
-  return player.getProfile().color.hexString;
+  const fromProfile = player.getProfile()?.color?.hexString;
+  if (fromProfile) return fromProfile;
+  let hash = 0;
+  for (const ch of player.id) hash = (hash * 31 + ch.charCodeAt(0)) | 0;
+  return FALLBACK_COLORS[Math.abs(hash) % FALLBACK_COLORS.length];
 }
 
 /** All connected players, re-rendering when any player's state changes. */

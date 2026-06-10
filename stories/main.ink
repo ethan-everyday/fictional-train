@@ -51,6 +51,18 @@ The landlady catches your eye and tilts her head toward an empty stool. In the c
     ~ charm = charm + 1
     ~ outcome = "beat the blacksmith at arm-wrestling and will be dining out on the story for a year."
     -> END
+* {flag_owes_the_landlady} [Work a shift behind the bar to pay your debt]
+    The landlady hands you an apron without a word. Six hours of pouring, mopping, and hearing every secret in the village twice, and she crosses one line out of the little black book.
+    ~ body = body + 1
+    ~ mind = mind + 1
+    ~ outcome = "worked off a debt behind the bar and earned the landlady's rarest currency: a nod."
+    -> END
+* {flag_met_the_stranger} [Find the stranger's corner booth again]
+    The booth is empty, but the stranger's tab is still open — and the landlady lets slip they settle it in manor silverware, always an hour before the harbor bell.
+    ~ mind = mind + 1
+    ~ shadow = shadow + 1
+    ~ outcome = "staked out the stranger's booth and connected the silver, the manor, and the harbor bell."
+    -> END
 
 // ---------------------------------------------------------------- CHURCH
 
@@ -74,6 +86,13 @@ The Old Church is empty except for a hundred lit candles nobody admits to lighti
     Outside, you'd swear one of the gargoyles turned its head to watch you go.
     ~ shadow = shadow + 1
     ~ outcome = "left the church with a silver candle-snuffer and the uncomfortable attention of a gargoyle."
+    -> END
+* {flag_marked_by_the_manor} [Confess what happened at the manor]
+    The verger listens without blinking, then fetches a ledger older than the church and adds your name to a very short list.
+    "You'll want a candle," the verger says, and lights it personally. The weight you've been carrying eases, a little.
+    ~ mind = mind + 1
+    ~ flag_blessed = true
+    ~ outcome = "confessed about the manor, joined a short list in a very old ledger, and left a candle burning."
     -> END
 
 // ---------------------------------------------------------------- MARKET
@@ -123,6 +142,12 @@ The path you came in on is not, on reflection, where you left it.
     ~ mind = mind + 1
     ~ outcome = "climbed the great watch-oak and spotted a light burning in the empty manor."
     -> END
+* {flag_met_the_stranger} [Track the stranger's bootprints off the path]
+    The prints are fresh, with a long, sure stride — heading straight for the manor's back wall, where they simply stop. No gate. No ladder. No prints coming back.
+    ~ shadow = shadow + 1
+    ~ mind = mind + 1
+    ~ outcome = "tracked the stranger's bootprints to the manor's back wall, where they stopped like the ground had opened."
+    -> END
 
 // ---------------------------------------------------------------- HARBOR
 
@@ -148,6 +173,13 @@ A crew is unloading a boat with no name, fast and quiet, and they're a pair of h
     ~ mind = mind + 1
     ~ outcome = "read the tide ledgers and found a boat that arrives every seventh night and never leaves."
     -> END
+* {flag_knows_the_password} [Use the smugglers' knock on the warehouse door]
+    Two slow, three quick. The door opens on crates, charts, and a second harbor that exists only after dark — and nobody inside questions you for a second.
+    You memorise what you can and leave before anyone thinks to.
+    ~ mind = mind + 1
+    ~ shadow = shadow + 1
+    ~ outcome = "gave the warehouse the smugglers' knock, walked it like an old hand, and left knowing far too much."
+    -> END
 
 // ----------------------------------------------------------------- MANOR
 
@@ -171,6 +203,13 @@ The Vane Manor has been empty for thirty years, which doesn't explain the footpr
     ~ shadow = shadow + 1
     ~ flag_marked_by_the_manor = true
     ~ outcome = "broke into the manor cellar, found seven tally marks struck through, and unwisely added an eighth."
+    -> END
+* {flag_found_the_locket} [Hold the ranger's locket up at the gate]
+    The gate, which was locked, is suddenly not. At the end of the drive the front door stands open, exactly as wide as a welcome.
+    You don't go in. But all night the manor's one lit window stays on you like an eye that has finally remembered your face.
+    ~ mind = mind + 1
+    ~ flag_marked_by_the_manor = true
+    ~ outcome = "showed the manor the locket with its own portrait inside, and the manor unlocked its gate in answer."
     -> END
 
 // ---------------------------------------------------------------- FINALE

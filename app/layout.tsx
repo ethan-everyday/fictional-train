@@ -2,14 +2,19 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Seven Nights",
-  description: "A 7-night narrative party game prototype",
+  title: {
+    default: "Seven Nights",
+    template: "%s · Seven Nights",
+  },
+  description:
+    "A storytelling party game: one big screen, 2–6 phones, seven nights in a village with too many secrets.",
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1, // phones: no pinch-zoom jank on button mashing
+  themeColor: "#09090b",
 };
 
 export default function RootLayout({

@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 // playroomkit touches browser globals at import time; never render on the server.
 const HostScreen = dynamic(() => import("@/components/HostScreen"), {
@@ -8,5 +9,9 @@ const HostScreen = dynamic(() => import("@/components/HostScreen"), {
 });
 
 export default function HostPage() {
-  return <HostScreen />;
+  return (
+    <ErrorBoundary>
+      <HostScreen />
+    </ErrorBoundary>
+  );
 }

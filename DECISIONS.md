@@ -20,3 +20,11 @@ One line per architectural choice. Append, don't rewrite history.
 - 2026-06-09 — Host refresh recovery: the host stores its room code in localStorage (2 h window) and rejoins the same room, where Playroom still holds all shared state.
 - 2026-06-09 — The finale knot runs on the party's AVERAGE stats so ending thresholds don't scale with player count.
 - 2026-06-09 — Phase transitions live in `lib/game/state.ts` and are only ever called by the host screen; phones render shared state and never transition.
+- 2026-06-10 — `skipLobby` leaves Playroom profiles without a colour; `playerColor` falls back to a palette colour hashed from the player id (stable per player) instead of crashing.
+- 2026-06-10 — Host can kick players from the lobby (`player.kick()` via `kickPlayer` in connection.ts); kicked browsers recover through the host error screen's "clear saved data" button.
+- 2026-06-10 — `insertCoin`'s once-only guard resets on failure; a cached rejected promise was bricking every retry (wrong room code, kicked session) until a full reload.
+- 2026-06-10 — The host's one-shot transition guard clears when phase returns to lobby; otherwise a second game in the same room never fires its night transitions.
+- 2026-06-10 — Phones wipe `7n:save:*` keys whenever they see the lobby phase, so a replayed room can't resume a stale mid-storylet save from the previous game.
+- 2026-06-10 — Both screens render inside an ErrorBoundary: a runtime error shows a reload button (reconnection makes reload safe) instead of a dead page mid-party.
+- 2026-06-10 — Host gets a force-resolve escape hatch on the storylets screen so one dead phone can't softlock the night; players without a result are simply skipped on the resolve screen.
+- 2026-06-10 — Storylets gain flag-gated bonus choices (`* {flag_x} [...]`): flags earned on earlier nights unlock extra options later in the week, making the seven nights one connected story.

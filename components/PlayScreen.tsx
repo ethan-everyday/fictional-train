@@ -4,8 +4,10 @@ import { FormEvent, useEffect, useState } from "react";
 import StoryletPlayer from "@/components/StoryletPlayer";
 import {
   getMyId,
+  getMyState,
   joinRoom,
   KEY_FLAGS,
+  KEY_NAME,
   KEY_PICK,
   KEY_RESULT,
   KEY_STATS,
@@ -39,8 +41,9 @@ type Status = "form" | "joining" | "joined";
 
 export default function PlayScreen() {
   // Rendered with ssr:false, so window is safe at first render.
-  const codeFromUrl =
-    new URLSearchParams(window.location.search).get("room") ?? "";
+  const codeFromUrl = (
+    new URLSearchParams(window.location.search).get("room") ?? ""
+  ).toUpperCase();
 
   const [roomCode, setRoomCode] = useState(
     codeFromUrl || localStorage.getItem("7n:last-room") || "",
@@ -124,6 +127,18 @@ function PhoneGame({ room }: { room: string }) {
     if (stats === null) setStats(DEFAULT_STATS);
   }, [stats, setStats]);
 
+  // A finished (or abandoned) week leaves mid-storylet saves behind; if the
+  // same room plays again, night 1 would resume a stale story. Lobby = clean.
+  useEffect(() => {
+    if (phase !== "lobby") return;
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key?.startsWith("7n:save:")) localStorage.removeItem(key);
+      }
+    } catch {}
+  }, [phase]);
+
   // Phones sleeping mid-game is a known party-game killer (spec §8).
   useEffect(() => {
     let lock: { release(): Promise<void> } | null = null;
@@ -189,10 +204,11 @@ function PhoneGame({ room }: { room: string }) {
 
 function PhoneLobby({ stats }: { stats: PlayerStats }) {
   const [waved, setWaved] = useState(0);
+  const myName = getMyState<string>(KEY_NAME);
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-8 p-6">
       <p className="text-center text-xl text-zinc-300">
-        You're in. Watch the big screen.
+        You're in{myName ? `, ${myName}` : ""}. Watch the big screen.
       </p>
       <button
         onClick={() => {

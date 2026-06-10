@@ -19,6 +19,12 @@ rejoins its room and the game carries on.
 
 ## Run it
 
+### Windows: double-click `start-game.bat`
+
+It installs dependencies on first run, starts the server on port 3100 bound
+to your LAN, prints the host/join URLs with your actual Wi-Fi IP, and opens
+the host screen in your browser. Close the window to stop the game.
+
 ### On your desktop, phones on the same Wi-Fi (no deploy needed)
 
 ```bash

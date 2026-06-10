@@ -146,12 +146,14 @@ export function runToEnd(
 ): string[] {
   const session = StoryletSession.begin(storyContent, knot, stats, []);
   const paragraphs: string[] = [];
-  for (;;) {
+  // Hard cap so a looping knot can't hang the host's finale forever.
+  for (let i = 0; i < 200; i++) {
     const step = session.step(stats);
     if (step.kind === "paragraph") paragraphs.push(step.text);
     else if (step.kind === "choices") session.choose(0);
     else return paragraphs;
   }
+  return paragraphs;
 }
 
 function readTags(choice: { tags?: string[] | null }): string[] {
