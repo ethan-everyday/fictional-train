@@ -8,6 +8,11 @@ if not exist node_modules (
     call npm install
 )
 
+REM Kill anything still holding the game's port (old/crashed servers),
+REM so a double-click always gets a clean start.
+echo Checking for old servers...
+powershell -NoProfile -Command "Get-NetTCPConnection -State Listen -LocalPort 3100 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Write-Host ('  stopping old server (pid ' + $_ + ')'); Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }"
+
 REM Find this PC's Wi-Fi/LAN IP so the phones know where to point.
 set LANIP=localhost
 for /f %%i in ('powershell -NoProfile -Command "(Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike '169.254*' -and $_.IPAddress -ne '127.0.0.1' } | Select-Object -First 1).IPAddress"') do set LANIP=%%i
