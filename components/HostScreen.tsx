@@ -22,6 +22,7 @@ import {
   STAT_LABELS,
 } from "@/lib/game/constants";
 import {
+  averageStats,
   backToLobby,
   beginChooseLocation,
   beginEpilogue,
@@ -37,6 +38,7 @@ import {
   playerVote,
   publishEnding,
   startGame,
+  useActiveEvent,
   useAssignments,
   useDeadline,
   useEnding,
@@ -140,6 +142,7 @@ function HostGame({ roomCode }: { roomCode: string }) {
   const players = usePlayers();
   const [deadline] = useDeadline();
   const [assignments] = useAssignments();
+  const activeEvent = useActiveEvent(night);
 
   // One-shot guard so transition effects can't double-fire while the local
   // echo of a setState is still in flight.
@@ -197,9 +200,23 @@ function HostGame({ roomCode }: { roomCode: string }) {
             <h1 className="mt-6 text-8xl font-black tracking-tight">
               NIGHT {night}
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-2xl text-zinc-400">
-              {nightIntro(night)}
-            </p>
+            {activeEvent ? (
+              <>
+                <p className="mx-auto mt-6 max-w-2xl text-2xl font-bold text-red-300">
+                  {activeEvent.introOverride}
+                </p>
+                {activeEvent.closedLocation && (
+                  <p className="mt-4 text-lg uppercase tracking-widest text-red-400/80">
+                    {locationDef(activeEvent.closedLocation).name} is closed
+                    tonight
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="mx-auto mt-6 max-w-2xl text-2xl text-zinc-400">
+                {nightIntro(night)}
+              </p>
+            )}
           </div>
         </Centered>
       );
@@ -210,6 +227,7 @@ function HostGame({ roomCode }: { roomCode: string }) {
           players={players}
           deadline={deadline}
           now={now}
+          closed={activeEvent?.closedLocation ?? null}
         />
       );
     case "storylets":
@@ -342,7 +360,7 @@ function LobbyScreen({
         </ul>
         {players.length > 0 && (
           <button
-            onClick={() => startGame()}
+            onClick={() => startGame(players)}
             className="mx-auto mt-8 block rounded-xl bg-amber-500 px-12 py-4 text-2xl font-black text-zinc-950 hover:bg-amber-400"
           >
             BEGIN THE WEEK
@@ -365,11 +383,13 @@ function ChooseScreen({
   players,
   deadline,
   now,
+  closed,
 }: {
   night: number;
   players: PlayerState[];
   deadline: number;
   now: number;
+  closed: string | null;
 }) {
   const secondsLeft = Math.max(0, Math.ceil((deadline - now) / 1000));
   return (
@@ -391,18 +411,23 @@ function ChooseScreen({
       </header>
       <div className="grid flex-1 grid-cols-3 gap-5">
         {LOCATIONS.map((loc) => {
+          const isClosed = loc.id === closed;
           const here = players.filter((p) => playerPick(p, night) === loc.id);
           return (
             <div
               key={loc.id}
               className={`flex flex-col rounded-2xl border p-6 ${
-                here.length > 0
-                  ? "border-amber-500/60 bg-amber-500/5"
-                  : "border-zinc-800"
+                isClosed
+                  ? "border-red-900/60 opacity-50"
+                  : here.length > 0
+                    ? "border-amber-500/60 bg-amber-500/5"
+                    : "border-zinc-800"
               }`}
             >
               <h2 className="text-2xl font-bold">{loc.name}</h2>
-              <p className="text-zinc-400">{loc.blurb}</p>
+              <p className="text-zinc-400">
+                {isClosed ? "Closed tonight." : loc.blurb}
+              </p>
               <div className="mt-auto flex flex-wrap gap-2 pt-4">
                 {here.map((p) => (
                   <PlayerChip key={p.id} player={p} />
@@ -512,10 +537,11 @@ function ResolveScreen({
     const id = setTimeout(() => {
       if (!advanced.current) {
         advanced.current = true;
-        endNight(night);
+        endNight(night, players);
       }
     }, RESOLVE_BEAT_MS);
     return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown, results.length, night]);
 
   return (
@@ -548,7 +574,7 @@ function ResolveScreen({
         onClick={() => {
           if (!advanced.current) {
             advanced.current = true;
-            endNight(night);
+            endNight(night, players);
           }
         }}
         className="mx-auto rounded-xl border border-zinc-700 px-8 py-3 text-lg text-zinc-400 hover:border-zinc-500"
@@ -637,25 +663,6 @@ function FinaleScreen({ players }: { players: PlayerState[] }) {
       </button>
     </main>
   );
-}
-
-function averageStats(all: PlayerStats[]): PlayerStats {
-  const sum = all.reduce(
-    (acc, s) => ({
-      mind: acc.mind + s.mind,
-      body: acc.body + s.body,
-      charm: acc.charm + s.charm,
-      shadow: acc.shadow + s.shadow,
-    }),
-    { mind: 0, body: 0, charm: 0, shadow: 0 },
-  );
-  const n = Math.max(1, all.length);
-  return {
-    mind: Math.round(sum.mind / n),
-    body: Math.round(sum.body / n),
-    charm: Math.round(sum.charm / n),
-    shadow: Math.round(sum.shadow / n),
-  };
 }
 
 // --------------------------------------------------------------- EPILOGUE

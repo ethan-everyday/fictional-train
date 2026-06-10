@@ -208,6 +208,25 @@ Line.
   });
 });
 
+describe("stat clamping", () => {
+  it("clamps runaway stats to 0..STAT_CAP on the way out of ink", () => {
+    const content = compile(`${VARS}
+=== k ===
+Excess.
+~ body = body + 9
+~ shadow = shadow - 9
+~ outcome = "overdid it."
+-> END
+`);
+    const session = StoryletSession.begin(content, "k", STATS, []);
+    session.step(STATS); // paragraph
+    const end = session.step(STATS);
+    if (end.kind !== "end") throw new Error("expected end");
+    expect(end.finalStats.body).toBe(5);
+    expect(end.finalStats.shadow).toBe(0);
+  });
+});
+
 describe("end step", () => {
   it("falls back to a default outcome when ink never set one", () => {
     const content = compile(`${VARS}

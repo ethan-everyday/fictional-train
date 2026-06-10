@@ -19,7 +19,14 @@ import {
   useShared,
   type PlayerState,
 } from "./connection";
-import { CHOOSE_SECONDS, DEFAULT_STATS, LOCATIONS, NIGHT_COUNT } from "./constants";
+import {
+  CHOOSE_SECONDS,
+  DEFAULT_STATS,
+  DRAMA_EVENTS,
+  LOCATIONS,
+  NIGHT_COUNT,
+  type DramaEvent,
+} from "./constants";
 import type {
   GamePhase,
   LocationId,
@@ -35,6 +42,13 @@ const KEY_NIGHT = "night";
 const KEY_DEADLINE = "deadline";
 const KEY_ASSIGNMENTS = "assignments";
 const KEY_ENDING = "ending";
+const KEY_EVENT = "event";
+
+/** The drama event the host rolled for a night (or null = ordinary night). */
+export interface ActiveEvent {
+  id: string;
+  night: number;
+}
 
 // --- Hooks (host and phones) ---
 
@@ -59,6 +73,16 @@ export function useAssignments() {
 /** Finale paragraphs, written once by the host so they survive refreshes. */
 export function useEnding() {
   return useShared<string[] | null>(KEY_ENDING, null);
+}
+
+/**
+ * The full DramaEvent definition active for the given night, or null.
+ * (Shared state stores only {id, night}; the definition lives in constants.)
+ */
+export function useActiveEvent(night: number): DramaEvent | null {
+  const [active] = useShared<ActiveEvent | null>(KEY_EVENT, null);
+  if (!active || active.night !== night) return null;
+  return DRAMA_EVENTS.find((e) => e.id === active.id) ?? null;
 }
 
 // --- Reading other players' state (host screens mostly) ---
@@ -96,16 +120,43 @@ export function playerHistory(p: PlayerState): NightRecord[] {
 
 // --- Host transitions ---
 
-export function startGame(): void {
-  beginNightIntro(1);
+/** The party's average stats; the finale and drama triggers both use this. */
+export function averageStats(all: PlayerStats[]): PlayerStats {
+  const sum = all.reduce(
+    (acc, s) => ({
+      mind: acc.mind + s.mind,
+      body: acc.body + s.body,
+      charm: acc.charm + s.charm,
+      shadow: acc.shadow + s.shadow,
+    }),
+    { mind: 0, body: 0, charm: 0, shadow: 0 },
+  );
+  const n = Math.max(1, all.length);
+  return {
+    mind: Math.round(sum.mind / n),
+    body: Math.round(sum.body / n),
+    charm: Math.round(sum.charm / n),
+    shadow: Math.round(sum.shadow / n),
+  };
 }
 
-export function beginNightIntro(night: number): void {
+export function startGame(players: PlayerState[]): void {
+  beginNightIntro(1, players);
+}
+
+export function beginNightIntro(night: number, players: PlayerState[]): void {
   setShared(KEY_ASSIGNMENTS, null);
   // Clear the old deadline too: if Playroom delivers these writes out of
   // order, a phone could briefly see choose-location with last night's
   // expired timer.
   setShared(KEY_DEADLINE, 0);
+  // Roll the night's drama event off the party's average stats.
+  const avg = averageStats(players.map(playerStats));
+  const event =
+    players.length > 0
+      ? DRAMA_EVENTS.find((e) => night >= e.minNight && e.trigger(avg)) ?? null
+      : null;
+  setShared(KEY_EVENT, event ? { id: event.id, night } : null);
   setShared(KEY_NIGHT, night);
   setShared(KEY_PHASE, "night-intro");
 }
@@ -117,14 +168,22 @@ export function beginChooseLocation(): void {
 
 /**
  * Lock in everyone's locations and start the storylets. Players who never
- * picked get a random location rather than sitting the night out.
+ * picked get a random location rather than sitting the night out. A drama
+ * event's closed location is never assigned, even if somehow picked.
  */
 export function beginStorylets(players: PlayerState[], night: number): void {
+  const active = getShared<ActiveEvent | null>(KEY_EVENT) ?? null;
+  const closed =
+    active && active.night === night
+      ? DRAMA_EVENTS.find((e) => e.id === active.id)?.closedLocation ?? null
+      : null;
+  const open = LOCATIONS.filter((l) => l.id !== closed);
   const assignments: Record<string, LocationId> = {};
   for (const p of players) {
+    const pick = playerPick(p, night);
     assignments[p.id] =
-      playerPick(p, night) ??
-      LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)].id;
+      (pick !== null && pick !== closed ? pick : null) ??
+      open[Math.floor(Math.random() * open.length)].id;
   }
   setShared(KEY_ASSIGNMENTS, assignments);
   setShared(KEY_PHASE, "storylets");
@@ -134,11 +193,11 @@ export function beginResolve(): void {
   setShared(KEY_PHASE, "resolve");
 }
 
-export function endNight(night: number): void {
+export function endNight(night: number, players: PlayerState[]): void {
   if (night >= NIGHT_COUNT) {
     setShared(KEY_PHASE, "finale");
   } else {
-    beginNightIntro(night + 1);
+    beginNightIntro(night + 1, players);
   }
 }
 
@@ -159,5 +218,6 @@ export async function backToLobby(): Promise<void> {
   setShared(KEY_NIGHT, 1);
   setShared(KEY_ENDING, null);
   setShared(KEY_ASSIGNMENTS, null);
+  setShared(KEY_EVENT, null);
   setShared(KEY_PHASE, "lobby");
 }

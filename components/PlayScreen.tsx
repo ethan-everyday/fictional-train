@@ -23,9 +23,11 @@ import {
   locationDef,
   LOCATIONS,
   nightIntro,
+  STAT_CAP,
   STAT_LABELS,
 } from "@/lib/game/constants";
 import {
+  useActiveEvent,
   useAssignments,
   useEnding,
   useNight,
@@ -187,16 +189,27 @@ function PhoneGame({ room }: { room: string }) {
   }
 
   const effectiveStats = stats ?? DEFAULT_STATS;
+  const activeEvent = useActiveEvent(night);
 
   switch (phase) {
     case "lobby":
       return <PhoneLobby stats={effectiveStats} />;
     case "night-intro":
       return (
-        <Waiting title={`Night ${night}`} line={nightIntro(night)} stats={effectiveStats} />
+        <Waiting
+          title={`Night ${night}`}
+          line={activeEvent?.introOverride ?? nightIntro(night)}
+          stats={effectiveStats}
+        />
       );
     case "choose-location":
-      return <PhoneChoose night={night} stats={effectiveStats} />;
+      return (
+        <PhoneChoose
+          night={night}
+          stats={effectiveStats}
+          closed={activeEvent?.closedLocation ?? null}
+        />
+      );
     case "storylets":
       return (
         <PhoneStorylet
@@ -205,6 +218,7 @@ function PhoneGame({ room }: { room: string }) {
           stats={effectiveStats}
           flags={flags}
           history={history}
+          eventId={activeEvent?.id ?? ""}
           result={result}
           onComplete={completeStorylet}
         />
@@ -253,7 +267,15 @@ function PhoneLobby({ stats }: { stats: PlayerStats }) {
   );
 }
 
-function PhoneChoose({ night, stats }: { night: number; stats: PlayerStats }) {
+function PhoneChoose({
+  night,
+  stats,
+  closed,
+}: {
+  night: number;
+  stats: PlayerStats;
+  closed: string | null;
+}) {
   const [pick, setPick] = useMyState<LocationPick | null>(KEY_PICK, null);
   const [assignments] = useAssignments();
   const locked = assignments !== null;
@@ -265,21 +287,30 @@ function PhoneChoose({ night, stats }: { night: number; stats: PlayerStats }) {
         Night {night} · Where will you go?
       </h1>
       <div className="grid grid-cols-2 gap-3">
-        {LOCATIONS.map((loc) => (
-          <button
-            key={loc.id}
-            disabled={locked}
-            onClick={() => setPick({ night, location: loc.id })}
-            className={`rounded-xl border p-4 text-left ${
-              current === loc.id
-                ? "border-amber-400 bg-amber-500/10"
-                : "border-zinc-700 bg-zinc-900"
-            } ${locked ? "opacity-60" : "active:bg-zinc-800"}`}
-          >
-            <span className="block font-bold">{loc.name}</span>
-            <span className="block text-sm text-zinc-400">{loc.blurb}</span>
-          </button>
-        ))}
+        {LOCATIONS.map((loc) => {
+          const isClosed = loc.id === closed;
+          return (
+            <button
+              key={loc.id}
+              disabled={locked || isClosed}
+              onClick={() => setPick({ night, location: loc.id })}
+              className={`rounded-xl border p-4 text-left ${
+                isClosed
+                  ? "border-red-900/60 opacity-40"
+                  : current === loc.id
+                    ? "border-amber-400 bg-amber-500/10"
+                    : "border-zinc-700 bg-zinc-900"
+              } ${locked && !isClosed ? "opacity-60" : ""} ${
+                !locked && !isClosed ? "active:bg-zinc-800" : ""
+              }`}
+            >
+              <span className="block font-bold">{loc.name}</span>
+              <span className="block text-sm text-zinc-400">
+                {isClosed ? "Closed tonight." : loc.blurb}
+              </span>
+            </button>
+          );
+        })}
       </div>
       <p className="text-center text-zinc-400">
         {locked
@@ -299,6 +330,7 @@ function PhoneStorylet({
   stats,
   flags,
   history,
+  eventId,
   result,
   onComplete,
 }: {
@@ -307,6 +339,7 @@ function PhoneStorylet({
   stats: PlayerStats;
   flags: string[];
   history: NightRecord[];
+  eventId: string;
   result: StoryletResult | null;
   onComplete: (r: StoryletResult) => void;
 }) {
@@ -342,6 +375,7 @@ function PhoneStorylet({
       stats={stats}
       flags={flags}
       visits={visits}
+      eventId={eventId}
       saveKey={`7n:save:${room}:n${night}`}
       onComplete={onComplete}
     />
@@ -489,6 +523,7 @@ function StatsBar({ stats, big }: { stats: PlayerStats; big?: boolean }) {
         <span key={s} className="text-center">
           <span className="block font-mono font-bold text-zinc-100">
             {stats[s]}
+            <span className="text-zinc-600">/{STAT_CAP}</span>
           </span>
           <span
             className={s === "shadow" ? "text-purple-400" : "text-zinc-500"}

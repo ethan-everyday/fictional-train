@@ -18,6 +18,14 @@ export const DEFAULT_STATS: PlayerStats = {
   shadow: 0,
 };
 
+/**
+ * Stats clamp to 0..STAT_CAP (enforced by the ink engine on the way out).
+ * Gate escalation convention: "needs 3" early week, "needs 4" behind
+ * {night >= 4} choices, "needs 5" behind {night >= 6} — so growth stays
+ * meaningful all seven nights. The validator rejects gates above the cap.
+ */
+export const STAT_CAP = 5;
+
 export const STAT_LABELS: Record<StatId, string> = {
   mind: "Mind",
   body: "Body",
@@ -47,6 +55,41 @@ export function locationDef(id: LocationId): LocationDef {
   if (!def) throw new Error(`Unknown location: ${id}`);
   return def;
 }
+
+/**
+ * Party-level drama events. Evaluated by the host at each night-intro
+ * against the party's AVERAGE stats; the first match (in order) wins and
+ * the night gets a different title card, an optional closed location, and
+ * an `event` id visible to ink ({event == "dark_tide": ...}).
+ */
+export interface DramaEvent {
+  id: string;
+  /** Earliest night this can fire (events are a mid/late-week thing). */
+  minNight: number;
+  trigger: (avg: PlayerStats) => boolean;
+  /** Replaces nightIntro() on the title card. */
+  introOverride: string;
+  /** This location can't be visited tonight. */
+  closedLocation?: LocationId;
+}
+
+export const DRAMA_EVENTS: DramaEvent[] = [
+  {
+    id: "dark_tide",
+    minNight: 4,
+    trigger: (avg) => avg.shadow >= 3,
+    introOverride:
+      "The tide has come up the channel black and wrong, and the harbor bell is ringing with nobody at the rope. No boats tonight. No harbor tonight.",
+    closedLocation: "harbor",
+  },
+  {
+    id: "lantern_festival",
+    minNight: 3,
+    trigger: (avg) => avg.charm >= 4,
+    introOverride:
+      "Somebody strung lanterns across the square at dusk, and the whole village came out to stand under them. Tonight, Hollowbrook almost lets itself be happy.",
+  },
+];
 
 /** One flavour line per night for the title card. Index = night - 1. */
 export const NIGHT_INTROS: string[] = [

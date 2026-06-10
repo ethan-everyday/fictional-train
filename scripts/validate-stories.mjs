@@ -19,6 +19,18 @@ const NEEDS_TAG = /^needs:\s*(mind|body|charm|shadow)\s+(\d+)\s*$/i;
 const STAT_IDS = ["mind", "body", "charm", "shadow"];
 const REQUIRED_GLOBALS = [...STAT_IDS, "outcome", "night", "visits", "event"];
 
+/** STAT_CAP from lib/game/constants.ts; a gate above it can never be met. */
+function statCap() {
+  try {
+    const src = readFileSync("lib/game/constants.ts", "utf8");
+    const m = src.match(/STAT_CAP\s*=\s*(\d+)/);
+    return m ? parseInt(m[1], 10) : Infinity;
+  } catch {
+    return Infinity;
+  }
+}
+const STAT_CAP = statCap();
+
 const MAX_DEPTH = 6;
 const MAX_PATHS = 500;
 
@@ -91,9 +103,15 @@ function walkKnotOnce(storyJson, knot, ctx, { forbidChoices = false } = {}) {
     // Tag check on every choice we encounter.
     for (const choice of choices) {
       for (const tag of choice.tags ?? []) {
-        if (/needs/i.test(tag) && !NEEDS_TAG.test(tag.trim())) {
+        if (!/needs/i.test(tag)) continue;
+        const match = NEEDS_TAG.exec(tag.trim());
+        if (!match) {
           problems.push(
             `${knot}: choice "${choice.text}" has malformed gate tag "# ${tag}" (want "# needs: stat N")`,
+          );
+        } else if (parseInt(match[2], 10) > STAT_CAP) {
+          problems.push(
+            `${knot}: choice "${choice.text}" needs ${match[1]} ${match[2]}, but stats cap at ${STAT_CAP} — permanently disabled`,
           );
         }
       }

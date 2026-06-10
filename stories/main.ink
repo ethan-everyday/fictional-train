@@ -38,6 +38,8 @@ VAR flag_marked_by_the_manor = false
 
 === storylet_tavern ===
 {visits == 0: The Crooked Lantern is packed wall to wall, and the air smells of spilled cider and wet dog. | The Lantern's regulars nod as you come in. You have a usual seat now, which is either belonging or a warning.}
+{event == "dark_tide": Half the room is harbor crew tonight, drinking like the sea owes them money. The boats won't go out, and nobody will say the word for why.}
+{event == "lantern_festival": The festival has spilled in from the square; somebody is standing on a table conducting the room in a song that has no fixed words.}
 The landlady catches your eye and tilts her head toward an empty stool. In the corner booth, someone in a travel cloak is buying drinks for anyone who'll talk.
 * [Buy a round for the whole room]
     You put your coins on the bar like a magician revealing a card. The room cheers your name. Twice.
@@ -116,6 +118,8 @@ The landlady catches your eye and tilts her head toward an empty stool. In the c
 
 === storylet_market ===
 {visits == 0: The Night Market only opens after dark, which everyone agrees is normal and fine. | The market knows you now. Two stallholders wave; a third quietly puts something under the counter as you pass.}
+{event == "dark_tide": The fish stalls stand empty and wet. The tide came up the channel wrong tonight, and the market is pretending very hard not to smell it.}
+{event == "lantern_festival": Festival lanterns hang between the stalls, and for once the unlabelled-goods table has a queue.}
 Stalls sell lamp oil, bad knives, excellent pies, and one table at the end sells things with no labels at all.
 * [Haggle for one of the unlabelled things]
     The stallholder names a price. You laugh. They name another. You weep theatrically.

@@ -13,7 +13,7 @@
 
 import { Story } from "inkjs";
 import type { PlayerStats, StatId, UiChoice } from "@/lib/game/types";
-import { STAT_LABELS } from "@/lib/game/constants";
+import { STAT_CAP, STAT_LABELS } from "@/lib/game/constants";
 
 const STAT_IDS: StatId[] = ["mind", "body", "charm", "shadow"];
 const FLAG_PREFIX = "flag_";
@@ -140,7 +140,10 @@ export class StoryletSession {
   private readStats(): PlayerStats {
     const stats = {} as PlayerStats;
     for (const stat of STAT_IDS) {
-      stats[stat] = Number(this.story.variablesState.$(stat)) || 0;
+      const raw = Number(this.story.variablesState.$(stat)) || 0;
+      // Clamp here, at the single point stats leave ink, so no storylet can
+      // push a stat past the cap (or below zero) no matter what it writes.
+      stats[stat] = Math.max(0, Math.min(STAT_CAP, raw));
     }
     return stats;
   }
