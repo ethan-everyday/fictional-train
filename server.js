@@ -23,8 +23,10 @@ const { WebSocketServer } = require("ws");
 const DEV = process.argv.includes("--dev");
 const PORT = Number(process.env.PORT) || (DEV ? 3199 : 3100);
 const OUT_DIR = path.join(__dirname, "out");
-const STATE_DIR = path.join(__dirname, ".seven-nights");
-const STATE_FILE = path.join(STATE_DIR, "rooms.json");
+
+// Where room state persists. The desktop app overrides this via start()
+// because a packaged app can't write inside its own bundle.
+let stateFile = path.join(__dirname, ".seven-nights", "rooms.json");
 
 /** How long a closed socket keeps its player marked connected (blip grace).
  * Env override exists so tests don't have to wait out the real grace. */
@@ -125,7 +127,7 @@ function scheduleSave() {
   saveTimer = setTimeout(() => {
     saveTimer = null;
     try {
-      fs.mkdirSync(STATE_DIR, { recursive: true });
+      fs.mkdirSync(path.dirname(stateFile), { recursive: true });
       const blob = [...rooms.values()].map((room) => ({
         code: room.code,
         createdAt: room.createdAt,
@@ -138,7 +140,7 @@ function scheduleSave() {
           state: p.state,
         })),
       }));
-      fs.writeFileSync(STATE_FILE, JSON.stringify(blob));
+      fs.writeFileSync(stateFile, JSON.stringify(blob));
     } catch (err) {
       console.warn("could not persist rooms:", err.message);
     }
@@ -147,7 +149,7 @@ function scheduleSave() {
 
 function loadRooms() {
   try {
-    const blob = JSON.parse(fs.readFileSync(STATE_FILE, "utf8"));
+    const blob = JSON.parse(fs.readFileSync(stateFile, "utf8"));
     for (const r of blob) {
       if (Date.now() - r.touchedAt > ROOM_TTL_MS) continue;
       const room = {
@@ -193,7 +195,17 @@ function handleSocket(ws) {
   /** Set after hello: { room, role: "host" | "player", clientId } */
   let session = null;
 
+  // Liveness for the heartbeat sweep: browsers answer protocol pings
+  // automatically, so a socket that stops ponging is genuinely dead
+  // (battery died, walked out of range) and gets terminated, which fires
+  // the normal close/debounce path instead of blocking the night forever.
+  ws.isAlive = true;
+  ws.on("pong", () => {
+    ws.isAlive = true;
+  });
+
   ws.on("message", (raw) => {
+    ws.isAlive = true;
     if (raw.length > MAX_MSG_BYTES) return ws.close(1009, "too big");
     let msg;
     try {
@@ -222,6 +234,10 @@ function handleSocket(ws) {
       if (player && player.attachedSocket === ws) {
         player.attachedSocket = null;
         player.disconnectTimer = setTimeout(() => {
+          // The player may have been kicked or replaced since the timer was
+          // armed; never broadcast presence for an object no longer in the
+          // room (it would resurrect a "???" ghost on every client).
+          if (room.players.get(clientId) !== player) return;
           if (!player.attachedSocket) {
             player.connected = false;
             presence(room, player);
@@ -343,6 +359,12 @@ function handleMessage(ws, msg, session, setSession) {
       if (role !== "host") return;
       const player = room.players.get(String(msg.id));
       if (!player) return;
+      // A pending disconnect-debounce timer must die with the player, or it
+      // fires later and broadcasts presence for a ghost.
+      if (player.disconnectTimer) {
+        clearTimeout(player.disconnectTimer);
+        player.disconnectTimer = null;
+      }
       room.players.delete(String(msg.id));
       if (player.attachedSocket) {
         send(player.attachedSocket, { t: "kicked" });
@@ -464,7 +486,8 @@ function serveStatic(req, res) {
 
 // --------------------------------------------------------------- start
 
-function start({ port = PORT, dev = DEV } = {}) {
+function start({ port = PORT, dev = DEV, stateDir } = {}) {
+  if (stateDir) stateFile = path.join(stateDir, "rooms.json");
   loadRooms();
 
   const server = http.createServer((req, res) => {
@@ -478,6 +501,25 @@ function start({ port = PORT, dev = DEV } = {}) {
 
   const wss = new WebSocketServer({ server, path: "/ws" });
   wss.on("connection", handleSocket);
+
+  // Heartbeat: terminate sockets that stop answering pings so abrupt phone
+  // deaths surface within ~2x the interval instead of OS TCP timeouts
+  // (minutes). terminate() emits 'close', which runs the normal debounce.
+  const HEARTBEAT_MS = Number(process.env.SEVEN_NIGHTS_HEARTBEAT_MS) || 10_000;
+  const heartbeat = setInterval(() => {
+    for (const ws of wss.clients) {
+      if (ws.isAlive === false) {
+        ws.terminate();
+        continue;
+      }
+      ws.isAlive = false;
+      try {
+        ws.ping();
+      } catch {}
+    }
+  }, HEARTBEAT_MS);
+  heartbeat.unref();
+  wss.on("close", () => clearInterval(heartbeat));
 
   server.listen(port, "0.0.0.0", () => {
     console.log(

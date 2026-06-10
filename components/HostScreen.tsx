@@ -212,10 +212,17 @@ function HostGame({ roomCode }: { roomCode: string }) {
   }
 
   // "Back to the lobby" starts a second game with the same night numbers, so
-  // the guard keys must reset or no transition ever fires again.
+  // the guard keys must reset or no transition ever fires again. And a
+  // reconnect snapshot can roll shared state BACKWARD (writes lost on a
+  // dead-but-open socket); re-arm the current phase's exit transition so the
+  // rescheduled timer/effect can fire it again. No-op in normal forward flow.
   useEffect(() => {
     if (phase === "lobby") fired.current.clear();
-  }, [phase]);
+    else if (phase === "night-intro") fired.current.delete(`choose-${night}`);
+    else if (phase === "choose-location")
+      fired.current.delete(`storylets-${night}`);
+    else if (phase === "storylets") fired.current.delete(`resolve-${night}`);
+  }, [phase, night]);
 
   // night-intro: title card, then on to choosing.
   useEffect(() => {

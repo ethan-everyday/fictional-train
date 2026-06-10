@@ -2,81 +2,88 @@
 
 A 7-night narrative party game: one host screen (TV/laptop), 2–6 phones as
 controllers, story content driven by [Ink](https://www.inklestudios.com/ink/).
-This repo is the **Phase 1 prototype** — see the spec for the full picture.
 
-## Status: M1–M5 built, awaiting real-phone testing
+Setting: grounded medieval — seven nights before the Michaelmas Fair in the
+village of Hollowbrook. Seven locations (church, tavern, market, farms,
+castle, slums, docks), each with its own people (the priest, the innkeep and
+gamblers, the Shire Reeve, the lord, the foreign traders…), stat-gated and
+flag-gated choices, and a week that remembers what you did.
 
-The whole prototype loop is in: lobby → night intro → choose location (60 s
-soft timer) → private storylets on phones → resolve on the big screen → ×7
-nights → finale (three Ink endings off the party's average stats) → vote →
-epilogue scoreboard. Setting: grounded medieval — seven nights before the
-Michaelmas Fair in the village of Hollowbrook. Seven locations (church,
-tavern, market, farms, castle, slums, docks), each with its own people
-(the priest, the innkeep and gamblers, the Shire Reeve, the lord, the
-foreign traders…), stat-gated and flag-gated choices, and a week that
-remembers what you did.
+## Architecture: local-first, Steam-shaped
 
-Reconnection basics: a phone refresh mid-storylet resumes where it was (ink
-state in localStorage, stats via Playroom's grace period); a host refresh
-rejoins its room and the game carries on.
+The game hosts its own multiplayer. **No cloud, no account, no internet
+required** — the host machine runs a small server (`server.js`) that serves
+the game and syncs state; phones on the same Wi-Fi connect straight to it.
+Wi-Fi blips and phone refreshes self-heal: clients auto-reconnect and pick
+up exactly where they were, and room state is persisted to disk so even the
+server restarting mid-game recovers the night.
+
+```
+[Host PC: server.js] ── serves ──> host screen (this PC's browser/window)
+        ^ ws                        phones browse to http://<lan-ip>:3100/play
+        └──────── ws ─────────────  2–6 phones on the same Wi-Fi
+```
 
 ## Run it
 
 ### Windows: double-click `start-game.bat`
 
-It installs dependencies on first run, starts the server on port 3100 bound
-to your LAN, prints the host/join URLs with your actual Wi-Fi IP, and opens
-the host screen in your browser. Close the window to stop the game.
+Installs dependencies on first run, builds once, kills any stale servers,
+starts the game on port 3100, and opens the host screen with the QR code
+phones scan. Close the window to stop. After changing code, run
+`start-game.bat --rebuild`.
 
-### On your desktop, phones on the same Wi-Fi (no deploy needed)
+If phones can't reach the page, allow Node through Windows Firewall
+(inbound TCP 3100), and make sure the phones are on the same Wi-Fi network
+(router "guest/AP isolation" modes block device-to-device traffic).
+
+### Desktop app (the Steam build)
 
 ```bash
-git clone https://github.com/ethan-everyday/fictional-train.git seven-nights
-cd seven-nights
-npm install
-npm run dev
+npm run build      # once
+npm run desktop    # Electron window embedding the server
+npm run dist       # package: NSIS installer + portable .exe in /dist
 ```
 
-Next prints two URLs — use the **Network** one (e.g.
-`http://192.168.1.23:3000`), not localhost:
+The packaged app is the product: players install one thing, double-click
+one icon, and the host window opens with the room code. Phones join via QR.
 
-1. Open `http://<that-ip>:3000/host` on the desktop. **Important:** open the
-   host page via the network IP, not localhost — the QR code encodes whatever
-   address the host page was opened on, and phones can't reach localhost.
-2. Scan the QR with each phone (or browse to
-   `http://<that-ip>:3000/play` and type the room code).
-3. The game itself syncs through Playroom's cloud, so only the page needs to
-   be on your LAN.
+### Development (hot reload)
 
-If the Network URL doesn't appear or phones can't connect, check the desktop
-firewall allows inbound port 3000, or run `npm run dev -- -H 0.0.0.0`.
+Double-click `dev-game.bat`, or run the two halves yourself:
 
-### Public URL (for testing away from home)
+```bash
+npm run ws    # game server (WebSocket only) on 3199
+npm run dev   # next dev on 3100
+```
 
-Import the repo once at vercel.com/new (framework auto-detects, no env vars);
-every push then gets a URL. Open `<deploy-url>/host` on the big screen and
-scan from anywhere.
+## Testing
 
-## Sound (optional)
+```bash
+npm test       # engine unit tests + server protocol tests (real sockets)
+npm run e2e    # Playwright: two phones play a FULL 7-night game to the
+               # epilogue and start a second week; phone refresh mid-story
+               # auto-rejoins and resumes (requires `npm run build` first)
+```
 
-The host screen plays an ambient bed + stingers if you drop files into
-`public/audio/`: `ambient.mp3` (loops), `stinger-night.mp3`,
-`stinger-drama.mp3`, `stinger-resolve.mp3`, `stinger-finale.mp3`. Missing
-files are silently skipped — the repo ships silent. Phones never play sound.
-Mute toggle bottom-right of the host screen.
+CI runs all of it on every push.
 
 ## Layout
 
 ```
+server.js        the whole multiplayer backend + static file server
+electron/        desktop shell: embeds server.js, opens the host window
 /app
-  /host        the TV/laptop screen
-  /play        the phone controller
-/components    the actual screens (loaded client-only)
+  /host          the TV/laptop screen
+  /play          the phone controller
+/components      the actual screens (loaded client-only)
 /lib
-  /game        ALL multiplayer code + the turn machine; nothing else imports playroomkit
-  /ink         ALL ink code; nothing else imports inkjs
-/stories       Ink sources; `npm run stories` compiles them to /public/stories
-/scripts       the ink → JSON build step (runs automatically before dev/build)
+  /game          connection.ts + socket.ts (ALL multiplayer), turn machine
+  /ink           ALL ink code; nothing else imports inkjs
+  /audio         host-only sound (ambient + stingers, silence-tolerant)
+/stories         Ink sources; `npm run stories` compiles + contract-checks
+/scripts         ink build + validator (runs automatically before dev/build)
+/tests           server protocol tests        /e2e   full-game Playwright
 ```
 
 Ground rules: multiplayer goes through `/lib/game`, Ink goes through
@@ -101,17 +108,24 @@ The contract per storylet knot:
   or `""` on an ordinary night). Branch with conditional text
   `{visits == 0: first-time line | return-visit line}`, gate choices with
   `* {night >= 5} [...]`, or dispatch whole variants at the top of a knot:
-  `{night >= 6: -> storylet_manor_endweek}` (see the manor for the pattern).
+  `{night >= 6: -> storylet_castle_eve}` (see the castle for the pattern).
 - **Each night is a fresh story.** Sequences, cycles, and read counts do NOT
   carry between nights — only stats, `flag_*`, and the context vars above do.
 - `npm run stories` compiles AND contract-checks every knot (every choice
   path must reach END with `outcome` set, gate tags must parse, finale knots
   must be choice-free). Run it after every writing session.
 
-## Milestones
+## Sound (optional)
 
-- [x] **M1 Plumbing** — room code, QR, join, PING round-trip
-- [x] **M2 Turn machine** — GamePhase state machine, choose-location round, soft timer
-- [x] **M3 Ink runtime** — storylets compiled from ink, stat gates, stat changes, resolve screen
-- [x] **M4 Full night loop** — six placeholder storylets, 7 nights, finale + epilogue *(needs the 3-human playtest)*
-- [x] **M5 Reconnection + finale** — phone refresh resumes mid-storylet, host refresh recovers, 3 stub endings *(needs the kill-a-phone test)*
+The host screen plays an ambient bed + stingers from `public/audio/`:
+`ambient.mp3` (loops), `stinger-night.mp3`, `stinger-drama.mp3`,
+`stinger-resolve.mp3`, `stinger-finale.mp3`. Missing files are silently
+skipped. Phones never play sound. Mute toggle bottom-right of the host.
+
+## Toward Steam
+
+The pieces in place: the desktop app embeds everything (no install steps
+beyond the app itself), works fully offline, and the e2e suite plays whole
+games against the exact build that ships. Remaining for a storefront build:
+app icon + store art, code signing, Steamworks SDK integration (overlay,
+achievements if wanted), and a settled title.

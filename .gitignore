@@ -10,6 +10,9 @@
 /test-results/
 /playwright-report/
 
+# packaged desktop builds
+/dist/
+
 # production
 /build
 

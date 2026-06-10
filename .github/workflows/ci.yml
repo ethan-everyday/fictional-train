@@ -4,6 +4,10 @@ on:
   push:
   pull_request:
 
+env:
+  # CI never launches the desktop shell; skip the ~100MB binary.
+  ELECTRON_SKIP_BINARY_DOWNLOAD: 1
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -18,7 +22,18 @@ jobs:
         run: npm run stories
       - name: Typecheck
         run: npx tsc --noEmit
-      - name: Unit tests
+      - name: Unit + protocol tests
         run: npm test
       - name: Production build
         run: npm run build
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+      - name: Full-game end-to-end
+        run: npm run e2e
+      - name: Upload e2e failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results
+          path: test-results/
+          if-no-files-found: ignore

@@ -115,9 +115,10 @@ export default function StoryletPlayer({
       setChoices(step.choices);
       persist();
     } else {
-      try {
-        localStorage.removeItem(saveKey);
-      } catch {}
+      // Deliberately do NOT delete the save here: if the phone is offline
+      // right now, the result write is queued and this save is the backstop.
+      // PhoneGame clears it once the night actually resolves (and the lobby
+      // sweep catches any stragglers).
       onComplete({
         night,
         location,

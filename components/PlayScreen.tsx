@@ -50,6 +50,7 @@ export default function PlayScreen() {
   const params = new URLSearchParams(window.location.search);
   const codeFromUrl = (params.get("room") ?? "").toUpperCase();
   const wasKicked = params.get("kicked") === "1";
+  const roomLost = params.get("lost") === "1";
 
   const [roomCode, setRoomCode] = useState(
     codeFromUrl || localStorage.getItem("7n:last-room") || "",
@@ -57,7 +58,11 @@ export default function PlayScreen() {
   const [name, setName] = useState(localStorage.getItem("7n:last-name") ?? "");
   const [status, setStatus] = useState<Status>("form");
   const [error, setError] = useState<string | null>(
-    wasKicked ? "The host removed you from the game." : null,
+    wasKicked
+      ? "The host removed you from the game."
+      : roomLost
+        ? "That game has ended or the room expired."
+        : null,
   );
 
   // A refresh mid-game should not need a tap: if this tab was already in a
@@ -67,7 +72,7 @@ export default function PlayScreen() {
   useEffect(() => {
     if (autoTried.current) return;
     autoTried.current = true;
-    if (wasKicked) return;
+    if (wasKicked || roomLost) return;
     let hadSession = false;
     try {
       hadSession = sessionStorage.getItem("7n:player-id") !== null;
@@ -172,6 +177,14 @@ function PhoneGame({ room }: { room: string }) {
       }
     } catch {}
   }, [phase]);
+
+  // The night's recovery save has done its job once the night resolves.
+  useEffect(() => {
+    if (phase !== "resolve") return;
+    try {
+      localStorage.removeItem(`7n:save:${room}:n${night}`);
+    } catch {}
+  }, [phase, room, night]);
 
   // Phones sleeping mid-game is a known party-game killer (spec §8).
   // NOTE: wakeLock needs a secure context — it silently no-ops over plain

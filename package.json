@@ -2,6 +2,7 @@
   "name": "seven-nights",
   "version": "0.1.0",
   "private": true,
+  "main": "electron/main.js",
   "scripts": {
     "stories": "node scripts/compile-stories.mjs",
     "predev": "npm run stories",
@@ -11,9 +12,35 @@
     "build": "next build",
     "serve": "node server.js",
     "game": "npm run build && node server.js",
+    "desktop": "electron electron/main.js",
+    "dist": "npm run build && electron-builder --win",
     "lint": "next lint",
     "test": "vitest run",
     "e2e": "playwright test"
+  },
+  "build": {
+    "appId": "uk.everydaycreatives.sevennights",
+    "productName": "Seven Nights",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**",
+      "server.js",
+      "out/**",
+      "node_modules/ws/**",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "deleteAppDataOnUninstall": false
+    }
   },
   "dependencies": {
     "inkjs": "^2.4.0",
@@ -28,7 +55,10 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/ws": "^8.18.1",
     "autoprefixer": "^10.4.20",
+    "electron": "^42.4.0",
+    "electron-builder": "^26.15.2",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "typescript": "^5",

@@ -109,11 +109,43 @@ let closedForGood = false;
 
 let resolveHello: ((value: string) => void) | null = null;
 let rejectHello: ((err: Error) => void) | null = null;
+/** Hello ack held until the snapshot lands, so callers never see an empty store. */
+let pendingHello: string | null = null;
 
-function sendRaw(msg: Record<string, Json>): void {
+// Writes attempted while the socket was down — newest value per key.
+// Replayed (locally over the snapshot AND to the server) after reconnect,
+// so a reconnect snapshot can never roll back state the server hasn't seen.
+// Safe because every write is an absolute key set, never a delta.
+const queuedShared = new Map<string, Json>();
+const queuedPlayer = new Map<string, { id: string; key: string; value: Json }>();
+
+function sendRaw(msg: Record<string, Json>): boolean {
   if (socket && socket.readyState === WebSocket.OPEN) {
     socket.send(JSON.stringify(msg));
+    return true;
   }
+  return false;
+}
+
+function replayQueuedWrites(): void {
+  if (queuedShared.size === 0 && queuedPlayer.size === 0) return;
+  queuedShared.forEach((value, key) => {
+    store.shared[key] = value;
+    sendRaw({ t: "set-shared", key, value });
+  });
+  queuedPlayer.forEach(({ id, key, value }) => {
+    const player = store.players.get(id);
+    if (player) player.state[key] = value;
+    sendRaw({ t: "set-player", id, key, value });
+  });
+  queuedShared.clear();
+  queuedPlayer.clear();
+  store.bump();
+}
+
+function clearQueuedWrites(): void {
+  queuedShared.clear();
+  queuedPlayer.clear();
 }
 
 function hello(): void {
@@ -179,23 +211,34 @@ function handleMessage(msg: any): void {
   switch (msg.t) {
     case "room": {
       store.connectedToServer = true;
+      // CRITICAL: remember the assigned code so every future reconnect
+      // rejoins THIS room. Without this, a host blip re-sends create with
+      // no code, the server mints a fresh room, and the game splits.
+      if (desiredRole?.kind === "host") {
+        desiredRole.rejoinCode = String(msg.code);
+      }
       store.bump();
-      resolveHello?.(String(msg.code));
-      resolveHello = null;
-      rejectHello = null;
+      pendingHello = String(msg.code);
       return;
     }
     case "joined": {
       store.connectedToServer = true;
       store.myId = String(msg.playerId);
       store.bump();
-      resolveHello?.(String(msg.playerId));
-      resolveHello = null;
-      rejectHello = null;
+      pendingHello = String(msg.playerId);
       return;
     }
     case "snapshot": {
       store.applySnapshot(msg);
+      replayQueuedWrites();
+      // Resolve the hello only now: components must never mount against an
+      // empty store (it wiped storylet saves and stomped stats once).
+      if (pendingHello !== null) {
+        resolveHello?.(pendingHello);
+        resolveHello = null;
+        rejectHello = null;
+        pendingHello = null;
+      }
       return;
     }
     case "shared": {
@@ -234,6 +277,7 @@ function handleMessage(msg: any): void {
     }
     case "kicked": {
       closedForGood = true;
+      clearQueuedWrites();
       try {
         sessionStorage.removeItem("7n:player-id");
       } catch {}
@@ -246,8 +290,22 @@ function handleMessage(msg: any): void {
         rejectHello(err);
         rejectHello = null;
         resolveHello = null;
+        pendingHello = null;
         // The hello failed (bad room code etc.) — stop retrying this role.
         desiredRole = null;
+      } else if (desiredRole && !store.connectedToServer) {
+        // A hello re-sent by auto-reconnect was rejected (the room is gone:
+        // server lost it or TTL-purged it). The socket is open, so onclose
+        // never fires — without this branch the client would sit on stale
+        // state showing "reconnecting…" forever.
+        const wasPlayer = desiredRole.kind === "player";
+        desiredRole = null;
+        closedForGood = true;
+        clearQueuedWrites();
+        try {
+          socket?.close();
+        } catch {}
+        window.location.replace(wasPlayer ? "/play?lost=1" : "/host");
       }
       return;
     }
@@ -287,11 +345,14 @@ export function connectAsPlayer(
 
 // ------------------------------------------------- outgoing state writes
 
-/** Host-only: write a shared key. Applied locally first (optimistic). */
+/** Host-only: write a shared key. Applied locally first (optimistic);
+ * queued for replay if the socket is down. */
 export function writeShared(key: string, value: Json): void {
   store.shared[key] = value;
   store.bump();
-  sendRaw({ t: "set-shared", key, value });
+  if (!sendRaw({ t: "set-shared", key, value })) {
+    queuedShared.set(key, value);
+  }
 }
 
 /** Write a player-state key (own id for phones; any id for the host). */
@@ -301,7 +362,9 @@ export function writePlayer(id: string, key: string, value: Json): void {
     player.state[key] = value;
     store.bump();
   }
-  sendRaw({ t: "set-player", id, key, value });
+  if (!sendRaw({ t: "set-player", id, key, value })) {
+    queuedPlayer.set(`${id}:${key}`, { id, key, value });
+  }
 }
 
 export function sendKick(id: string): void {
@@ -309,6 +372,8 @@ export function sendKick(id: string): void {
 }
 
 export function sendReset(keepPlayerKeys: string[]): void {
+  // Queued pre-reset writes must not resurrect the old game after replay.
+  clearQueuedWrites();
   // Optimistic local apply so the host's next writes layer on a clean slate.
   store.shared = {};
   store.players.forEach((player) => {

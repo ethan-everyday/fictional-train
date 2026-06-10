@@ -12,8 +12,10 @@ process.env.SEVEN_NIGHTS_DEBOUNCE_MS = "120";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { start } = require("../server.js");
 
+import type { Server } from "node:http";
+
 let port = 0;
-let handle: { server: { close(cb?: () => void): void; address(): unknown } };
+let handle: { server: Server };
 
 beforeAll(async () => {
   handle = start({ port: 0, dev: true });
@@ -265,6 +267,25 @@ describe("host controls", () => {
     expect(frank?.state).toEqual({ name: "Frank" });
     h.close();
     p.close();
+  });
+
+  it("kicking a player inside the disconnect-debounce window leaves no ghost", async () => {
+    const { c: h, code } = await host();
+    const p = await join(code, "ghost-1", "Ghost");
+    await h.next((m) => m.t === "presence" && m.id === "ghost-1");
+
+    // Phone drops (debounce timer armed), host kicks before it fires.
+    p.close();
+    await sleep(20);
+    h.send({ t: "kick", id: "ghost-1" });
+    await h.next((m) => m.t === "player-left" && m.id === "ghost-1");
+
+    // Past the debounce: no resurrection presence for the kicked player.
+    await sleep(300);
+    expect(
+      h.inbox.find((m) => m.t === "presence" && m.id === "ghost-1"),
+    ).toBe(undefined);
+    h.close();
   });
 
   it("a 7th player is rejected with FULL", async () => {
