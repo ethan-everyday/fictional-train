@@ -140,6 +140,8 @@ function PhoneGame({ room }: { room: string }) {
   }, [phase]);
 
   // Phones sleeping mid-game is a known party-game killer (spec §8).
+  // NOTE: wakeLock needs a secure context — it silently no-ops over plain
+  // http on a LAN IP. Only the HTTPS deploy gets real wake locks.
   useEffect(() => {
     let lock: { release(): Promise<void> } | null = null;
     const request = () =>

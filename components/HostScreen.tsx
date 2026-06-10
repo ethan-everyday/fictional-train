@@ -469,7 +469,7 @@ function StoryletsScreen({
         onClick={() => {
           if (
             window.confirm(
-              "End the night now? Players still mid-story won't get an outcome.",
+              "End the night now? Players still mid-story won't get an outcome, and a permanently disconnected phone drops out of the finale.",
             )
           ) {
             beginResolve();

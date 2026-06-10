@@ -36,6 +36,16 @@ export const KEY_VOTE = "vote";
 /** How long Playroom keeps a disconnected player's slot + state alive. */
 const RECONNECT_GRACE_MS = 3 * 60 * 1000;
 
+/** README says 2–6 phones; without this a 7th join degrades the pacing. */
+const MAX_PLAYERS = 6;
+
+/**
+ * Playroom project id. Empty string = anonymous dev mode, which works but
+ * carries dev branding/limits. Before a public release, register a free game
+ * at dev.joinplayroom.com and paste its id here.
+ */
+const GAME_ID = "";
+
 export interface Ping {
   count: number;
   at: number; // epoch ms of the latest ping
@@ -54,10 +64,12 @@ let coinInserted: Promise<void> | null = null;
 export async function startHost(rejoinCode?: string): Promise<string> {
   if (!coinInserted) {
     coinInserted = insertCoin({
+      gameId: GAME_ID || undefined,
       streamMode: true,
       skipLobby: true,
       roomCode: rejoinCode?.trim().toUpperCase() || undefined,
       reconnectGracePeriod: RECONNECT_GRACE_MS,
+      maxPlayersPerRoom: MAX_PLAYERS,
     });
   }
   try {
@@ -80,9 +92,11 @@ export async function startHost(rejoinCode?: string): Promise<string> {
 export async function joinRoom(roomCode: string, name: string): Promise<void> {
   if (!coinInserted) {
     coinInserted = insertCoin({
+      gameId: GAME_ID || undefined,
       skipLobby: true,
       roomCode: roomCode.trim().toUpperCase(),
       reconnectGracePeriod: RECONNECT_GRACE_MS,
+      maxPlayersPerRoom: MAX_PLAYERS,
     });
   }
   try {

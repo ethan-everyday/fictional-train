@@ -5,6 +5,7 @@
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { Compiler } from "inkjs/full";
+import { validateStory } from "./validate-stories.mjs";
 
 const SRC_DIR = "stories";
 const OUT_DIR = join("public", "stories");
@@ -23,9 +24,16 @@ for (const file of sources) {
   try {
     const story = new Compiler(source).Compile();
     const json = story.ToJson();
+    const problems = validateStory(JSON.parse(json), file);
+    if (problems.length > 0) {
+      failed = true;
+      console.error(`CONTRACT violations in ${file}:`);
+      for (const p of problems) console.error(`  - ${p}`);
+      continue;
+    }
     const outFile = join(OUT_DIR, basename(file, ".ink") + ".json");
     writeFileSync(outFile, json);
-    console.log(`compiled ${file} -> ${outFile} (${json.length} bytes)`);
+    console.log(`compiled + validated ${file} -> ${outFile} (${json.length} bytes)`);
   } catch (err) {
     failed = true;
     console.error(`FAILED to compile ${file}:`);

@@ -94,6 +94,10 @@ export function startGame(): void {
 
 export function beginNightIntro(night: number): void {
   setShared(KEY_ASSIGNMENTS, null);
+  // Clear the old deadline too: if Playroom delivers these writes out of
+  // order, a phone could briefly see choose-location with last night's
+  // expired timer.
+  setShared(KEY_DEADLINE, 0);
   setShared(KEY_NIGHT, night);
   setShared(KEY_PHASE, "night-intro");
 }
