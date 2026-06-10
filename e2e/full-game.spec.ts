@@ -8,7 +8,9 @@ import { test, expect, type Page, type BrowserContext } from "@playwright/test";
 
 test.describe.configure({ mode: "serial" });
 
+/** Pass the title screen (Start) and read the lobby's room code. */
 async function readRoomCode(host: Page): Promise<string> {
+  await host.getByRole("button", { name: "Start", exact: true }).click();
   const codeEl = host.locator("p.font-mono.text-8xl");
   await expect(codeEl).toBeVisible({ timeout: 20_000 });
   const code = (await codeEl.textContent())?.trim() ?? "";

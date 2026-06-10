@@ -1,5 +1,13 @@
 import type { Metadata, Viewport } from "next";
+import localFont from "next/font/local";
 import "./globals.css";
+
+// Medieval display face for headers; self-hosted (see fonts/LICENSE.txt).
+const displayFont = localFont({
+  src: "./fonts/MedievalSharp.woff2",
+  variable: "--font-display",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -23,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={displayFont.variable}>
       <body className="min-h-screen bg-zinc-950 text-zinc-100 antialiased">
         {children}
       </body>

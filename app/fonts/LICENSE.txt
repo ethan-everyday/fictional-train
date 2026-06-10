@@ -1,0 +1,4 @@
+MedievalSharp — designed by Wojciech Kalinowski.
+Licensed under the SIL Open Font License, Version 1.1.
+https://fonts.google.com/specimen/MedievalSharp/license
+Self-hosted so builds never depend on an internet fetch.

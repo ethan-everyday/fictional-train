@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Every header speaks medieval; body text stays readable sans. */
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display), Georgia, serif;
+    letter-spacing: 0.02em;
+  }
+}
+
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+/* Title screen: the woodcut breathes, very slowly. */
+@keyframes kenburns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+
+.kenburns {
+  animation: kenburns 45s ease-in-out infinite alternate;
+}
+
 @keyframes ping-flash {
   0% {
     background-color: rgb(217 119 6 / 0.6);
@@ -61,7 +89,8 @@
   .fade-up-2,
   .fade-up-3,
   .lantern,
-  .ping-flash {
+  .ping-flash,
+  .kenburns {
     animation: none;
   }
 }

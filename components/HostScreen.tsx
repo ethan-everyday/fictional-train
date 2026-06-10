@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { DeltaChips } from "@/components/PlayScreen";
+import TitleScreen from "@/components/TitleScreen";
 import {
   kickPlayer,
   playerColor,
@@ -66,14 +67,20 @@ const HOST_ROOM_KEY = "7n:host-room";
 const HOST_ROOM_MAX_AGE_MS = 2 * 60 * 60 * 1000;
 
 export default function HostScreen() {
+  const [started, setStarted] = useState(false);
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Rejoin our last room after a host refresh; Playroom keeps the room
-    // (and all shared state) alive, so the game resumes where it was.
+  /** Leave the title screen and open (or rejoin) a room. */
+  function begin(freshRoom: boolean) {
+    if (freshRoom) {
+      try {
+        localStorage.removeItem(HOST_ROOM_KEY);
+      } catch {}
+    }
+    setStarted(true);
     let settled = false;
-    startHost(readSavedRoom() ?? undefined).then(
+    startHost(freshRoom ? undefined : (readSavedRoom() ?? undefined)).then(
       (code) => {
         settled = true;
         localStorage.setItem(
@@ -89,15 +96,18 @@ export default function HostScreen() {
     );
     // Route a never-resolving connect into the error screen. With the
     // self-hosted server this should only happen if the server died.
-    const timeout = setTimeout(() => {
+    setTimeout(() => {
       if (!settled) {
         setError(
           "timed out after 15 s. The game server isn't answering — is the Seven Nights window (start-game.bat) still running?",
         );
       }
     }, 15_000);
-    return () => clearTimeout(timeout);
-  }, []);
+  }
+
+  if (!started) {
+    return <TitleScreen hasSave={readSavedRoom() !== null} onStart={begin} />;
+  }
 
   if (error) {
     return (

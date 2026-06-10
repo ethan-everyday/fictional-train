@@ -10,6 +10,9 @@
 const { app, BrowserWindow, dialog, shell } = require("electron");
 const path = require("path");
 
+// Desktop app = a real game: title music starts without a click.
+app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
+
 const PORT = 3100;
 
 let mainWindow = null;

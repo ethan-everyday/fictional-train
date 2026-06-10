@@ -151,7 +151,7 @@ export default function StoryletPlayer({
 
   return (
     <main className="flex min-h-screen flex-col p-6">
-      <p className="mb-4 text-center text-sm font-bold uppercase tracking-widest text-amber-400">
+      <p className="font-display mb-4 text-center text-base uppercase tracking-widest text-amber-400">
         {locationDef(location).name}
       </p>
       <div className="flex flex-col gap-4 pb-6">
