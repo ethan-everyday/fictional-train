@@ -161,6 +161,53 @@ Before the choice.
   });
 });
 
+describe("storylet context", () => {
+  const content = compile(`${VARS}
+VAR night = 1
+VAR visits = 0
+VAR event = ""
+=== k ===
+{night >= 6: -> late}
+{visits == 0: First time here.|Back again.}
+-> END
+=== late ===
+The end of the week.
+~ outcome = "saw the week end."
+-> END
+`);
+
+  it("writes night and visits into declared globals", () => {
+    const session = StoryletSession.begin(content, "k", STATS, [], {
+      night: 2,
+      visits: 1,
+    });
+    const step = session.step(STATS);
+    if (step.kind !== "paragraph") throw new Error("expected paragraph");
+    expect(step.text).toBe("Back again.");
+  });
+
+  it("drives night-based dispatch", () => {
+    const session = StoryletSession.begin(content, "k", STATS, [], {
+      night: 7,
+      visits: 0,
+    });
+    const step = session.step(STATS);
+    if (step.kind !== "paragraph") throw new Error("expected paragraph");
+    expect(step.text).toBe("The end of the week.");
+  });
+
+  it("is harmless against ink that never declared the vars", () => {
+    const bare = compile(`${VARS}
+=== k ===
+Line.
+-> END
+`);
+    expect(() =>
+      StoryletSession.begin(bare, "k", STATS, [], { night: 3, visits: 1 }),
+    ).not.toThrow();
+  });
+});
+
 describe("end step", () => {
   it("falls back to a default outcome when ink never set one", () => {
     const content = compile(`${VARS}

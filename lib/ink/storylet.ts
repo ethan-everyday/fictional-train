@@ -24,6 +24,19 @@ export type StoryletStep =
   | { kind: "choices"; choices: UiChoice[] }
   | { kind: "end"; outcome: string; finalStats: PlayerStats; flagsSet: string[] };
 
+/**
+ * Read-only context written into ink globals before a knot runs (each var
+ * only if the story declares it, so older ink keeps working):
+ *  - night:  1–7
+ *  - visits: previous nights this player spent at this location (0 = first)
+ *  - event:  current drama event id, or "" when the night is ordinary
+ */
+export interface StoryletContext {
+  night?: number;
+  visits?: number;
+  event?: string;
+}
+
 export class StoryletSession {
   private story: Story;
   private startStats: PlayerStats;
@@ -33,12 +46,13 @@ export class StoryletSession {
     this.startStats = startStats;
   }
 
-  /** Start a knot fresh: write stats and flags in, jump to the knot. */
+  /** Start a knot fresh: write stats, flags, and context in, jump to the knot. */
   static begin(
     storyContent: unknown,
     knot: string,
     stats: PlayerStats,
     flags: string[],
+    ctx?: StoryletContext,
   ): StoryletSession {
     const story = new Story(storyContent as never);
     for (const stat of STAT_IDS) {
@@ -48,6 +62,19 @@ export class StoryletSession {
       const varName = FLAG_PREFIX + flag;
       if (story.variablesState.GlobalVariableExistsWithName(varName)) {
         story.variablesState.$(varName, true);
+      }
+    }
+    const ctxVars: [string, number | string | undefined][] = [
+      ["night", ctx?.night],
+      ["visits", ctx?.visits],
+      ["event", ctx?.event],
+    ];
+    for (const [name, value] of ctxVars) {
+      if (
+        value !== undefined &&
+        story.variablesState.GlobalVariableExistsWithName(name)
+      ) {
+        story.variablesState.$(name, value);
       }
     }
     story.variablesState.$("outcome", "");

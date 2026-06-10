@@ -9,6 +9,7 @@
 import {
   getShared,
   KEY_FLAGS,
+  KEY_HISTORY,
   KEY_PICK,
   KEY_RESULT,
   KEY_STATS,
@@ -23,6 +24,7 @@ import type {
   GamePhase,
   LocationId,
   LocationPick,
+  NightRecord,
   PlayerStats,
   StoryletResult,
 } from "./types";
@@ -84,6 +86,12 @@ export function playerResult(
 
 export function playerVote(p: PlayerState): string | null {
   return (p.getState(KEY_VOTE) as string | undefined) ?? null;
+}
+
+/** The player's finished nights, oldest first. */
+export function playerHistory(p: PlayerState): NightRecord[] {
+  const history = (p.getState(KEY_HISTORY) as NightRecord[] | undefined) ?? [];
+  return [...history].sort((a, b) => a.night - b.night);
 }
 
 // --- Host transitions ---

@@ -32,6 +32,7 @@ export const KEY_FLAGS = "flags";
 export const KEY_PICK = "pick";
 export const KEY_RESULT = "result";
 export const KEY_VOTE = "vote";
+export const KEY_HISTORY = "history";
 
 /** How long Playroom keeps a disconnected player's slot + state alive. */
 const RECONNECT_GRACE_MS = 3 * 60 * 1000;

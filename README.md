@@ -83,6 +83,18 @@ The contract per storylet knot:
 - Gate a choice with a tag *inside* the brackets:
   `* [Arm-wrestle the blacksmith # needs: body 3]` — shown but disabled until
   the stat meets the bar.
+- Three read-only context vars are written in before the knot runs:
+  `night` (1–7), `visits` (previous nights this player spent at this
+  location — 0 on a first visit), and `event` (the current drama event id,
+  or `""` on an ordinary night). Branch with conditional text
+  `{visits == 0: first-time line | return-visit line}`, gate choices with
+  `* {night >= 5} [...]`, or dispatch whole variants at the top of a knot:
+  `{night >= 6: -> storylet_manor_endweek}` (see the manor for the pattern).
+- **Each night is a fresh story.** Sequences, cycles, and read counts do NOT
+  carry between nights — only stats, `flag_*`, and the context vars above do.
+- `npm run stories` compiles AND contract-checks every knot (every choice
+  path must reach END with `outcome` set, gate tags must parse, finale knots
+  must be choice-free). Run it after every writing session.
 
 ## Milestones
 

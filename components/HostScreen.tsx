@@ -30,6 +30,7 @@ import {
   endNight,
   getPublishedEnding,
   playerFlags,
+  playerHistory,
   playerPick,
   playerResult,
   playerStats,
@@ -715,6 +716,37 @@ function EpilogueScreen({ players }: { players: PlayerState[] }) {
           })}
         </tbody>
       </table>
+      <section className="w-full max-w-6xl">
+        <h2 className="mb-4 text-center text-xl font-bold text-zinc-400">
+          The week, night by night
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {players.map((p) => (
+            <div
+              key={p.id}
+              className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5"
+            >
+              <p className="mb-3 flex items-center gap-2 text-lg font-bold">
+                <PlayerDot player={p} />
+                {playerName(p)}
+              </p>
+              <ol className="flex flex-col gap-1.5 text-sm leading-snug text-zinc-400">
+                {playerHistory(p).map((h) => (
+                  <li key={h.night}>
+                    <span className="font-mono font-bold text-amber-400/80">
+                      N{h.night}
+                    </span>{" "}
+                    {h.outcome}
+                  </li>
+                ))}
+                {playerHistory(p).length === 0 && (
+                  <li className="text-zinc-600">slept through the week.</li>
+                )}
+              </ol>
+            </div>
+          ))}
+        </div>
+      </section>
       <button
         onClick={() => backToLobby()}
         className="rounded-xl border border-zinc-700 px-10 py-4 text-xl font-bold text-zinc-300 hover:border-zinc-500"

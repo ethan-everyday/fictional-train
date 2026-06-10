@@ -16,6 +16,8 @@ interface Props {
   location: LocationId;
   stats: PlayerStats;
   flags: string[];
+  /** Previous nights this player spent at this location (0 = first visit). */
+  visits: number;
   /** localStorage key for mid-storylet recovery after a phone refresh. */
   saveKey: string;
   onComplete: (result: StoryletResult) => void;
@@ -32,6 +34,7 @@ export default function StoryletPlayer({
   location,
   stats,
   flags,
+  visits,
   saveKey,
   onComplete,
 }: Props) {
@@ -64,6 +67,7 @@ export default function StoryletPlayer({
             locationDef(location).knot,
             stats,
             flags,
+            { night, visits },
           );
         }
         setLoaded(true);

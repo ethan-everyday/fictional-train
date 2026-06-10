@@ -17,7 +17,7 @@ import { Story } from "inkjs";
 // Keep in sync with NEEDS_TAG in lib/ink/storylet.ts.
 const NEEDS_TAG = /^needs:\s*(mind|body|charm|shadow)\s+(\d+)\s*$/i;
 const STAT_IDS = ["mind", "body", "charm", "shadow"];
-const REQUIRED_GLOBALS = [...STAT_IDS, "outcome"];
+const REQUIRED_GLOBALS = [...STAT_IDS, "outcome", "night", "visits", "event"];
 
 const MAX_DEPTH = 6;
 const MAX_PATHS = 500;
@@ -27,13 +27,33 @@ function knotNames(story) {
   return [...story.mainContentContainer.namedContent.keys()];
 }
 
+// Night-gated choices and {night >= N} dispatches only appear under the
+// right context, so every knot is walked once per scenario.
+const WALK_CONTEXTS = [
+  { night: 1, visits: 0 },
+  { night: 7, visits: 2 },
+];
+
 /**
- * Walk every choice path of a knot from a fresh story instance.
+ * Walk every choice path of a knot under each context scenario.
  * Returns a list of problems (empty = clean).
  */
-function walkKnot(storyJson, knot, { forbidChoices = false } = {}) {
+function walkKnot(storyJson, knot, opts = {}) {
+  const problems = new Set();
+  for (const ctx of WALK_CONTEXTS) {
+    for (const p of walkKnotOnce(storyJson, knot, ctx, opts)) problems.add(p);
+  }
+  return [...problems];
+}
+
+function walkKnotOnce(storyJson, knot, ctx, { forbidChoices = false } = {}) {
   const problems = [];
   const story = new Story(storyJson);
+  for (const [name, value] of Object.entries(ctx)) {
+    if (story.variablesState.GlobalVariableExistsWithName(name)) {
+      story.variablesState.$(name, value);
+    }
+  }
   let paths = 0;
 
   function explore(pathSoFar, depth) {

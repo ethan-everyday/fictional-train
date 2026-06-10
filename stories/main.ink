@@ -17,6 +17,16 @@ VAR charm = 2
 VAR shadow = 0
 VAR outcome = ""
 
+// Read-only context the game writes in before each knot (see README):
+//   night  = 1..7
+//   visits = previous nights THIS player spent at THIS location (0 = first)
+//   event  = current drama event id, or "" on an ordinary night
+// NOTE: each night runs as a FRESH story — sequences, cycles, and read
+// counts do NOT carry between nights. Only stats, flag_*, and these vars do.
+VAR night = 1
+VAR visits = 0
+VAR event = ""
+
 VAR flag_met_the_stranger = false
 VAR flag_owes_the_landlady = false
 VAR flag_blessed = false
@@ -27,7 +37,7 @@ VAR flag_marked_by_the_manor = false
 // ---------------------------------------------------------------- TAVERN
 
 === storylet_tavern ===
-The Crooked Lantern is packed wall to wall, and the air smells of spilled cider and wet dog.
+{visits == 0: The Crooked Lantern is packed wall to wall, and the air smells of spilled cider and wet dog. | The Lantern's regulars nod as you come in. You have a usual seat now, which is either belonging or a warning.}
 The landlady catches your eye and tilts her head toward an empty stool. In the corner booth, someone in a travel cloak is buying drinks for anyone who'll talk.
 * [Buy a round for the whole room]
     You put your coins on the bar like a magician revealing a card. The room cheers your name. Twice.
@@ -63,11 +73,18 @@ The landlady catches your eye and tilts her head toward an empty stool. In the c
     ~ shadow = shadow + 1
     ~ outcome = "staked out the stranger's booth and connected the silver, the manor, and the harbor bell."
     -> END
+* {night >= 5} [Ask the landlady what the seventh night really is # needs: charm 4]
+    She doesn't answer until the room empties, and then only with the candle between you pinched out.
+    What she tells you takes four sentences. You will not repeat any of them, and you understand the week very differently now.
+    ~ mind = mind + 1
+    ~ shadow = shadow + 1
+    ~ outcome = "got the landlady to say out loud what the seventh night is, and rather wishes the candle had stayed lit."
+    -> END
 
 // ---------------------------------------------------------------- CHURCH
 
 === storylet_church ===
-The Old Church is empty except for a hundred lit candles nobody admits to lighting.
+{visits == 0: The Old Church is empty except for a hundred lit candles nobody admits to lighting. | The candles are lit again tonight — and one of them, you'd swear, has been set out where you knelt last time.}
 {flag_blessed: The verger nods at you like an old friend. | The verger watches you from the shadows by the font, deciding what sort of visitor you are.}
 * [Kneel and sit with your thoughts]
     The quiet rearranges something in you. An hour passes like a held breath, and you leave lighter.
@@ -98,7 +115,7 @@ The Old Church is empty except for a hundred lit candles nobody admits to lighti
 // ---------------------------------------------------------------- MARKET
 
 === storylet_market ===
-The Night Market only opens after dark, which everyone agrees is normal and fine.
+{visits == 0: The Night Market only opens after dark, which everyone agrees is normal and fine. | The market knows you now. Two stallholders wave; a third quietly puts something under the counter as you pass.}
 Stalls sell lamp oil, bad knives, excellent pies, and one table at the end sells things with no labels at all.
 * [Haggle for one of the unlabelled things]
     The stallholder names a price. You laugh. They name another. You weep theatrically.
@@ -122,7 +139,7 @@ Stalls sell lamp oil, bad knives, excellent pies, and one table at the end sells
 // ----------------------------------------------------------------- WOODS
 
 === storylet_woods ===
-The Whispering Woods do whisper, though it might just be the wind. Might.
+{visits == 0: The Whispering Woods do whisper, though it might just be the wind. Might. | The woods remember you. The whispering starts before you're even under the branches, and it sounds pleased.}
 The path you came in on is not, on reflection, where you left it.
 * [Follow the whispering deeper in]
     You walk until the trees stop pretending and the whispering becomes one voice, very politely asking you to leave.
@@ -152,7 +169,7 @@ The path you came in on is not, on reflection, where you left it.
 // ---------------------------------------------------------------- HARBOR
 
 === storylet_harbor ===
-The Harbor at night is rope, salt, and lanterns that swing without wind.
+{visits == 0: The Harbor at night is rope, salt, and lanterns that swing without wind. | The harbor's night crew has stopped going quiet when you walk the quay. That took exactly {visits + 1} nights.}
 A crew is unloading a boat with no name, fast and quiet, and they're a pair of hands short.
 * [Join the crew, no questions asked]
     You haul crates that clink in a way fish do not. At the end the foreman pays double and taps her nose.
@@ -184,7 +201,11 @@ A crew is unloading a boat with no name, fast and quiet, and they're a pair of h
 // ----------------------------------------------------------------- MANOR
 
 === storylet_manor ===
-The Vane Manor has been empty for thirty years, which doesn't explain the footprints on the drive or the warm chimney.
+// Late-week dispatch: nights 6–7 play a different manor entirely. This is
+// the reference pattern for big per-night swings (vs. one-line {visits} or
+// {night} variations).
+{night >= 6: -> storylet_manor_endweek}
+{visits == 0: The Vane Manor has been empty for thirty years, which doesn't explain the footprints on the drive or the warm chimney. | The manor's gate hangs open a little wider than last time — wider for you specifically, is the impression you can't shake.}
 {flag_met_the_stranger: You think of the stranger from the tavern, paying silver for exactly this address.}
 * [Knock on the front door like a civilised person]
     The door opens before your second knock. Nobody is behind it.
@@ -210,6 +231,37 @@ The Vane Manor has been empty for thirty years, which doesn't explain the footpr
     ~ mind = mind + 1
     ~ flag_marked_by_the_manor = true
     ~ outcome = "showed the manor the locket with its own portrait inside, and the manor unlocked its gate in answer."
+    -> END
+
+=== storylet_manor_endweek ===
+By the {night == 6: sixth | seventh} night the manor has stopped pretending. Every window is lit, the gate stands open, and someone — something — has swept the drive.
+Whatever lives here is expecting the village.
+* [Walk up the drive and ring the bell]
+    The door opens on warmth and a long table set for exactly as many guests as Hollowbrook has residents.
+    Nobody is in the chairs. Yet. You count the places twice and leave before you find your own name card.
+    ~ charm = charm + 1
+    ~ mind = mind + 1
+    ~ outcome = "rang the manor's bell on the open-door night and found the table set for the whole village."
+    -> END
+* [Watch the lit windows from the wall]
+    Shapes cross the windows in pairs, like dancers. One of them stops, mid-figure, and looks directly at you.
+    It waves.
+    ~ mind = mind + 1
+    ~ shadow = shadow + 1
+    ~ outcome = "watched the manor's bright windows from the wall, and something mid-dance stopped to wave."
+    -> END
+* [Heave the iron gate shut # needs: body 4]
+    The gate is older than the village and it does not want to close. You close it anyway.
+    From inside the house, very faintly: applause.
+    ~ body = body + 1
+    ~ outcome = "heaved the manor's iron gate shut against whatever the last nights are bringing — and was applauded for it."
+    -> END
+* {flag_marked_by_the_manor} [Answer the invitation you know is yours]
+    You added a mark to that cellar wall once. The front door knows it; it opens before your foot finds the first step.
+    Inside, one chair at the long table has been pulled out. You sit. The week makes a terrible kind of sense from this seat, and the tea, again, is perfect.
+    ~ shadow = shadow + 1
+    ~ mind = mind + 1
+    ~ outcome = "accepted the manor's invitation, sat at the set table, and came back knowing what the tally marks count."
     -> END
 
 // ---------------------------------------------------------------- FINALE

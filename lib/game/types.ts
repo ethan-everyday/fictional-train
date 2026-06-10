@@ -46,6 +46,16 @@ export interface StoryletResult {
   flagsSet: string[];
 }
 
+/** One finished night, appended to the player's week history (the archive
+ * behind the epilogue recap and the "visits" count fed back into ink). */
+export interface NightRecord {
+  night: number;
+  location: LocationId;
+  outcome: string;
+  deltas: PlayerStats;
+  flagsSet: string[];
+}
+
 /** A choice as rendered on the phone: ink choice + stat-gate metadata. */
 export interface UiChoice {
   index: number;

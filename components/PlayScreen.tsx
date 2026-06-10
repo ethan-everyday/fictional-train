@@ -7,6 +7,7 @@ import {
   getMyState,
   joinRoom,
   KEY_FLAGS,
+  KEY_HISTORY,
   KEY_NAME,
   KEY_PICK,
   KEY_RESULT,
@@ -32,6 +33,7 @@ import {
 } from "@/lib/game/state";
 import type {
   LocationPick,
+  NightRecord,
   PlayerStats,
   StatId,
   StoryletResult,
@@ -121,6 +123,7 @@ function PhoneGame({ room }: { room: string }) {
   const [stats, setStats] = useMyState<PlayerStats | null>(KEY_STATS, null);
   const [flags, setFlags] = useMyState<string[]>(KEY_FLAGS, []);
   const [result, setResult] = useMyState<StoryletResult | null>(KEY_RESULT, null);
+  const [history, setHistory] = useMyState<NightRecord[]>(KEY_HISTORY, []);
 
   // First join: give the player their starting stats.
   useEffect(() => {
@@ -161,8 +164,25 @@ function PhoneGame({ room }: { room: string }) {
   }, []);
 
   function completeStorylet(r: StoryletResult) {
+    // Read latest values via getMyState, not the render closure — Playroom
+    // setters don't take functional updaters, and a stale closure here would
+    // drop flags or history entries.
+    const prevFlags = getMyState<string[]>(KEY_FLAGS) ?? [];
+    const prevHistory = getMyState<NightRecord[]>(KEY_HISTORY) ?? [];
     setStats(r.stats);
-    setFlags(Array.from(new Set([...flags, ...r.flagsSet])));
+    setFlags(Array.from(new Set([...prevFlags, ...r.flagsSet])));
+    if (!prevHistory.some((h) => h.night === r.night)) {
+      setHistory([
+        ...prevHistory,
+        {
+          night: r.night,
+          location: r.location,
+          outcome: r.outcome,
+          deltas: r.deltas,
+          flagsSet: r.flagsSet,
+        },
+      ]);
+    }
     setResult(r);
   }
 
@@ -184,6 +204,7 @@ function PhoneGame({ room }: { room: string }) {
           night={night}
           stats={effectiveStats}
           flags={flags}
+          history={history}
           result={result}
           onComplete={completeStorylet}
         />
@@ -200,7 +221,9 @@ function PhoneGame({ room }: { room: string }) {
     case "finale":
       return <PhoneFinale stats={effectiveStats} />;
     case "epilogue":
-      return <PhoneEpilogue stats={effectiveStats} flags={flags} />;
+      return (
+        <PhoneEpilogue stats={effectiveStats} flags={flags} history={history} />
+      );
   }
 }
 
@@ -275,6 +298,7 @@ function PhoneStorylet({
   night,
   stats,
   flags,
+  history,
   result,
   onComplete,
 }: {
@@ -282,11 +306,15 @@ function PhoneStorylet({
   night: number;
   stats: PlayerStats;
   flags: string[];
+  history: NightRecord[];
   result: StoryletResult | null;
   onComplete: (r: StoryletResult) => void;
 }) {
   const [assignments] = useAssignments();
   const myLocation = assignments?.[getMyId()] ?? null;
+  const visits = myLocation
+    ? history.filter((h) => h.location === myLocation).length
+    : 0;
 
   if (result?.night === night) {
     return (
@@ -313,6 +341,7 @@ function PhoneStorylet({
       location={myLocation}
       stats={stats}
       flags={flags}
+      visits={visits}
       saveKey={`7n:save:${room}:n${night}`}
       onComplete={onComplete}
     />
@@ -358,11 +387,38 @@ function PhoneFinale({ stats }: { stats: PlayerStats }) {
   );
 }
 
-function PhoneEpilogue({ stats, flags }: { stats: PlayerStats; flags: string[] }) {
+function PhoneEpilogue({
+  stats,
+  flags,
+  history,
+}: {
+  stats: PlayerStats;
+  flags: string[];
+  history: NightRecord[];
+}) {
+  const week = [...history].sort((a, b) => a.night - b.night);
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-6">
+    <main className="flex min-h-screen flex-col items-center gap-6 p-6 py-10">
       <h1 className="text-3xl font-black">Your week</h1>
       <StatsBar stats={stats} big />
+      {week.length > 0 && (
+        <ol className="flex w-full max-w-md flex-col gap-2">
+          {week.map((h) => (
+            <li
+              key={h.night}
+              className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3 text-sm"
+            >
+              <span className="font-mono font-bold text-amber-400">
+                N{h.night}
+              </span>{" "}
+              <span className="font-bold text-zinc-300">
+                {locationDef(h.location).name}
+              </span>
+              <span className="block text-zinc-400">You {h.outcome}</span>
+            </li>
+          ))}
+        </ol>
+      )}
       {flags.length > 0 && (
         <div className="text-center">
           <p className="mb-2 text-sm font-bold uppercase tracking-widest text-zinc-500">
