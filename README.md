@@ -19,16 +19,34 @@ rejoins its room and the game carries on.
 
 ## Run it
 
+### On your desktop, phones on the same Wi-Fi (no deploy needed)
+
 ```bash
+git clone https://github.com/ethan-everyday/fictional-train.git seven-nights
+cd seven-nights
 npm install
 npm run dev
 ```
 
-Open `http://localhost:3000/host` on the laptop. **Phones can't reach
-localhost** — Playroom needs a public URL for phone testing, so push and use a
-Vercel preview deploy (free), then open `<preview-url>/host` on the laptop and
-scan the QR with phones. For quick same-Wi-Fi testing without a deploy, `npm
-run dev` also listens on your LAN IP (`http://<laptop-ip>:3000/play?room=…`).
+Next prints two URLs — use the **Network** one (e.g.
+`http://192.168.1.23:3000`), not localhost:
+
+1. Open `http://<that-ip>:3000/host` on the desktop. **Important:** open the
+   host page via the network IP, not localhost — the QR code encodes whatever
+   address the host page was opened on, and phones can't reach localhost.
+2. Scan the QR with each phone (or browse to
+   `http://<that-ip>:3000/play` and type the room code).
+3. The game itself syncs through Playroom's cloud, so only the page needs to
+   be on your LAN.
+
+If the Network URL doesn't appear or phones can't connect, check the desktop
+firewall allows inbound port 3000, or run `npm run dev -- -H 0.0.0.0`.
+
+### Public URL (for testing away from home)
+
+Import the repo once at vercel.com/new (framework auto-detects, no env vars);
+every push then gets a URL. Open `<deploy-url>/host` on the big screen and
+scan from anywhere.
 
 ## Layout
 
