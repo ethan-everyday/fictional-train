@@ -105,6 +105,20 @@ export function useServerConnection(): boolean {
   return store.connectedToServer;
 }
 
+/**
+ * The base URL phones must use to join — built from the LAN IP the server
+ * reported, NOT from how this page happens to be open (localhost in the
+ * desktop app). The QR must just work.
+ */
+export function useJoinBase(): string {
+  useStoreVersion();
+  if (store.lanIp) {
+    const port = window.location.port ? `:${window.location.port}` : "";
+    return `${window.location.protocol}//${store.lanIp}${port}`;
+  }
+  return window.location.origin;
+}
+
 // ------------------------------------------------------------ connecting
 
 /**

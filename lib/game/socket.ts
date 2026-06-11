@@ -38,6 +38,8 @@ class GameStore {
   players = new Map<string, PlayerRecord>();
   myId: string | null = null;
   connectedToServer = false;
+  /** The host machine's LAN IP, as reported by the server (host role only). */
+  lanIp: string | null = null;
 
   private listeners = new Set<() => void>();
   private playersArrayCache: PlayerRecord[] = [];
@@ -217,6 +219,7 @@ function handleMessage(msg: any): void {
       if (desiredRole?.kind === "host") {
         desiredRole.rejoinCode = String(msg.code);
       }
+      store.lanIp = typeof msg.lanIp === "string" ? msg.lanIp : null;
       store.bump();
       pendingHello = String(msg.code);
       return;

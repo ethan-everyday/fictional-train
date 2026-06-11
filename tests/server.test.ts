@@ -127,6 +127,19 @@ describe("rooms", () => {
     c.close();
   });
 
+  it("the room message carries the machine's LAN IP for the QR code", async () => {
+    const c = new Client();
+    await c.open();
+    c.send({ t: "create" });
+    const room = await c.next((m) => m.t === "room");
+    // Null only on machines with no network at all; otherwise a usable IPv4.
+    if (room.lanIp !== null) {
+      expect(String(room.lanIp)).toMatch(/^\d+\.\d+\.\d+\.\d+$/);
+      expect(String(room.lanIp)).not.toBe("127.0.0.1");
+    }
+    c.close();
+  });
+
   it("host rejoins the same room after a refresh", async () => {
     const { c, code } = await host();
     c.close();

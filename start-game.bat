@@ -43,18 +43,18 @@ echo.
 echo   ===========================================
 echo    SEVEN NIGHTS
 echo   ===========================================
-echo    Host screen:  http://%LANIP%:3100/host
+echo    Host screen:  http://localhost:3100/host
 echo    Phones join:  http://%LANIP%:3100/play
+echo                  (or just scan the QR code)
 echo   ===========================================
-echo    Open the HOST page via that IP, not
-echo    localhost, or the QR code won't work.
 echo    Close this window to stop the game.
 echo    (Run with --rebuild after changing code.)
 echo   ===========================================
 echo.
 
-REM Open the host page once the server has had a moment to boot.
-start "" cmd /c "timeout /t 3 /nobreak >nul & start http://%LANIP%:3100/host"
+REM Open the host page once the server has had a moment to boot. The QR
+REM always encodes the LAN IP (the server reports it), so localhost is fine.
+start "" cmd /c "timeout /t 3 /nobreak >nul & start http://localhost:3100/host"
 
 node server.js
 

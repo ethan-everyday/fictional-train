@@ -17,6 +17,7 @@
 
 const http = require("http");
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 const { WebSocketServer } = require("ws");
 
@@ -41,6 +42,31 @@ const PLAYER_COLORS = [
   "#f59e0b", "#ef4444", "#10b981", "#3b82f6",
   "#a855f7", "#ec4899", "#14b8a6", "#f97316",
 ];
+
+/**
+ * This machine's best LAN IPv4 — what phones must use to reach us. Sent to
+ * the host with the room code so the QR always encodes a phone-reachable
+ * address no matter how the host page itself was opened (localhost included).
+ */
+function lanIp() {
+  const nets = os.networkInterfaces();
+  const candidates = [];
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name] ?? []) {
+      if (net.family !== "IPv4" || net.internal) continue;
+      if (net.address.startsWith("169.254.")) continue; // APIPA = no router
+      candidates.push(net.address);
+    }
+  }
+  // Prefer home-router ranges over VPN/virtual adapter ranges.
+  const score = (ip) =>
+    ip.startsWith("192.168.") ? 0
+    : ip.startsWith("10.") ? 1
+    : /^172\.(1[6-9]|2\d|3[01])\./.test(ip) ? 2
+    : 3;
+  candidates.sort((a, b) => score(a) - score(b));
+  return candidates[0] ?? null;
+}
 
 // ---------------------------------------------------------------- rooms
 
@@ -266,7 +292,7 @@ function handleMessage(ws, msg, session, setSession) {
     room.sockets.add(ws);
     room.hostSockets.add(ws);
     setSession({ room, role: "host", clientId: null });
-    send(ws, { t: "room", code: room.code });
+    send(ws, { t: "room", code: room.code, lanIp: lanIp() });
     send(ws, roomSnapshot(room));
     scheduleSave();
     return;

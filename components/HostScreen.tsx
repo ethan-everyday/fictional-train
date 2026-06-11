@@ -10,6 +10,7 @@ import {
   playerConnected,
   playerName,
   startHost,
+  useJoinBase,
   usePings,
   usePlayers,
   useServerConnection,
@@ -439,7 +440,8 @@ function LobbyScreen({
   players: PlayerState[];
 }) {
   const pings = usePings();
-  const joinUrl = `${window.location.origin}/play?room=${roomCode}`;
+  const joinBase = useJoinBase();
+  const joinUrl = `${joinBase}/play?room=${roomCode}`;
   const now = useClock(500);
   const pingByPlayer = new Map(pings.map(({ player, ping }) => [player.id, ping]));
 
