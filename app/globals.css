@@ -10,6 +10,40 @@
     font-family: var(--font-display), Georgia, serif;
     letter-spacing: 0.02em;
   }
+
+  /* Every screen sits on candlelit oak with the village faint behind it:
+     the woodcut at ~5% under a heavy tint, ember glow rising from below. */
+  body {
+    background-color: #0f0b07;
+    background-image:
+      radial-gradient(
+        1100px 700px at 50% 118%,
+        rgba(208, 154, 52, 0.09),
+        transparent 62%
+      ),
+      linear-gradient(rgba(15, 11, 7, 0.94), rgba(15, 11, 7, 0.965)),
+      url("/village-woodcut.jpg");
+    background-size:
+      auto,
+      auto,
+      cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+}
+
+/* Storylet prose reads like a manuscript: serif body, illuminated drop cap. */
+.story-prose p {
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.story-prose p:first-of-type::first-letter {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 3.1em;
+  line-height: 0.82;
+  float: left;
+  padding-right: 0.09em;
+  color: #d4a937;
 }
 
 .font-display {

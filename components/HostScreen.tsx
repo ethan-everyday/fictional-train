@@ -115,7 +115,7 @@ export default function HostScreen() {
       <Centered>
         <div className="flex flex-col items-center gap-6 text-center">
           <p className="text-2xl text-red-400">Could not open a room: {error}</p>
-          <p className="max-w-md text-zinc-400">
+          <p className="max-w-md text-parch-400">
             If the game window is running, this is usually stale saved data in
             this browser.
           </p>
@@ -125,7 +125,7 @@ export default function HostScreen() {
               sessionStorage.clear();
               window.location.reload();
             }}
-            className="rounded-xl bg-amber-500 px-8 py-3 text-lg font-bold text-zinc-950 hover:bg-amber-400"
+            className="rounded-xl bg-amber-500 px-8 py-3 text-lg font-bold text-night hover:bg-amber-400"
           >
             Clear saved data &amp; open a fresh room
           </button>
@@ -173,7 +173,7 @@ function ConnectingScreen() {
         </p>
         <h1 className="text-4xl font-black tracking-tight">Opening the room</h1>
         <div
-          className="h-3 w-full overflow-hidden rounded-full border border-zinc-800 bg-zinc-900"
+          className="h-3 w-full overflow-hidden rounded-full border border-bark bg-oak"
           role="progressbar"
           aria-valuenow={Math.round(progress)}
           aria-valuemin={0}
@@ -184,7 +184,7 @@ function ConnectingScreen() {
             style={{ width: `${progress}%` }}
           />
         </div>
-        <p className="text-zinc-400">{line}</p>
+        <p className="text-parch-400">{line}</p>
       </div>
     </Centered>
   );
@@ -319,7 +319,7 @@ function HostGame({ roomCode }: { roomCode: string }) {
                   }
                 });
               }}
-              className="rounded-full border border-amber-500/60 bg-zinc-900 px-4 py-2 text-sm font-bold text-amber-400"
+              className="rounded-full border border-amber-500/60 bg-oak px-4 py-2 text-sm font-bold text-amber-400"
             >
               Sound off — tap to enable
             </button>
@@ -339,7 +339,10 @@ function HostGame({ roomCode }: { roomCode: string }) {
         <Centered>
           <div className="fade-up text-center">
             <NightDots night={night} />
-            <h1 className="mt-6 text-8xl font-black tracking-tight">
+            <p aria-hidden className="mt-4 text-xl tracking-[0.8em] text-amber-400/60">
+              ❦
+            </p>
+            <h1 className="mt-2 text-8xl font-black tracking-tight">
               NIGHT {night}
             </h1>
             {activeEvent ? (
@@ -355,7 +358,7 @@ function HostGame({ roomCode }: { roomCode: string }) {
                 )}
               </>
             ) : (
-              <p className="mx-auto mt-6 max-w-2xl text-2xl text-zinc-400">
+              <p className="mx-auto mt-6 max-w-2xl text-2xl text-parch-400">
                 {nightIntro(night)}
               </p>
             )}
@@ -396,24 +399,27 @@ function MuteButton() {
       }}
       title={muted ? "Unmute" : "Mute"}
       aria-label={muted ? "Unmute" : "Mute"}
-      className="rounded-full border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-400 hover:border-zinc-500"
+      className="rounded-full border border-bark-light bg-oak px-3 py-2 text-sm text-parch-400 hover:border-parch-500"
     >
       {muted ? "🔇" : "🔊"}
     </button>
   );
 }
 
-/** Week progress: one dot per night, lit up to the current one. */
+/** Week progress: one star per night, lit up to the current one. */
 function NightDots({ night }: { night: number }) {
   return (
-    <div className="flex justify-center gap-2" aria-label={`Night ${night} of ${NIGHT_COUNT}`}>
+    <div
+      className="flex justify-center gap-2 text-base"
+      aria-label={`Night ${night} of ${NIGHT_COUNT}`}
+    >
       {Array.from({ length: NIGHT_COUNT }, (_, i) => (
         <span
           key={i}
-          className={`h-2.5 w-2.5 rounded-full ${
-            i < night ? "bg-amber-400" : "bg-zinc-800"
-          }`}
-        />
+          className={i < night ? "text-amber-400" : "text-bark-light"}
+        >
+          ✦
+        </span>
       ))}
     </div>
   );
@@ -448,14 +454,14 @@ function LobbyScreen({
   return (
     <main className="flex min-h-screen flex-col items-center gap-8 p-10">
       <header className="text-center">
-        <h1 className="text-3xl font-black tracking-tight text-zinc-400">
+        <h1 className="text-3xl font-black tracking-tight text-parch-400">
           SEVEN NIGHTS
         </h1>
-        <p className="mt-4 text-2xl text-zinc-300">Join on your phone</p>
+        <p className="mt-4 text-2xl text-parch-300">Join on your phone</p>
         <p className="my-2 font-mono text-8xl font-black tracking-[0.2em] text-amber-400">
           {roomCode}
         </p>
-        <p className="text-lg text-zinc-500">{joinUrl}</p>
+        <p className="text-lg text-parch-500">{joinUrl}</p>
         <button
           onClick={() => {
             // Full wipe, not just our saved room: Playroom keeps its own
@@ -465,18 +471,29 @@ function LobbyScreen({
             sessionStorage.clear();
             window.location.reload();
           }}
-          className="mt-3 text-sm text-zinc-600 underline hover:text-zinc-400"
+          className="mt-3 text-sm text-parch-600 underline hover:text-parch-400"
         >
           Start a fresh room
         </button>
       </header>
 
-      <div className="rounded-2xl bg-white p-4">
-        <QRCodeSVG value={joinUrl} size={180} />
+      <div className="-rotate-1 rounded-sm border-4 border-double border-bark bg-parch-100 p-4 shadow-[0_10px_34px_rgba(0,0,0,0.6)]">
+        <p className="font-display mb-2 text-center text-sm uppercase tracking-[0.25em] text-[#3a2a14]">
+          By order of the lord
+        </p>
+        <QRCodeSVG
+          value={joinUrl}
+          size={180}
+          bgColor="#f2e8ce"
+          fgColor="#1d1408"
+        />
+        <p className="font-display mt-2 text-center text-sm text-[#3a2a14]">
+          scan &amp; join the week
+        </p>
       </div>
 
       <section className="w-full max-w-2xl">
-        <h2 className="mb-4 text-center text-xl font-bold text-zinc-400">
+        <h2 className="mb-4 text-center text-xl font-bold text-parch-400">
           {players.length === 0
             ? "Waiting for players…"
             : `${players.length} player${players.length === 1 ? "" : "s"} ready`}
@@ -489,7 +506,7 @@ function LobbyScreen({
             return (
               <li
                 key={`${player.id}-${ping?.count ?? 0}`}
-                className={`flex items-center justify-between rounded-xl border border-zinc-800 px-6 py-3 text-2xl ${
+                className={`flex items-center justify-between rounded-xl border border-bark px-6 py-3 text-2xl ${
                   waved ? "ping-flash" : ""
                 } ${away ? "opacity-50" : ""}`}
               >
@@ -497,7 +514,7 @@ function LobbyScreen({
                   <PlayerDot player={player} />
                   {playerName(player)}
                   {away && (
-                    <span className="text-base font-normal text-zinc-500">
+                    <span className="text-base font-normal text-parch-500">
                       reconnecting…
                     </span>
                   )}
@@ -516,7 +533,7 @@ function LobbyScreen({
                     }}
                     title={`Kick ${playerName(player)}`}
                     aria-label={`Kick ${playerName(player)}`}
-                    className="rounded-lg border border-zinc-700 px-3 py-1 text-base font-bold text-zinc-500 hover:border-red-500 hover:text-red-400"
+                    className="rounded-lg border border-bark-light px-3 py-1 text-base font-bold text-parch-500 hover:border-red-500 hover:text-red-400"
                   >
                     Kick
                   </button>
@@ -535,13 +552,13 @@ function LobbyScreen({
               });
               startGame(players);
             }}
-            className="mx-auto mt-8 block rounded-xl bg-amber-500 px-12 py-4 text-2xl font-black text-zinc-950 hover:bg-amber-400"
+            className="font-display mx-auto mt-8 block rounded-xl bg-amber-500 px-12 py-4 text-2xl text-night hover:bg-amber-400"
           >
             BEGIN THE WEEK
           </button>
         )}
         {players.length === 1 && (
-          <p className="mt-2 text-center text-sm text-zinc-500">
+          <p className="mt-2 text-center text-sm text-parch-500">
             (Solo works for testing; it's better with 2–6.)
           </p>
         )}
@@ -577,7 +594,7 @@ function ChooseScreen({
         </div>
         <span
           className={`font-mono text-4xl font-bold ${
-            secondsLeft <= 10 ? "text-red-400" : "text-zinc-400"
+            secondsLeft <= 10 ? "text-red-400" : "text-parch-400"
           }`}
         >
           {secondsLeft}s
@@ -595,11 +612,11 @@ function ChooseScreen({
                   ? "border-red-900/60 opacity-50"
                   : here.length > 0
                     ? "border-amber-500/60 bg-amber-500/5"
-                    : "border-zinc-800"
+                    : "border-bark"
               }`}
             >
               <h2 className="text-2xl font-bold">{loc.name}</h2>
-              <p className="text-zinc-400">
+              <p className="text-parch-400">
                 {isClosed ? "Closed tonight." : loc.blurb}
               </p>
               <div className="mt-auto flex flex-wrap gap-2 pt-4">
@@ -611,7 +628,7 @@ function ChooseScreen({
           );
         })}
       </div>
-      <p className="text-center text-xl text-zinc-400">
+      <p className="text-center text-xl text-parch-400">
         {players.filter((p) => playerPick(p, night)).length} of {players.length}{" "}
         decided · stragglers get sent somewhere random
       </p>
@@ -634,7 +651,7 @@ function StoryletsScreen({
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-10 p-10">
       <NightDots night={night} />
-      <h1 className="text-5xl font-black text-zinc-300">
+      <h1 className="text-5xl font-black text-parch-300">
         Night {night} unfolds…
       </h1>
       <ul className="flex w-full max-w-3xl flex-col gap-4">
@@ -645,7 +662,7 @@ function StoryletsScreen({
           return (
             <li
               key={p.id}
-              className={`flex items-center justify-between rounded-xl border border-zinc-800 px-6 py-4 text-2xl ${
+              className={`flex items-center justify-between rounded-xl border border-bark px-6 py-4 text-2xl ${
                 away ? "opacity-50" : ""
               }`}
             >
@@ -653,7 +670,7 @@ function StoryletsScreen({
                 <PlayerDot player={p} />
                 <span>
                   <span className="font-bold">{playerName(p)}</span>
-                  <span className="text-zinc-400"> is at {loc.name}…</span>
+                  <span className="text-parch-400"> is at {loc.name}…</span>
                   {away && !done && (
                     <span className="ml-3 text-base text-red-400/80">
                       (phone lost — reconnecting?)
@@ -662,7 +679,7 @@ function StoryletsScreen({
                 </span>
               </span>
               <span
-                className={done ? "text-emerald-400" : "animate-pulse text-zinc-600"}
+                className={done ? "text-emerald-400" : "animate-pulse text-parch-600"}
               >
                 {done ? "✓" : "…"}
               </span>
@@ -670,7 +687,7 @@ function StoryletsScreen({
           );
         })}
       </ul>
-      <p className="text-zinc-500">
+      <p className="text-parch-500">
         Their phones know things this screen doesn't.
       </p>
       <button
@@ -683,7 +700,7 @@ function StoryletsScreen({
             beginResolve();
           }
         }}
-        className="rounded-lg border border-zinc-800 px-5 py-2 text-sm text-zinc-600 hover:border-zinc-600 hover:text-zinc-400"
+        className="rounded-lg border border-bark px-5 py-2 text-sm text-parch-600 hover:border-parch-600 hover:text-parch-400"
       >
         A phone died? End the night without them →
       </button>
@@ -730,7 +747,7 @@ function ResolveScreen({
     <main className="flex min-h-screen flex-col gap-8 p-10">
       <div className="flex flex-col items-center gap-4">
         <NightDots night={night} />
-        <h1 className="text-center text-4xl font-black text-zinc-300">
+        <h1 className="text-center text-4xl font-black text-parch-300">
           Night {night} · What happened out there
         </h1>
       </div>
@@ -738,13 +755,13 @@ function ResolveScreen({
         {results.slice(0, shown).map(({ player, result }) => (
           <div
             key={player.id}
-            className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6"
+            className="rounded-2xl border border-bark bg-oak/50 p-6"
           >
             <p className="text-2xl leading-snug">
               <span className="font-black" style={{ color: playerColor(player) }}>
                 {playerName(player)}
               </span>{" "}
-              <span className="text-zinc-200">{result!.outcome}</span>
+              <span className="text-parch-200">{result!.outcome}</span>
             </p>
             <div className="mt-3">
               <DeltaChips deltas={result!.deltas} />
@@ -759,7 +776,7 @@ function ResolveScreen({
             endNight(night, players);
           }
         }}
-        className="mx-auto rounded-xl border border-zinc-700 px-8 py-3 text-lg text-zinc-400 hover:border-zinc-500"
+        className="font-display mx-auto rounded-xl border border-bark-light px-8 py-3 text-lg text-parch-400 hover:border-parch-500"
       >
         {night >= NIGHT_COUNT ? "To the finale →" : `On to night ${night + 1} →`}
       </button>
@@ -802,28 +819,28 @@ function FinaleScreen({ players }: { players: PlayerState[] }) {
               className={
                 i === ending.length - 1
                   ? "pt-2 text-3xl font-black tracking-wide text-amber-400"
-                  : "text-2xl text-zinc-300"
+                  : "text-2xl text-parch-300"
               }
             >
               {p}
             </p>
           ))
         ) : (
-          <p className="animate-pulse text-2xl text-zinc-500">
+          <p className="animate-pulse text-2xl text-parch-500">
             Hollowbrook adds up the week…
           </p>
         )}
       </div>
 
       <section className="mt-4 w-full max-w-2xl">
-        <h2 className="mb-3 text-center text-xl font-bold text-zinc-400">
+        <h2 className="mb-3 text-center text-xl font-bold text-parch-400">
           Whose week was the wildest? · {voted}/{players.length} voted
         </h2>
         <ul className="flex flex-col gap-2">
           {players.map((p) => (
             <li
               key={p.id}
-              className="flex items-center justify-between rounded-xl border border-zinc-800 px-6 py-3 text-xl"
+              className="flex items-center justify-between rounded-xl border border-bark px-6 py-3 text-xl"
             >
               <span className="flex items-center gap-3 font-bold">
                 <PlayerDot player={p} />
@@ -839,7 +856,7 @@ function FinaleScreen({ players }: { players: PlayerState[] }) {
 
       <button
         onClick={() => beginEpilogue()}
-        className="rounded-xl bg-amber-500 px-10 py-4 text-xl font-black text-zinc-950 hover:bg-amber-400"
+        className="font-display rounded-xl bg-amber-500 px-10 py-4 text-xl text-night hover:bg-amber-400"
       >
         END THE WEEK
       </button>
@@ -865,7 +882,7 @@ function EpilogueScreen({ players }: { players: PlayerState[] }) {
     <main className="flex min-h-screen flex-col items-center gap-10 p-10">
       <h1 className="text-5xl font-black">SEVEN NIGHTS, SURVIVED</h1>
       {wildest && (
-        <p className="text-2xl text-zinc-300">
+        <p className="text-2xl text-parch-300">
           The village agrees:{" "}
           <span className="font-black text-amber-400">{playerName(wildest)}</span>{" "}
           had the wildest week.
@@ -873,7 +890,7 @@ function EpilogueScreen({ players }: { players: PlayerState[] }) {
       )}
       <table className="w-full max-w-3xl border-separate border-spacing-y-2 text-xl">
         <thead>
-          <tr className="text-left text-sm uppercase tracking-widest text-zinc-500">
+          <tr className="text-left text-sm uppercase tracking-widest text-parch-500">
             <th className="px-4">Player</th>
             {(Object.keys(STAT_LABELS) as StatId[]).map((s) => (
               <th key={s} className="px-4 text-center">
@@ -887,7 +904,7 @@ function EpilogueScreen({ players }: { players: PlayerState[] }) {
           {players.map((p) => {
             const stats = playerStats(p);
             return (
-              <tr key={p.id} className="rounded-xl bg-zinc-900/60">
+              <tr key={p.id} className="rounded-xl bg-oak/60">
                 <td className="flex items-center gap-3 rounded-l-xl px-4 py-3 font-bold">
                   <PlayerDot player={p} />
                   {playerName(p)}
@@ -906,20 +923,20 @@ function EpilogueScreen({ players }: { players: PlayerState[] }) {
         </tbody>
       </table>
       <section className="w-full max-w-6xl">
-        <h2 className="mb-4 text-center text-xl font-bold text-zinc-400">
+        <h2 className="mb-4 text-center text-xl font-bold text-parch-400">
           The week, night by night
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {players.map((p) => (
             <div
               key={p.id}
-              className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5"
+              className="rounded-2xl border border-bark bg-oak/40 p-5"
             >
               <p className="mb-3 flex items-center gap-2 text-lg font-bold">
                 <PlayerDot player={p} />
                 {playerName(p)}
               </p>
-              <ol className="flex flex-col gap-1.5 text-sm leading-snug text-zinc-400">
+              <ol className="flex flex-col gap-1.5 text-sm leading-snug text-parch-400">
                 {playerHistory(p).map((h) => (
                   <li key={h.night}>
                     <span className="font-mono font-bold text-amber-400/80">
@@ -929,7 +946,7 @@ function EpilogueScreen({ players }: { players: PlayerState[] }) {
                   </li>
                 ))}
                 {playerHistory(p).length === 0 && (
-                  <li className="text-zinc-600">slept through the week.</li>
+                  <li className="text-parch-600">slept through the week.</li>
                 )}
               </ol>
             </div>
@@ -938,7 +955,7 @@ function EpilogueScreen({ players }: { players: PlayerState[] }) {
       </section>
       <button
         onClick={() => backToLobby()}
-        className="rounded-xl border border-zinc-700 px-10 py-4 text-xl font-bold text-zinc-300 hover:border-zinc-500"
+        className="font-display rounded-xl border border-bark-light px-10 py-4 text-xl text-parch-300 hover:border-parch-500"
       >
         Play another week →
       </button>
@@ -960,7 +977,7 @@ function PlayerDot({ player }: { player: PlayerState }) {
 function PlayerChip({ player }: { player: PlayerState }) {
   return (
     <span
-      className="rounded-full px-3 py-1 text-sm font-bold text-zinc-950"
+      className="rounded-full px-3 py-1 text-sm font-bold text-night"
       style={{ backgroundColor: playerColor(player) }}
     >
       {playerName(player)}

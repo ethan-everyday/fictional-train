@@ -143,7 +143,7 @@ export default function StoryletPlayer({
   }
   if (!loaded) {
     return (
-      <p className="animate-pulse p-6 text-center text-zinc-400">
+      <p className="animate-pulse p-6 text-center text-parch-400">
         The night begins…
       </p>
     );
@@ -154,12 +154,12 @@ export default function StoryletPlayer({
       <p className="font-display mb-4 text-center text-base uppercase tracking-widest text-amber-400">
         {locationDef(location).name}
       </p>
-      <div className="flex flex-col gap-4 pb-6">
+      <div className="story-prose flex flex-col gap-4 pb-6">
         {revealed.map((text, i) => (
           <p
             key={i}
             className={`text-lg leading-relaxed ${
-              i === revealed.length - 1 ? "text-zinc-100" : "text-zinc-400"
+              i === revealed.length - 1 ? "text-parch-100" : "text-parch-400"
             }`}
           >
             {text}
@@ -176,8 +176,8 @@ export default function StoryletPlayer({
               disabled={choice.disabled}
               className={`rounded-xl border px-5 py-4 text-left text-lg font-semibold ${
                 choice.disabled
-                  ? "border-zinc-800 text-zinc-600"
-                  : "border-amber-500/60 bg-zinc-900 text-zinc-100 active:bg-zinc-800"
+                  ? "border-bark text-parch-600"
+                  : "border-amber-500/60 bg-oak text-parch-100 active:bg-bark"
               }`}
             >
               {choice.text}
@@ -196,7 +196,7 @@ export default function StoryletPlayer({
       ) : (
         <button
           onClick={advance}
-          className="mt-auto rounded-xl bg-zinc-800 px-5 py-4 pb-4 text-lg font-bold text-zinc-200 active:bg-zinc-700"
+          className="mt-auto rounded-xl bg-bark px-5 py-4 pb-4 text-lg font-bold text-parch-200 active:bg-bark-light"
         >
           Continue…
         </button>

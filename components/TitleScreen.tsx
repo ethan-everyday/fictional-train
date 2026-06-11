@@ -94,7 +94,7 @@ export default function TitleScreen({ hasSave, onStart }: Props) {
         alt=""
         className="kenburns absolute inset-0 h-full w-full object-cover object-center sepia-[.35] contrast-105"
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/55 via-zinc-950/25 to-zinc-950" />
+      <div className="absolute inset-0 bg-gradient-to-b from-night/55 via-night/25 to-night" />
       <div
         aria-hidden
         className="lantern pointer-events-none absolute inset-0 bg-[radial-gradient(1000px_600px_at_50%_120%,rgba(245,158,11,0.16),transparent_65%)]"
@@ -105,7 +105,7 @@ export default function TitleScreen({ hasSave, onStart }: Props) {
           <p className="mb-3 text-sm font-bold uppercase tracking-[0.45em] text-amber-300 [text-shadow:0_1px_8px_rgba(9,9,11,0.9)]">
             A party game of village fortunes
           </p>
-          <h1 className="text-8xl leading-none text-zinc-50 [text-shadow:0_3px_28px_rgba(9,9,11,0.95)] sm:text-9xl">
+          <h1 className="text-8xl leading-none text-parch-100 [text-shadow:0_3px_28px_rgba(9,9,11,0.95)] sm:text-9xl">
             Seven Nights
           </h1>
         </header>
@@ -115,19 +115,19 @@ export default function TitleScreen({ hasSave, onStart }: Props) {
             <h2 className="mb-2 text-3xl text-amber-300">Options</h2>
             <button
               onClick={toggleMusic}
-              className={`${menuButton} border-zinc-600 bg-zinc-950/70 text-zinc-100 backdrop-blur hover:border-amber-400`}
+              className={`${menuButton} border-parch-600 bg-night/70 text-parch-100 backdrop-blur hover:border-amber-400`}
             >
               Music: {muted ? "Off" : "On"}
             </button>
             <button
               onClick={toggleFullscreen}
-              className={`${menuButton} border-zinc-600 bg-zinc-950/70 text-zinc-100 backdrop-blur hover:border-amber-400`}
+              className={`${menuButton} border-parch-600 bg-night/70 text-parch-100 backdrop-blur hover:border-amber-400`}
             >
               Fullscreen: {fullscreen ? "On" : "Off"}
             </button>
             <button
               onClick={() => setShowOptions(false)}
-              className={`${menuButton} border-zinc-700 bg-zinc-950/70 text-zinc-400 backdrop-blur hover:border-zinc-400 hover:text-zinc-200`}
+              className={`${menuButton} border-bark-light bg-night/70 text-parch-400 backdrop-blur hover:border-parch-400 hover:text-parch-200`}
             >
               Back
             </button>
@@ -138,13 +138,13 @@ export default function TitleScreen({ hasSave, onStart }: Props) {
               <>
                 <button
                   onClick={() => onStart(false)}
-                  className={`${menuButton} border-amber-500 bg-amber-500 text-zinc-950 shadow-lg shadow-amber-500/25 hover:bg-amber-400`}
+                  className={`${menuButton} border-amber-500 bg-amber-500 text-night shadow-lg shadow-amber-500/25 hover:bg-amber-400`}
                 >
                   Continue
                 </button>
                 <button
                   onClick={() => onStart(true)}
-                  className={`${menuButton} border-zinc-600 bg-zinc-950/70 text-zinc-100 backdrop-blur hover:border-amber-400`}
+                  className={`${menuButton} border-parch-600 bg-night/70 text-parch-100 backdrop-blur hover:border-amber-400`}
                 >
                   New Game
                 </button>
@@ -152,25 +152,25 @@ export default function TitleScreen({ hasSave, onStart }: Props) {
             ) : (
               <button
                 onClick={() => onStart(true)}
-                className={`${menuButton} border-amber-500 bg-amber-500 text-zinc-950 shadow-lg shadow-amber-500/25 hover:bg-amber-400`}
+                className={`${menuButton} border-amber-500 bg-amber-500 text-night shadow-lg shadow-amber-500/25 hover:bg-amber-400`}
               >
                 Start
               </button>
             )}
             <button
               onClick={() => setShowOptions(true)}
-              className={`${menuButton} border-zinc-600 bg-zinc-950/70 text-zinc-100 backdrop-blur hover:border-amber-400`}
+              className={`${menuButton} border-parch-600 bg-night/70 text-parch-100 backdrop-blur hover:border-amber-400`}
             >
               Options
             </button>
             <button
               onClick={exitGame}
-              className={`${menuButton} border-zinc-700 bg-zinc-950/70 text-zinc-400 backdrop-blur hover:border-zinc-400 hover:text-zinc-200`}
+              className={`${menuButton} border-bark-light bg-night/70 text-parch-400 backdrop-blur hover:border-parch-400 hover:text-parch-200`}
             >
               Exit
             </button>
             {exitNote && (
-              <p className="text-sm text-zinc-500">
+              <p className="text-sm text-parch-500">
                 This browser won't let the page close itself — just close the
                 tab or window.
               </p>
@@ -178,7 +178,7 @@ export default function TitleScreen({ hasSave, onStart }: Props) {
           </div>
         )}
 
-        <footer className="fade-up fade-up-2 text-sm text-zinc-500 [text-shadow:0_1px_6px_rgba(9,9,11,0.9)]">
+        <footer className="fade-up fade-up-2 text-sm text-parch-500 [text-shadow:0_1px_6px_rgba(9,9,11,0.9)]">
           2–6 players · phones join over Wi-Fi once the room opens
         </footer>
       </div>

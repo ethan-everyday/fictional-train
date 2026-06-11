@@ -26,16 +26,16 @@ export default class ErrorBoundary extends Component<Props, State> {
       return (
         <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8 text-center">
           <h1 className="text-3xl font-black">Something broke</h1>
-          <p className="max-w-md font-mono text-sm text-zinc-500">
+          <p className="max-w-md font-mono text-sm text-parch-500">
             {this.state.error.message}
           </p>
-          <p className="max-w-md text-zinc-400">
+          <p className="max-w-md text-parch-400">
             Reloading rejoins the game where it was — stats and story survive
             a refresh.
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="rounded-xl bg-amber-500 px-10 py-4 text-xl font-bold text-zinc-950 hover:bg-amber-400"
+            className="rounded-xl bg-amber-500 px-10 py-4 text-xl font-bold text-night hover:bg-amber-400"
           >
             Reload
           </button>

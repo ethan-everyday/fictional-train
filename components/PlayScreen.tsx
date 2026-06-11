@@ -116,32 +116,32 @@ export default function PlayScreen() {
           SEVEN NIGHTS
         </h1>
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-bold text-zinc-400">Room code</span>
+          <span className="text-sm font-bold text-parch-400">Room code</span>
           <input
             value={roomCode}
             onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
             placeholder="ABCD"
             autoCapitalize="characters"
             autoComplete="off"
-            className="rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-center font-mono text-2xl tracking-[0.3em] outline-none focus:border-amber-400"
+            className="rounded-xl border border-bark-light bg-oak px-4 py-3 text-center font-mono text-2xl tracking-[0.3em] outline-none focus:border-amber-400"
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-bold text-zinc-400">Your name</span>
+          <span className="text-sm font-bold text-parch-400">Your name</span>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Maria"
             maxLength={16}
             autoComplete="off"
-            className="rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-center text-2xl outline-none focus:border-amber-400"
+            className="rounded-xl border border-bark-light bg-oak px-4 py-3 text-center text-2xl outline-none focus:border-amber-400"
           />
         </label>
         {error && <p className="text-center text-red-400">{error}</p>}
         <button
           type="submit"
           disabled={status === "joining" || !roomCode.trim() || !name.trim()}
-          className="rounded-xl bg-amber-500 px-6 py-4 text-xl font-bold text-zinc-950 disabled:opacity-40"
+          className="font-display rounded-xl bg-amber-500 px-6 py-4 text-xl text-night disabled:opacity-40"
         >
           {status === "joining" ? "Joining…" : "Join"}
         </button>
@@ -302,7 +302,7 @@ function PhoneLobby({ stats }: { stats: PlayerStats }) {
   const myName = getMyState<string>(KEY_NAME);
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-8 p-6">
-      <p className="text-center text-xl text-zinc-300">
+      <p className="text-center text-xl text-parch-300">
         You're in{myName ? `, ${myName}` : ""}. Watch the big screen.
       </p>
       <button
@@ -311,11 +311,11 @@ function PhoneLobby({ stats }: { stats: PlayerStats }) {
           setWaved((n) => n + 1);
           if (navigator.vibrate) navigator.vibrate(50);
         }}
-        className="h-44 w-44 rounded-full bg-amber-500 text-3xl font-black text-zinc-950 shadow-lg shadow-amber-500/30 active:scale-95"
+        className="h-44 w-44 rounded-full bg-amber-500 text-3xl font-black text-night shadow-lg shadow-amber-500/30 active:scale-95"
       >
         WAVE
       </button>
-      <p className="font-mono text-sm text-zinc-500">
+      <p className="font-mono text-sm text-parch-500">
         {waved === 0 ? "Tap to wave at the screen" : `Waved ${waved}×`}
       </p>
       <StatsBar stats={stats} />
@@ -355,20 +355,20 @@ function PhoneChoose({
                   ? "border-red-900/60 opacity-40"
                   : current === loc.id
                     ? "border-amber-400 bg-amber-500/10"
-                    : "border-zinc-700 bg-zinc-900"
+                    : "border-bark-light bg-oak"
               } ${locked && !isClosed ? "opacity-60" : ""} ${
-                !locked && !isClosed ? "active:bg-zinc-800" : ""
+                !locked && !isClosed ? "active:bg-bark" : ""
               }`}
             >
               <span className="block font-bold">{loc.name}</span>
-              <span className="block text-sm text-zinc-400">
+              <span className="block text-sm text-parch-400">
                 {isClosed ? "Closed tonight." : loc.blurb}
               </span>
             </button>
           );
         })}
       </div>
-      <p className="text-center text-zinc-400">
+      <p className="text-center text-parch-400">
         {locked
           ? "Locked in. The night begins…"
           : current
@@ -449,9 +449,9 @@ function PhoneFinale({ stats }: { stats: PlayerStats }) {
     <main className="flex min-h-screen flex-col gap-5 p-6">
       <h1 className="text-center text-2xl font-black">The week is over</h1>
       {ending && (
-        <p className="text-center italic text-zinc-400">{ending[ending.length - 1]}</p>
+        <p className="text-center italic text-parch-400">{ending[ending.length - 1]}</p>
       )}
-      <p className="text-center text-lg text-zinc-300">
+      <p className="text-center text-lg text-parch-300">
         One last thing: whose week was the wildest?
       </p>
       <div className="flex flex-col gap-3">
@@ -462,14 +462,14 @@ function PhoneFinale({ stats }: { stats: PlayerStats }) {
             className={`rounded-xl border px-5 py-4 text-lg font-bold ${
               vote === p.id
                 ? "border-amber-400 bg-amber-500/10"
-                : "border-zinc-700 bg-zinc-900 active:bg-zinc-800"
+                : "border-bark-light bg-oak active:bg-bark"
             }`}
           >
             {playerName(p)}
           </button>
         ))}
       </div>
-      <p className="text-center text-zinc-500">
+      <p className="text-center text-parch-500">
         {vote ? "Vote cast. You can change it until the host ends the week." : "Tap to vote."}
       </p>
       <StatsBar stats={stats} />
@@ -496,30 +496,30 @@ function PhoneEpilogue({
           {week.map((h) => (
             <li
               key={h.night}
-              className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3 text-sm"
+              className="rounded-xl border border-bark bg-oak/50 px-4 py-3 text-sm"
             >
               <span className="font-mono font-bold text-amber-400">
                 N{h.night}
               </span>{" "}
-              <span className="font-bold text-zinc-300">
+              <span className="font-bold text-parch-300">
                 {locationDef(h.location).name}
               </span>
-              <span className="block text-zinc-400">You {h.outcome}</span>
+              <span className="block text-parch-400">You {h.outcome}</span>
             </li>
           ))}
         </ol>
       )}
       {flags.length > 0 && (
         <div className="text-center">
-          <p className="mb-2 text-sm font-bold uppercase tracking-widest text-zinc-500">
+          <p className="mb-2 text-sm font-bold uppercase tracking-widest text-parch-500">
             Marks the week left on you
           </p>
-          <p className="text-zinc-300">
+          <p className="text-parch-300">
             {flags.map((f) => f.replaceAll("_", " ")).join(" · ")}
           </p>
         </div>
       )}
-      <p className="text-zinc-500">Thanks for playing the prototype.</p>
+      <p className="text-parch-500">Thanks for playing the prototype.</p>
     </main>
   );
 }
@@ -538,7 +538,7 @@ function Waiting({
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-6 text-center">
       <h1 className="text-3xl font-black">{title}</h1>
-      <p className="max-w-xs text-lg text-zinc-400">{line}</p>
+      <p className="max-w-xs text-lg text-parch-400">{line}</p>
       {deltas && <DeltaChips deltas={deltas} />}
       <StatsBar stats={stats} />
     </main>
@@ -571,17 +571,17 @@ export function DeltaChips({ deltas }: { deltas: PlayerStats }) {
 function StatsBar({ stats, big }: { stats: PlayerStats; big?: boolean }) {
   return (
     <div
-      className={`flex gap-3 rounded-xl border border-zinc-800 bg-zinc-900/60 px-4 py-3 ${
+      className={`flex gap-3 rounded-xl border border-bark bg-oak/60 px-4 py-3 ${
         big ? "text-base" : "text-xs"
       }`}
     >
       {(Object.keys(STAT_SHORT) as StatId[]).map((s) => (
         <span key={s} className="text-center">
-          <span className="block font-mono font-bold text-zinc-100">
+          <span className="block font-mono font-bold text-parch-100">
             {stats[s]}
-            <span className="text-zinc-600">/{STAT_CAP}</span>
+            <span className="text-parch-600">/{STAT_CAP}</span>
           </span>
-          <span className={s === "wealth" ? "text-amber-400" : "text-zinc-500"}>
+          <span className={s === "wealth" ? "text-amber-400" : "text-parch-500"}>
             {STAT_SHORT[s]}
           </span>
         </span>

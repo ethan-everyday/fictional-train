@@ -40,7 +40,7 @@ export default function MusicToggle() {
       className={`rounded-full border px-5 py-2 text-sm font-bold transition-colors ${
         playing
           ? "border-amber-500/60 text-amber-400"
-          : "border-zinc-700 text-zinc-400 hover:border-zinc-500"
+          : "border-bark-light text-parch-400 hover:border-parch-500"
       }`}
     >
       {playing ? "♪ The minstrel plays — hush him" : "♪ Let the minstrel play"}
