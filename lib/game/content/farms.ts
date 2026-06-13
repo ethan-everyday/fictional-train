@@ -1,0 +1,349 @@
+import type { LocationContent } from "./index";
+
+// Authored by the content fan-out, validated against the contract.
+export const farms: LocationContent = {
+  "activities": [
+    {
+      "id": "farms_harvest",
+      "location": "farms",
+      "name": "Bring in the Harvest",
+      "blurb": "Day-labour in the lord's fields. An aching back, an honest few coins, and every grumble worth hearing."
+    },
+    {
+      "id": "farms_reeve",
+      "location": "farms",
+      "name": "Square the Reeve's Ledger",
+      "blurb": "The Shire Reeve sits at the barn door with his great book. Everyone's debts are in it. So is yours."
+    },
+    {
+      "id": "farms_poach",
+      "location": "farms",
+      "name": "Walk the Lord's Wood",
+      "blurb": "The deer are fat before the fair, and the wood is dark. The verderer is not always watching."
+    },
+    {
+      "id": "farms_barn",
+      "location": "farms",
+      "name": "Linger at the Byres",
+      "blurb": "Where the cottars take their bread and their grievances. Nothing happens here that isn't known by morning."
+    }
+  ],
+  "events": [
+    {
+      "id": "farms_long_day",
+      "location": "farms",
+      "activities": [
+        "farms_harvest"
+      ],
+      "weight": 3,
+      "text": "The reeve wants the last of the lord's barley in before the fair, and there is more of it than there are hands. A bailiff points you at a scythe and says the pay is by the sheaf.",
+      "check": {
+        "stat": "strength",
+        "dc": 5
+      },
+      "pass": {
+        "text": "You cut a clean swathe and keep cutting long after the others have sat down in the stubble. By dusk you have raised the biggest stook in the field, and the bailiff counts your sheaves twice because he can't believe the first count.",
+        "outcome": "out-mowed the whole field and was paid by the sheaf.",
+        "stats": {
+          "strength": 1,
+          "wealth": 1
+        }
+      },
+      "fail": {
+        "text": "The scythe is heavier than it looks and the day is longer than the scythe. You bring in your share, but your back will remember it, and the bailiff pays you for honest middling work and no more.",
+        "outcome": "brought in an honest share of the barley and a sore back.",
+        "stats": {
+          "strength": 1
+        }
+      }
+    },
+    {
+      "id": "farms_reeve_ledger",
+      "location": "farms",
+      "activities": [
+        "farms_reeve"
+      ],
+      "weight": 3,
+      "text": "The Shire Reeve runs a blunt finger down the great ledger and finds your name. There is a figure beside it from a season you'd half forgotten. He looks up, patient as a millstone, and waits.",
+      "choices": [
+        {
+          "label": "Pay what the book says",
+          "effect": {
+            "text": "You count the coin into his palm. He licks his thumb, makes a careful stroke through your name, and for the first time all week looks at you as a man and not a number. A debt squared before the fair is a rare and noticed thing.",
+            "outcome": "paid the reeve's ledger clean and earned a careful nod.",
+            "stats": {
+              "wealth": -1,
+              "will": 1
+            },
+            "flags": [
+              "squared_the_ledger"
+            ]
+          }
+        },
+        {
+          "label": "Talk the figure down",
+          "effect": {
+            "text": "You remind him the field flooded that year, that half the parish owed the same, that the lord wants goodwill before the fair more than he wants this scraping. The reeve sighs, wets his thumb, and shaves the figure down to something a man can pay.",
+            "outcome": "argued the reeve down to a figure worth paying.",
+            "stats": {
+              "intelligence": 1
+            }
+          }
+        },
+        {
+          "label": "Swear you'll pay after the fair",
+          "effect": {
+            "text": "You promise it on your mother's grave and the saint's bones both. The reeve has heard every oath there is; he writes a small mark beside your name that you don't like the look of, and waves you on.",
+            "outcome": "talked his way out of the reeve's book for now.",
+            "stats": {
+              "agility": 1
+            },
+            "flags": [
+              "in_the_reeves_book"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "farms_reeve_clerk",
+      "location": "farms",
+      "activities": [
+        "farms_reeve"
+      ],
+      "requires": [
+        "squared_the_ledger"
+      ],
+      "weight": 2,
+      "text": "The reeve remembers a man who pays. He's drowning in figures with the fair two days off, and his own clerk has gone down with the flux. He pushes the great ledger an inch toward you and asks if your letters are any good.",
+      "check": {
+        "stat": "intelligence",
+        "dc": 6
+      },
+      "pass": {
+        "text": "You take up the quill and put the parish's tangled debts in order before the candle gutters: who owes, who's paid, who's lying. The reeve reads it over, grunts the grunt of a satisfied man, and says he'll remember the favour where it counts.",
+        "outcome": "set the reeve's whole ledger straight in a single night.",
+        "stats": {
+          "intelligence": 1,
+          "will": 1
+        },
+        "flags": [
+          "reeve_owes_you"
+        ]
+      },
+      "fail": {
+        "text": "The columns swim and the figures won't sit still, and twice you cross out a name that turns out to be owed money. The reeve takes the quill back gently, the way you'd take a knife from a child, and finds the rest of the night's work himself.",
+        "outcome": "muddled the reeve's ledger and was quietly relieved of the quill.",
+        "stats": {
+          "craft": 1
+        }
+      }
+    },
+    {
+      "id": "farms_steward_rents",
+      "location": "farms",
+      "activities": [
+        "farms_reeve",
+        "farms_barn"
+      ],
+      "requires": [
+        "met_steward"
+      ],
+      "weight": 2,
+      "text": "The lord's steward has ridden down to watch the reeve collect, and he picks you out of the yard with a thin smile of recognition. He could use a man who knows the parish to tell him which farmers are truly poor and which only play at it before the fair.",
+      "choices": [
+        {
+          "label": "Name the ones who are hiding coin",
+          "effect": {
+            "text": "You point out the cottar with the new roof and the widow with the fat geese, and the steward's clerk writes busily. It is not work that will make you friends at the byres, but the castle counts you useful now, and useful men are kept close.",
+            "outcome": "named the parish's hidden purses to the steward.",
+            "stats": {
+              "intelligence": 1
+            },
+            "flags": [
+              "lords_eye"
+            ]
+          }
+        },
+        {
+          "label": "Tell him the parish is honestly poor",
+          "effect": {
+            "text": "You swear the harvest was thin and the people thinner, and you say it with enough plain conviction that he believes you, or chooses to. Word gets back to the byres that you stood for them, and a man can eat on that kind of standing.",
+            "outcome": "swore the parish poor and won the cottars' goodwill.",
+            "stats": {
+              "will": 1
+            },
+            "flags": [
+              "barn_friends"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "farms_buck_in_the_glade",
+      "location": "farms",
+      "activities": [
+        "farms_poach"
+      ],
+      "weight": 2,
+      "text": "Past the boundary stones, the lord's wood breathes cold and dark. A great buck steps into a moonlit glade not forty paces off, the lord's deer in the lord's wood, and the verderer's gallows for any man caught with venison before the fair. But you mark the trails it walks, and the wallow it favours, and the deadfall where a snare would sit unseen.",
+      "effect": {
+        "text": "You don't take it tonight; only a fool rushes a hanging matter. But you learn the wood the way the deer knows it, and you know now exactly where you'd lie in wait. The glade keeps your secret until you're ready for it.",
+        "outcome": "marked the lord's buck and the trails it walks.",
+        "stats": {
+          "intelligence": 1
+        },
+        "flags": [
+          "marked_the_deer"
+        ]
+      }
+    },
+    {
+      "id": "farms_take_the_deer",
+      "location": "farms",
+      "activities": [
+        "farms_poach"
+      ],
+      "requires": [
+        "marked_the_deer"
+      ],
+      "weight": 2,
+      "text": "You return to the glade you scouted, snare in hand and the buck's trails fixed in your mind. Somewhere off in the dark the verderer's hound coughs once and goes quiet. Now is the moment, if there is one.",
+      "check": {
+        "stat": "agility",
+        "dc": 6
+      },
+      "pass": {
+        "text": "You move the way the wood moves, set the snare where the trail narrows, and have the buck down and gutted before the hound's master rounds the far ridge. By dawn the venison is jointed and hidden, worth a small fortune to the right cook before the fair.",
+        "outcome": "took the lord's buck clean and sold the venison quietly.",
+        "stats": {
+          "agility": 1,
+          "wealth": 2
+        },
+        "flags": [
+          "venison_to_sell"
+        ]
+      },
+      "fail": {
+        "text": "A twig goes off like a struck bell and the hound is suddenly very loud and very near. You leave the snare and most of your dignity in the bracken and run blind for the boundary stones, lucky to clear the wood with your neck unstretched.",
+        "outcome": "spooked the verderer's hound and fled the wood empty-handed.",
+        "stats": {
+          "agility": 1
+        }
+      }
+    },
+    {
+      "id": "farms_verderer_bribe",
+      "location": "farms",
+      "activities": [
+        "farms_poach",
+        "farms_barn"
+      ],
+      "requires": [
+        "venison_to_sell"
+      ],
+      "forbids": [
+        "lords_eye"
+      ],
+      "weight": 2,
+      "text": "The verderer finds you at the edge of the wood with a knowing look and a nose that's smelled blood before. He doesn't ask where the buck went. He asks, very reasonably, what's in it for a man who keeps his mouth shut.",
+      "choices": [
+        {
+          "label": "Cut him in on the venison",
+          "effect": {
+            "text": "You name him a joint of the best and a fair share of the coin. He weighs it, finds it fair, and decides the wood was empty tonight after all. A bought silence is the only kind worth having out here.",
+            "outcome": "bought the verderer's silence with a cut of the kill.",
+            "stats": {
+              "wealth": -1,
+              "craft": 1
+            },
+            "flags": [
+              "verderer_silenced"
+            ]
+          }
+        },
+        {
+          "label": "Stare him down and walk on",
+          "effect": {
+            "text": "You meet his look and let the quiet stretch until it's plain you'll give nothing and admit less. He grunts, spits, and lets you pass, but he marks your face, and a verderer's memory is longer than his patience.",
+            "outcome": "faced down the verderer and kept the whole kill.",
+            "stats": {
+              "will": 1
+            },
+            "flags": [
+              "verderer_marked_you"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "farms_byre_talk",
+      "location": "farms",
+      "activities": [
+        "farms_barn"
+      ],
+      "weight": 2,
+      "text": "The cottars share black bread and thin ale in the warmth of the byre, and the talk turns, as it always does this week, to the reeve and the steward and what the lord will skin them for at the fair. An old herdsman beckons you to sit, on condition you've ears to listen and not to carry.",
+      "check": {
+        "stat": "will",
+        "dc": 4
+      },
+      "pass": {
+        "text": "You sit quiet, trade your own grievance to earn theirs, and by the second cup they've forgotten you're not one of them. You leave knowing exactly how the lord means to set this year's rents, and what the parish plans to swear to keep them down.",
+        "outcome": "won the cottars' trust and learned how the rents will fall.",
+        "stats": {
+          "will": 1,
+          "intelligence": 1
+        },
+        "flags": [
+          "knows_the_tax",
+          "barn_friends"
+        ]
+      },
+      "fail": {
+        "text": "You ask one question too many and too sharp, and the herdsman's eyes go flat. The talk turns abruptly to weather and worms, and a younger man walks you politely but firmly back out into the cold.",
+        "outcome": "asked one question too many and got walked out of the byre.",
+        "stats": {
+          "intelligence": 1
+        }
+      }
+    },
+    {
+      "id": "farms_michaelmas_goose",
+      "location": "farms",
+      "activities": [
+        "farms_barn",
+        "farms_harvest"
+      ],
+      "requires": [
+        "barn_friends"
+      ],
+      "weight": 2,
+      "text": "Word's got round the byres that you stood for the parish, or at least didn't sell it. A widow with the fattest geese in the hundred presses one into your arms for the Michaelmas table; a Michaelmas goose is a gift with weight, and a debt of the gentler kind.",
+      "effect": {
+        "text": "You take the goose with the proper show of refusing it first, the way it's done. The cottars count you a friend now, plainly, and friends in the byres are friends who don't forget, at the fair or after it.",
+        "outcome": "was gifted a Michaelmas goose and counted a friend of the parish.",
+        "stats": {
+          "will": 1,
+          "wealth": 1
+        }
+      }
+    },
+    {
+      "id": "farms_quiet_furrow",
+      "location": "farms",
+      "activities": [],
+      "weight": 1,
+      "text": "A grey, ordinary morning in the fields. No reeve, no steward, no buck in the glade, only the long furrow ahead and the rooks arguing over what the plough turns up. You set your shoulder to honest work and let your mind go quiet.",
+      "effect": {
+        "text": "Nothing happens that anyone will remember. But a day at the plough leaves you steadier in yourself than a day of scheming ever did, and you walk back to the village with the smell of turned earth and a clearer head.",
+        "outcome": "spent a plain day at the plough and came back steadier.",
+        "stats": {
+          "will": 1
+        }
+      }
+    }
+  ]
+};

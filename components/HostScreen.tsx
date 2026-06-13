@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { DeltaChips } from "@/components/PlayScreen";
+import { DeltaChips } from "@/components/StatBits";
 import TitleScreen from "@/components/TitleScreen";
 import {
+  KEY_CHARACTER,
   kickPlayer,
   playerColor,
   playerConnected,
@@ -16,6 +17,8 @@ import {
   useServerConnection,
   type PlayerState,
 } from "@/lib/game/connection";
+import { roleDef } from "@/lib/game/character";
+import type { Character } from "@/lib/game/types";
 import {
   locationDef,
   LOCATIONS,
@@ -49,8 +52,7 @@ import {
   useNight,
   usePhase,
 } from "@/lib/game/state";
-import { getStoryContent } from "@/lib/ink/loadStory";
-import { runToEnd } from "@/lib/ink/storylet";
+import { finaleEnding } from "@/lib/game/finale";
 import {
   audioUnlocked,
   isMuted,
@@ -451,6 +453,14 @@ function LobbyScreen({
   const now = useClock(500);
   const pingByPlayer = new Map(pings.map(({ player, ping }) => [player.id, ping]));
 
+  const hasCharacter = (p: PlayerState) =>
+    Boolean(p.getState(KEY_CHARACTER));
+  const readyCount = players.filter(hasCharacter).length;
+  // Don't begin until every connected player has built a character.
+  const connected = players.filter(playerConnected);
+  const allReady =
+    players.length > 0 && connected.every(hasCharacter);
+
   return (
     <main className="flex min-h-screen flex-col items-center gap-8 p-10">
       <header className="text-center">
@@ -496,7 +506,7 @@ function LobbyScreen({
         <h2 className="mb-4 text-center text-xl font-bold text-parch-400">
           {players.length === 0
             ? "Waiting for players…"
-            : `${players.length} player${players.length === 1 ? "" : "s"} ready`}
+            : `${readyCount} of ${players.length} have chosen their lot`}
         </h2>
         <ul className="flex flex-col gap-3">
           {players.map((player) => {
@@ -513,9 +523,13 @@ function LobbyScreen({
                 <span className="flex items-center gap-4 font-bold">
                   <PlayerDot player={player} />
                   {playerName(player)}
-                  {away && (
+                  {away ? (
                     <span className="text-base font-normal text-parch-500">
                       reconnecting…
+                    </span>
+                  ) : (
+                    <span className="text-base font-normal text-parch-500">
+                      {roleLabel(player)}
                     </span>
                   )}
                 </span>
@@ -544,6 +558,7 @@ function LobbyScreen({
         </ul>
         {players.length > 0 && (
           <button
+            disabled={!allReady}
             onClick={() => {
               // This click is the user gesture that unlocks autoplay for the
               // whole session; the ambient bed starts here.
@@ -552,12 +567,12 @@ function LobbyScreen({
               });
               startGame(players);
             }}
-            className="font-display mx-auto mt-8 block rounded-xl bg-amber-500 px-12 py-4 text-2xl text-night hover:bg-amber-400"
+            className="font-display mx-auto mt-8 block rounded-xl bg-amber-500 px-12 py-4 text-2xl text-night hover:bg-amber-400 disabled:opacity-40"
           >
-            BEGIN THE WEEK
+            {allReady ? "BEGIN THE WEEK" : "Waiting for players to choose…"}
           </button>
         )}
-        {players.length === 1 && (
+        {players.length === 1 && allReady && (
           <p className="mt-2 text-center text-sm text-parch-500">
             (Solo works for testing; it's better with 2–6.)
           </p>
@@ -789,15 +804,12 @@ function ResolveScreen({
 function FinaleScreen({ players }: { players: PlayerState[] }) {
   const [ending] = useEnding();
 
-  // Run the finale knot exactly once, on the party's average stats, and
-  // publish it to shared state so it survives a host refresh.
+  // Compute the ending once, on the party's average stats, and publish it
+  // to shared state so it survives a host refresh.
   useEffect(() => {
     if (players.length === 0 || getPublishedEnding()) return;
-    getStoryContent().then((content) => {
-      if (getPublishedEnding()) return;
-      const avg = averageStats(players.map(playerStats));
-      publishEnding(runToEnd(content, "finale", avg));
-    });
+    const avg = averageStats(players.map(playerStats));
+    publishEnding(finaleEnding(avg));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [players.length]);
 
@@ -964,6 +976,13 @@ function EpilogueScreen({ players }: { players: PlayerState[] }) {
 }
 
 // ------------------------------------------------------------------ BITS
+
+/** A player's chosen role for the lobby, or "choosing…" until they pick. */
+function roleLabel(player: PlayerState): string {
+  const character = player.getState(KEY_CHARACTER) as Character | undefined;
+  if (!character) return "choosing…";
+  return roleDef(character.role)?.name ?? "ready";
+}
 
 function PlayerDot({ player }: { player: PlayerState }) {
   return (

@@ -11,7 +11,9 @@ export const NIGHT_INTRO_MS = 4500;
 /** Pace of the resolve screen: one player's outcome revealed per beat. */
 export const RESOLVE_BEAT_MS = 4000;
 
-// Everyone starts a capable nobody; Wealth starts low so coin is earned.
+// Fallback stats for a player who somehow reaches the game without having
+// built a character. Real starting stats come from role + background
+// (see lib/game/character.ts).
 export const DEFAULT_STATS: PlayerStats = {
   intelligence: 2,
   strength: 2,
@@ -22,12 +24,12 @@ export const DEFAULT_STATS: PlayerStats = {
 };
 
 /**
- * Stats clamp to 0..STAT_CAP (enforced by the ink engine on the way out).
- * Gate escalation convention: "needs 3" early week, "needs 4" behind
- * {night >= 4} choices, "needs 5" behind {night >= 6} — so growth stays
- * meaningful all seven nights. The validator rejects gates above the cap.
+ * Stats clamp to 0..STAT_CAP. Base stats land roughly 1–6 from role +
+ * background; seven nights of gains push a focused stat toward the ceiling.
+ * Hidden event checks (StatCheck.dc) must stay within this range — the
+ * content validator rejects any dc above the cap.
  */
-export const STAT_CAP = 5;
+export const STAT_CAP = 10;
 
 export const STAT_LABELS: Record<StatId, string> = {
   intelligence: "Intelligence",
@@ -52,18 +54,16 @@ export interface LocationDef {
   id: LocationId;
   name: string;
   blurb: string;
-  /** Ink knot that plays when a player spends the night here. */
-  knot: string;
 }
 
 export const LOCATIONS: LocationDef[] = [
-  { id: "church", name: "The Church", blurb: "The priest, the candles, the tithe.", knot: "storylet_church" },
-  { id: "tavern", name: "The Tavern", blurb: "The innkeep pours, the gamblers deal.", knot: "storylet_tavern" },
-  { id: "market", name: "The Market", blurb: "Butcher, armourer, and every stall between.", knot: "storylet_market" },
-  { id: "farms", name: "The Farms", blurb: "Harvest hands wanted; the reeve is counting.", knot: "storylet_farms" },
-  { id: "castle", name: "The Castle", blurb: "The lord's hall, if they'll let you in.", knot: "storylet_castle" },
-  { id: "slums", name: "The Slums", blurb: "Crowded, cold, and nobody lies to you here.", knot: "storylet_slums" },
-  { id: "docks", name: "The Docks", blurb: "Foreign traders, heavy cargo, loose talk.", knot: "storylet_docks" },
+  { id: "church", name: "The Church", blurb: "The priest, the candles, the tithe." },
+  { id: "tavern", name: "The Tavern", blurb: "The innkeep pours, the gamblers deal." },
+  { id: "market", name: "The Market", blurb: "Butcher, armourer, and every stall between." },
+  { id: "farms", name: "The Farms", blurb: "Harvest hands wanted; the reeve is counting." },
+  { id: "castle", name: "The Castle", blurb: "The lord's hall, if they'll let you in." },
+  { id: "slums", name: "The Slums", blurb: "Crowded, cold, and nobody lies to you here." },
+  { id: "docks", name: "The Docks", blurb: "Foreign traders, heavy cargo, loose talk." },
 ];
 
 export function locationDef(id: LocationId): LocationDef {

@@ -1,11 +1,14 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import StoryletPlayer from "@/components/StoryletPlayer";
+import EventPlayer from "@/components/EventPlayer";
+import CharacterCreate from "@/components/CharacterCreate";
+import { DeltaChips, StatsBar } from "@/components/StatBits";
 import {
   getMyId,
   getMyState,
   joinRoom,
+  KEY_CHARACTER,
   KEY_FLAGS,
   KEY_HISTORY,
   KEY_NAME,
@@ -28,6 +31,7 @@ import {
   STAT_LABELS,
   STAT_SHORT,
 } from "@/lib/game/constants";
+import { baseStats, roleDef, startingFlags } from "@/lib/game/character";
 import {
   useActiveEvent,
   useAssignments,
@@ -36,6 +40,7 @@ import {
   usePhase,
 } from "@/lib/game/state";
 import type {
+  Character,
   LocationPick,
   NightRecord,
   PlayerStats,
@@ -160,11 +165,28 @@ function PhoneGame({ room }: { room: string }) {
   const [flags, setFlags] = useMyState<string[]>(KEY_FLAGS, []);
   const [result, setResult] = useMyState<StoryletResult | null>(KEY_RESULT, null);
   const [history, setHistory] = useMyState<NightRecord[]>(KEY_HISTORY, []);
+  const [character, setCharacter] = useMyState<Character | null>(
+    KEY_CHARACTER,
+    null,
+  );
 
-  // First join: give the player their starting stats.
+  /** Confirm a built character: it sets the starting stats and flags. */
+  function confirmCharacter(c: Character) {
+    setCharacter(c);
+    setStats(baseStats(c));
+    setFlags(startingFlags(c));
+  }
+
+  // "Play another week" keeps the character but wipes stats/flags. Back in
+  // the lobby with a character but no stats, re-roll the starting stats so
+  // the same person begins a fresh week.
   useEffect(() => {
-    if (stats === null) setStats(DEFAULT_STATS);
-  }, [stats, setStats]);
+    if (phase === "lobby" && character && stats === null) {
+      setStats(baseStats(character));
+      setFlags(startingFlags(character));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, character, stats]);
 
   // A finished (or abandoned) week leaves mid-storylet saves behind; if the
   // same room plays again, night 1 would resume a stale story. Lobby = clean.
@@ -221,6 +243,8 @@ function PhoneGame({ room }: { room: string }) {
         {
           night: r.night,
           location: r.location,
+          activity: r.activity,
+          eventId: r.eventId,
           outcome: r.outcome,
           deltas: r.deltas,
           flagsSet: r.flagsSet,
@@ -248,7 +272,14 @@ function PhoneGame({ room }: { room: string }) {
   function renderPhase() {
   switch (phase) {
     case "lobby":
-      return <PhoneLobby stats={effectiveStats} />;
+      // Build a character before the week begins. A reconnect that already
+      // has one skips straight to the lobby.
+      if (!character) {
+        return (
+          <CharacterCreate initial={character} onConfirm={confirmCharacter} />
+        );
+      }
+      return <PhoneLobby stats={effectiveStats} character={character} />;
     case "night-intro":
       return (
         <Waiting
@@ -273,7 +304,6 @@ function PhoneGame({ room }: { room: string }) {
           stats={effectiveStats}
           flags={flags}
           history={history}
-          eventId={activeEvent?.id ?? ""}
           result={result}
           onComplete={completeStorylet}
         />
@@ -297,14 +327,29 @@ function PhoneGame({ room }: { room: string }) {
   }
 }
 
-function PhoneLobby({ stats }: { stats: PlayerStats }) {
+function PhoneLobby({
+  stats,
+  character,
+}: {
+  stats: PlayerStats;
+  character: Character;
+}) {
   const [waved, setWaved] = useState(0);
   const myName = getMyState<string>(KEY_NAME);
+  const role = roleDef(character.role);
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-8 p-6">
-      <p className="text-center text-xl text-parch-300">
-        You're in{myName ? `, ${myName}` : ""}. Watch the big screen.
-      </p>
+      <div className="text-center">
+        <p className="text-xl text-parch-300">
+          You're in{myName ? `, ${myName}` : ""}.
+        </p>
+        {role && (
+          <p className="font-display mt-1 text-lg text-amber-400">
+            {role.name}
+          </p>
+        )}
+        <p className="mt-1 text-sm text-parch-500">Watch the big screen.</p>
+      </div>
       <button
         onClick={() => {
           sendPing();
@@ -386,7 +431,6 @@ function PhoneStorylet({
   stats,
   flags,
   history,
-  eventId,
   result,
   onComplete,
 }: {
@@ -395,15 +439,11 @@ function PhoneStorylet({
   stats: PlayerStats;
   flags: string[];
   history: NightRecord[];
-  eventId: string;
   result: StoryletResult | null;
   onComplete: (r: StoryletResult) => void;
 }) {
   const [assignments] = useAssignments();
   const myLocation = assignments?.[getMyId()] ?? null;
-  const visits = myLocation
-    ? history.filter((h) => h.location === myLocation).length
-    : 0;
 
   if (result?.night === night) {
     return (
@@ -425,13 +465,13 @@ function PhoneStorylet({
     );
   }
   return (
-    <StoryletPlayer
+    <EventPlayer
+      playerId={getMyId()}
       night={night}
       location={myLocation}
       stats={stats}
       flags={flags}
-      visits={visits}
-      eventId={eventId}
+      history={history}
       saveKey={`7n:save:${room}:n${night}`}
       onComplete={onComplete}
     />
@@ -545,47 +585,3 @@ function Waiting({
   );
 }
 
-export function DeltaChips({ deltas }: { deltas: PlayerStats }) {
-  const chips = (Object.keys(STAT_LABELS) as StatId[])
-    .filter((s) => deltas[s] !== 0)
-    .map((s) => `${deltas[s] > 0 ? "+" : ""}${deltas[s]} ${STAT_LABELS[s]}`);
-  if (chips.length === 0) return null;
-  return (
-    <div className="flex flex-wrap justify-center gap-2">
-      {chips.map((chip) => (
-        <span
-          key={chip}
-          className={`rounded-full px-3 py-1 text-sm font-bold ${
-            chip.startsWith("-")
-              ? "bg-rose-500/20 text-rose-300"
-              : "bg-emerald-500/20 text-emerald-300"
-          }`}
-        >
-          {chip}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function StatsBar({ stats, big }: { stats: PlayerStats; big?: boolean }) {
-  return (
-    <div
-      className={`flex gap-3 rounded-xl border border-bark bg-oak/60 px-4 py-3 ${
-        big ? "text-base" : "text-xs"
-      }`}
-    >
-      {(Object.keys(STAT_SHORT) as StatId[]).map((s) => (
-        <span key={s} className="text-center">
-          <span className="block font-mono font-bold text-parch-100">
-            {stats[s]}
-            <span className="text-parch-600">/{STAT_CAP}</span>
-          </span>
-          <span className={s === "wealth" ? "text-amber-400" : "text-parch-500"}>
-            {STAT_SHORT[s]}
-          </span>
-        </span>
-      ))}
-    </div>
-  );
-}

@@ -1,13 +1,16 @@
 # Seven Nights (working title)
 
 A 7-night narrative party game: one host screen (TV/laptop), 2–6 phones as
-controllers, story content driven by [Ink](https://www.inklestudios.com/ink/).
+controllers, driven by a data-defined event engine.
 
 Setting: grounded medieval — seven nights before the Michaelmas Fair in the
-village of Hollowbrook. Seven locations (church, tavern, market, farms,
-castle, slums, docks), each with its own people (the priest, the innkeep and
-gamblers, the Shire Reeve, the lord, the foreign traders…), stat-gated and
-flag-gated choices, and a week that remembers what you did.
+village of Hollowbrook. Each player builds a character (1 of 6 **roles** ×
+1 of 6 **backgrounds**, which set hidden base stats), then spends each night
+at one of seven locations. Each location offers 2–4 **activities**; doing one
+draws a random **event** from that location's pool. Events chain across the
+week — meet the lord's steward at the tavern and the castle gate opens later.
+**Stats are never shown as requirements**; they tilt hidden checks behind the
+prose. The week remembers everything you did.
 
 ## Architecture: local-first, Steam-shaped
 
@@ -78,42 +81,43 @@ electron/        desktop shell: embeds server.js, opens the host window
   /play          the phone controller
 /components      the actual screens (loaded client-only)
 /lib
-  /game          connection.ts + socket.ts (ALL multiplayer), turn machine
-  /ink           ALL ink code; nothing else imports inkjs
+  /game          connection.ts + socket.ts (ALL multiplayer), turn machine,
+                 character.ts, events.ts (engine), finale.ts
+  /game/content  one file per location: activities + the event pool
   /audio         host-only sound (ambient + stingers, silence-tolerant)
-/stories         Ink sources; `npm run stories` compiles + contract-checks
-/scripts         ink build + validator (runs automatically before dev/build)
-/tests           server protocol tests        /e2e   full-game Playwright
+/tests           engine, content-contract, and server protocol tests
+/e2e             full-game Playwright
 ```
 
-Ground rules: multiplayer goes through `/lib/game`, Ink goes through
-`/lib/ink`, and every architectural choice gets a line in `DECISIONS.md`.
+Ground rules: multiplayer goes through `/lib/game`, all content is data in
+`/lib/game/content`, and every architectural choice gets a line in
+`DECISIONS.md`.
 
-## Writing storylets
+## Writing content
 
-Edit `stories/main.ink` (plain text; Inky optional — the build compiles it).
-The contract per storylet knot:
+Content is plain TypeScript data in `lib/game/content/<location>.ts` (see
+`tavern.ts` as the reference). Each location exports `{ activities, events }`.
 
-- The game writes `intelligence/strength/agility/craft/will/wealth` in before
-  the knot runs and reads them back out at the end (clamped 0–5). Change them
-  with `~ craft = craft + 1`; wealth can also be spent: `~ wealth = wealth - 1`.
-- Set `~ outcome = "..."` to one short line; the host shows "<name> <outcome>".
-- `flag_*` booleans become persistent story flags on the player.
-- Gate a choice with a tag *inside* the brackets:
-  `* [Join the harvest line # needs: strength 3]` — shown but disabled until
-  the stat meets the bar.
-- Three read-only context vars are written in before the knot runs:
-  `night` (1–7), `visits` (previous nights this player spent at this
-  location — 0 on a first visit), and `event` (the current drama event id,
-  or `""` on an ordinary night). Branch with conditional text
-  `{visits == 0: first-time line | return-visit line}`, gate choices with
-  `* {night >= 5} [...]`, or dispatch whole variants at the top of a knot:
-  `{night >= 6: -> storylet_castle_eve}` (see the castle for the pattern).
-- **Each night is a fresh story.** Sequences, cycles, and read counts do NOT
-  carry between nights — only stats, `flag_*`, and the context vars above do.
-- `npm run stories` compiles AND contract-checks every knot (every choice
-  path must reach END with `outcome` set, gate tags must parse, finale knots
-  must be choice-free). Run it after every writing session.
+- **Activities** (2–4 per location): the things a player can choose to do.
+  Just `{ id, location, name, blurb }` — they never show stat requirements.
+- **Events** (7–10 per location) fire at random when an activity is done.
+  Each event is ONE of three shapes:
+  - flat `effect` — a fixed outcome;
+  - hidden `check: { stat, dc }` + `pass`/`fail` — stats decide the branch,
+    invisibly (dc is 1–10, never shown);
+  - `choices: [...]` — 2–3 player options, each a plain action label.
+- Every branch (`effect`/`pass`/`fail`/`choices[].effect`) sets `text` (the
+  prose the player reads), `outcome` (one short host line: "<name> <outcome>"),
+  optional `stats` deltas, and optional `flags`.
+- **Chaining**: an event's `flags` unlock later events via their `requires`
+  (and `forbids`) — works across locations and nights (e.g. tavern's
+  `met_steward` → castle's `audience_with_lord`). `repeatable` events can
+  fire again; everything else fires once per week.
+- `baseStats` come from the chosen role + background (`lib/game/character.ts`);
+  stats clamp 0–`STAT_CAP`.
+- `npm test` runs the content contract: unique ids, valid shapes, real
+  stats/locations/activities, dc ≤ cap, and **no orphan prerequisites** (every
+  required flag is producible somewhere). Run it after every writing session.
 
 ## Sound (optional)
 

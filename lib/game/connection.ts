@@ -29,6 +29,7 @@ export const KEY_PICK = "pick";
 export const KEY_RESULT = "result";
 export const KEY_VOTE = "vote";
 export const KEY_HISTORY = "history";
+export const KEY_CHARACTER = "character";
 
 export interface Ping {
   count: number;
@@ -269,7 +270,8 @@ export function getMyId(): string {
   return store.myId ?? "";
 }
 
-/** Wipe all game state but keep player names; used by "back to lobby". */
+/** Wipe a week's state but keep player names and their built characters,
+ * so "play another week" replays with the same people. */
 export async function resetRoom(): Promise<void> {
-  sendReset([KEY_NAME]);
+  sendReset([KEY_NAME, KEY_CHARACTER]);
 }

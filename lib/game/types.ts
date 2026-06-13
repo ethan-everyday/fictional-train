@@ -35,42 +35,143 @@ export interface PlayerStats {
   wealth: number;
 }
 
+// ---------------------------------------------------------- character
+
+export type RoleId =
+  | "knight"
+  | "scholar"
+  | "merchant"
+  | "outlaw"
+  | "cleric"
+  | "smith";
+
+export type BackgroundId =
+  | "noble"
+  | "peasant"
+  | "foreigner"
+  | "orphan"
+  | "guild"
+  | "soldier";
+
+/** A role or background: a name, flavour, and the stat bonuses it grants. */
+export interface OriginDef<Id extends string> {
+  id: Id;
+  name: string;
+  blurb: string;
+  /** Stat bonuses added on top of the floor (any subset of stats). */
+  bonus: Partial<PlayerStats>;
+  /** A story flag the character starts the week already carrying. */
+  startFlag?: string;
+}
+
+export type RoleDef = OriginDef<RoleId>;
+export type BackgroundDef = OriginDef<BackgroundId>;
+
+/** The character a player built at the start. Null until they pick. */
+export interface Character {
+  role: RoleId;
+  background: BackgroundId;
+}
+
+// ------------------------------------------------------------ events
+
+/** A thing you can choose to do at a location. NEVER shows stat gates. */
+export interface Activity {
+  id: string;
+  location: LocationId;
+  name: string;
+  blurb: string;
+}
+
+/** A hidden stat check: the event branches pass/fail on stat >= dc. */
+export interface StatCheck {
+  stat: StatId;
+  dc: number;
+}
+
+/** The result of an event branch: prose, a host line, and what it changes. */
+export interface EventEffect {
+  /** Prose shown to the player for this branch. */
+  text: string;
+  /** One short line for the host resolve screen: "<name> <outcome>". */
+  outcome: string;
+  /** Stat deltas to apply (any subset). */
+  stats?: Partial<PlayerStats>;
+  /** Flags set true — these unlock later events across the week. */
+  flags?: string[];
+}
+
+/** A player-facing choice within an event. The label never reveals stats. */
+export interface EventChoice {
+  label: string;
+  effect: EventEffect;
+}
+
+/**
+ * A random event that can fire when a player does an activity. One of three
+ * shapes: a flat `effect`, a hidden `check` (pass/fail), or player `choices`.
+ * `requires`/`forbids` chain events together across locations and nights.
+ */
+export interface GameEvent {
+  id: string;
+  location: LocationId;
+  /** Activity ids that can trigger it; empty = any activity at the location. */
+  activities: string[];
+  /** All these flags must be set for the event to be eligible. */
+  requires?: string[];
+  /** If any of these flags are set, the event is ineligible. */
+  forbids?: string[];
+  /** Can fire more than once across the week? Default false (once only). */
+  repeatable?: boolean;
+  /** Relative selection weight among eligible events (default 1). */
+  weight?: number;
+  /** Setup prose, shown before any branch or choice. */
+  text: string;
+
+  // Exactly one of the following three resolution shapes:
+  /** Hidden stat check; with `pass` and `fail`. */
+  check?: StatCheck;
+  pass?: EventEffect;
+  fail?: EventEffect;
+  /** A player choice (2–3 options). */
+  choices?: EventChoice[];
+  /** A flat, deterministic outcome. */
+  effect?: EventEffect;
+}
+
+// --------------------------------------------------------- networking
+
 /** A phone's location pick, tagged with the night so stale picks are ignored. */
 export interface LocationPick {
   night: number;
   location: LocationId;
 }
 
-/** What a phone reports back after finishing its storylet. */
+/** What a phone reports back after finishing its night. */
 export interface StoryletResult {
   night: number;
   location: LocationId;
-  /** One short line for the host resolve screen, written by Ink. */
+  /** The activity the player chose. */
+  activity: string;
+  /** The event that fired (id), for de-duping and the epilogue. */
+  eventId: string;
+  /** One short line for the host resolve screen. */
   outcome: string;
-  /** Stats after the storylet. */
+  /** Stats after the night. */
   stats: PlayerStats;
-  /** Stat change this storylet caused (for the +1 Charm toasts). */
+  /** Stat change this night caused (for the +1 toasts). */
   deltas: PlayerStats;
-  /** Flags this storylet set. */
+  /** Flags this night set. */
   flagsSet: string[];
 }
 
-/** One finished night, appended to the player's week history (the archive
- * behind the epilogue recap and the "visits" count fed back into ink). */
+/** One finished night, appended to the player's week history. */
 export interface NightRecord {
   night: number;
   location: LocationId;
+  activity: string;
+  eventId: string;
   outcome: string;
   deltas: PlayerStats;
   flagsSet: string[];
-}
-
-/** A choice as rendered on the phone: ink choice + stat-gate metadata. */
-export interface UiChoice {
-  index: number;
-  text: string;
-  /** Set when the choice carries a "# needs: stat N" tag the player fails. */
-  disabled: boolean;
-  /** Human-readable requirement, e.g. "Needs Body 3". Shown even when met. */
-  requirement: string | null;
 }

@@ -1,0 +1,286 @@
+import type { LocationContent } from "./index";
+
+// Authored by the content fan-out, validated against the contract.
+export const docks: LocationContent = {
+  "activities": [
+    {
+      "id": "docks_haul",
+      "location": "docks",
+      "name": "Haul cargo by the crate",
+      "blurb": "Paid by the crate, worked till your arms give out."
+    },
+    {
+      "id": "docks_trade",
+      "location": "docks",
+      "name": "Talk trade with the factor",
+      "blurb": "The foreign traders' man keeps a ledger and a sharp ear."
+    },
+    {
+      "id": "docks_nightwork",
+      "location": "docks",
+      "name": "Work the torchlit wharf",
+      "blurb": "A nameless ship, an unlisted shift, no questions asked."
+    }
+  ],
+  "events": [
+    {
+      "id": "docks_crate_pay",
+      "location": "docks",
+      "activities": [
+        "docks_haul"
+      ],
+      "weight": 3,
+      "text": "The gangboss counts heads, then crates. Move enough of them before the tide turns and the coin is yours; slack, and someone else takes your tally.",
+      "check": {
+        "stat": "strength",
+        "dc": 4
+      },
+      "pass": {
+        "text": "You shoulder twice your share and the gangboss marks your tally without arguing. Honest weight, honest coin.",
+        "outcome": "out-hauled the gang and was paid by the crate.",
+        "stats": {
+          "strength": 1,
+          "wealth": 1
+        }
+      },
+      "fail": {
+        "text": "The crates win. By the turn of the tide your back is one long ache and your tally is half what you hoped.",
+        "outcome": "was beaten by the crates and went home half-paid.",
+        "stats": {
+          "will": 1
+        }
+      }
+    },
+    {
+      "id": "docks_factor_ledger",
+      "location": "docks",
+      "activities": [
+        "docks_trade"
+      ],
+      "weight": 2,
+      "text": "The foreign traders' factor sits behind a ledger thick as a hymnal, weighing every word as if it cost him a penny. He'll talk trade, if you can keep up.",
+      "check": {
+        "stat": "intelligence",
+        "dc": 5
+      },
+      "pass": {
+        "text": "You match his figures sum for sum and he warms by a degree, letting slip which prices the fair will and won't bear. A friend behind the ledger is no small thing.",
+        "outcome": "talked the foreign factor's own trade back at him and won his ear.",
+        "stats": {
+          "intelligence": 1,
+          "will": 1
+        },
+        "flags": [
+          "factor_friend"
+        ]
+      },
+      "fail": {
+        "text": "He runs three figures past you and watches you lose the thread on the second. He goes back to his ledger, and you go back to the cold.",
+        "outcome": "lost the thread of the factor's figures and was waved off.",
+        "stats": {
+          "intelligence": 1
+        }
+      }
+    },
+    {
+      "id": "docks_factor_consignment",
+      "location": "docks",
+      "activities": [
+        "docks_trade"
+      ],
+      "requires": [
+        "factor_friend"
+      ],
+      "weight": 2,
+      "text": "The factor remembers your head for figures. He has a small consignment that wants a clever hand to see it sold before the fair, and a cut for the one who manages it.",
+      "effect": {
+        "text": "You broker his goods to three buyers at three prices and keep the difference with his blessing. Coin, and a name that travels on foreign ships.",
+        "outcome": "brokered the factor's consignment and pocketed the spread.",
+        "stats": {
+          "intelligence": 1,
+          "wealth": 2
+        }
+      }
+    },
+    {
+      "id": "docks_boathouse_word",
+      "location": "docks",
+      "activities": [
+        "docks_nightwork",
+        "docks_haul"
+      ],
+      "weight": 2,
+      "text": "A man waits at the boathouse door and lets no one past without the night's word. Lean close to the right people on the wharf and the word can be had.",
+      "check": {
+        "stat": "intelligence",
+        "dc": 4
+      },
+      "pass": {
+        "text": "You catch the word passed crate to crate and give it back at the door without a stumble. The bolt slides; you're inside, and inside is where the real shifts are run.",
+        "outcome": "learned the boathouse password and was let through the door.",
+        "stats": {
+          "intelligence": 1,
+          "agility": 1
+        },
+        "flags": [
+          "knows_password"
+        ]
+      },
+      "fail": {
+        "text": "You guess wrong at the door and the man's smile never reaches his eyes. He suggests, politely, that you find somewhere drier to be.",
+        "outcome": "fumbled the boathouse word and was turned away at the door.",
+        "stats": {
+          "will": 1
+        }
+      }
+    },
+    {
+      "id": "docks_night_shift",
+      "location": "docks",
+      "activities": [
+        "docks_nightwork"
+      ],
+      "requires": [
+        "knows_password"
+      ],
+      "weight": 2,
+      "text": "Inside the boathouse the lamps are hooded and the ship beyond is nameless. They put you on the shift that no ledger will ever name and pay double for silence.",
+      "effect": {
+        "text": "You haul through the small hours and take your double wage in your fist, no tally, no name. Your arms remember it; the ledger never will.",
+        "outcome": "worked the unlisted night-shift for double and asked nothing.",
+        "stats": {
+          "strength": 1,
+          "wealth": 2
+        },
+        "flags": [
+          "worked_the_dark"
+        ]
+      }
+    },
+    {
+      "id": "docks_torchlight_unload",
+      "location": "docks",
+      "activities": [
+        "docks_nightwork"
+      ],
+      "text": "A ship slips in past curfew and unloads by torchlight, fast and quiet. A crate goes over the side onto the slick boards. Catch it clean and you're one of them; drop it and you're a liability.",
+      "check": {
+        "stat": "agility",
+        "dc": 5
+      },
+      "pass": {
+        "text": "You take the crate out of the dark and set it down soft as a sleeping child. The line nods you up to the front, where the trusted hands work.",
+        "outcome": "caught the smugglers' crate clean and was moved to the front of the line.",
+        "stats": {
+          "agility": 1,
+          "strength": 1
+        }
+      },
+      "fail": {
+        "text": "The crate finds the boards before your hands find the crate. Wood splinters, something inside clinks that shouldn't, and a dozen eyes mark your face.",
+        "outcome": "dropped a smuggler's crate on the torchlit wharf.",
+        "stats": {
+          "will": 1
+        }
+      }
+    },
+    {
+      "id": "docks_cargo_buyer",
+      "location": "docks",
+      "activities": [
+        "docks_trade",
+        "docks_nightwork"
+      ],
+      "requires": [
+        "knows_the_cargo"
+      ],
+      "weight": 2,
+      "text": "You already know what the foreign ship truly carries, and so does the hard-faced woman who sidles up and asks, very low, whether you're a buyer or a talker.",
+      "effect": {
+        "text": "You name the cargo before she can and her caution turns to custom. She cuts you in on the next landing as one who already knows too much to be left out.",
+        "outcome": "traded on knowledge of the cargo and was cut into the next landing.",
+        "stats": {
+          "intelligence": 1,
+          "wealth": 1
+        },
+        "flags": [
+          "smuggler_partner"
+        ]
+      }
+    },
+    {
+      "id": "docks_pay_off_slate",
+      "location": "docks",
+      "activities": [
+        "docks_haul"
+      ],
+      "requires": [
+        "owes_innkeep"
+      ],
+      "weight": 2,
+      "text": "Word of your slate at the tavern has reached the wharf, the way debts always do. The gangboss offers a brutal double-shift that would clear it in one night, if your back holds.",
+      "check": {
+        "stat": "strength",
+        "dc": 5
+      },
+      "pass": {
+        "text": "You break your back from dusk to dawn and walk away with a fist of coin earmarked for the innkeep's chalk. Sore, lighter, and square with the world.",
+        "outcome": "hauled a double-shift to clear the tavern slate.",
+        "stats": {
+          "strength": 1,
+          "wealth": 1
+        }
+      },
+      "fail": {
+        "text": "The double-shift breaks you before you break it. You quit at the third bell with too little to clear the slate and a back that won't forgive you for a week.",
+        "outcome": "buckled under a double-shift and still owes the innkeep.",
+        "stats": {
+          "will": 1
+        }
+      }
+    },
+    {
+      "id": "docks_riverman_offer",
+      "location": "docks",
+      "activities": [
+        "docks_haul",
+        "docks_trade"
+      ],
+      "text": "A riverman with a fast skiff offers a night's run downstream, no questions about the wrapped bundle under the thwart. The coin is good. The bundle is not your business, unless you make it so.",
+      "choices": [
+        {
+          "label": "Take the coin, ask nothing",
+          "effect": {
+            "text": "You row, you don't look, and you're paid at the far landing and rowed home before the cocks. The bundle is gone and so is your curiosity, sold for silver.",
+            "outcome": "rowed a no-questions run downstream and pocketed the silver.",
+            "stats": {
+              "wealth": 2,
+              "agility": 1
+            }
+          }
+        },
+        {
+          "label": "Peek under the thwart",
+          "effect": {
+            "text": "You lift a corner of the sacking and wish you hadn't, then wish harder that the riverman hadn't seen you do it. He pays you anyway, short, and warns you to forget the river entirely.",
+            "outcome": "peeked under the riverman's bundle and was paid short to forget it.",
+            "stats": {
+              "intelligence": 1,
+              "wealth": 1
+            }
+          }
+        },
+        {
+          "label": "Leave the run alone",
+          "effect": {
+            "text": "You wave the skiff off and keep your hands clean. The riverman shrugs and finds another fool, and you sleep the better for it.",
+            "outcome": "turned down the riverman's run and slept easy.",
+            "stats": {
+              "will": 1
+            }
+          }
+        }
+      ]
+    }
+  ]
+};

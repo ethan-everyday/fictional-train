@@ -28,11 +28,16 @@ async function joinAsPhone(
   await phone.getByPlaceholder("ABCD").fill(code);
   await phone.getByPlaceholder("Maria").fill(name);
   await phone.getByRole("button", { name: "Join" }).click();
+  // Character creation: pick a calling and a past, then enter.
+  await expect(phone.getByText("Who are you?")).toBeVisible({ timeout: 30_000 });
+  await phone.getByRole("button", { name: /Knight/ }).click();
+  await phone.getByRole("button", { name: /Peasant/ }).click();
+  await phone.getByRole("button", { name: "Enter Hollowbrook" }).click();
   await expect(phone.getByText(/You're in/)).toBeVisible();
   return phone;
 }
 
-/** Click through one storylet on a phone until the night is over. */
+/** Pick an activity, ride the event to its end, sleep on it. */
 async function playStorylet(phone: Page): Promise<void> {
   // Wait until the choose screen has actually given way to the storylet,
   // so the click loop can't hit location buttons by mistake.
@@ -43,11 +48,17 @@ async function playStorylet(phone: Page): Promise<void> {
     if (await phone.getByText("Your night is over").isVisible().catch(() => false)) return;
     if (await phone.getByText("The night resolves").isVisible().catch(() => false)) return;
 
+    const sleep = phone.getByRole("button", { name: "Sleep on it →" });
+    if (await sleep.isVisible().catch(() => false)) {
+      await sleep.click();
+      continue;
+    }
     const cont = phone.getByRole("button", { name: "Continue…" });
     if (await cont.isVisible().catch(() => false)) {
       await cont.click();
       continue;
     }
+    // Activity buttons or in-event choice buttons: take the first.
     const choice = phone.locator("main button:not([disabled])").first();
     if (await choice.isVisible().catch(() => false)) {
       await choice.click();
@@ -131,8 +142,10 @@ test("two phones play a full seven-night game, then start a second week", async 
   const alice = await joinAsPhone(phoneAContext, code, "Alice");
   const bob = await joinAsPhone(phoneBContext, code, "Bob");
 
-  // Host sees both players in the lobby.
-  await expect(host.getByText("2 players ready")).toBeVisible();
+  // Host sees both players in the lobby, both having chosen a character.
+  await expect(host.getByText("2 of 2 have chosen their lot")).toBeVisible({
+    timeout: 30_000,
+  });
   await expect(host.getByText("Alice")).toBeVisible();
   await expect(host.getByText("Bob")).toBeVisible();
 
@@ -164,7 +177,8 @@ test("two phones play a full seven-night game, then start a second week", async 
   // Second week: the lobby keeps the players and night 1 must start again
   // (regression: the one-shot transition guard used to softlock game two).
   await host.getByRole("button", { name: "Play another week →" }).click();
-  await expect(host.getByText("2 players ready")).toBeVisible({
+  // Characters are kept, so both are ready again immediately.
+  await expect(host.getByText("2 of 2 have chosen their lot")).toBeVisible({
     timeout: 30_000,
   });
   await host.getByRole("button", { name: "BEGIN THE WEEK" }).click();
@@ -198,14 +212,23 @@ test("a phone refresh mid-storylet auto-rejoins and resumes the story", async ({
   });
   await phone.getByRole("button", { name: /The Church/ }).click();
 
-  // Enter the storylet, read the first beat, then pull the rug.
-  const cont = phone.getByRole("button", { name: "Continue…" });
-  await expect(cont).toBeVisible({ timeout: 30_000 });
-  await cont.click();
+  // Pick an activity so there's an in-progress night to recover, then
+  // pull the rug.
+  await expect(phone.getByText(/What will you do here\?/)).toBeVisible({
+    timeout: 30_000,
+  });
+  await phone.locator("main button:not([disabled])").first().click();
+  // Now mid-event (a Continue or a choice is showing).
+  await expect(
+    phone.getByRole("button", { name: /Continue…|Sleep on it →/ }).or(
+      phone.locator("main button:not([disabled])").first(),
+    ),
+  ).toBeVisible({ timeout: 30_000 });
 
   await phone.reload();
 
-  // No tapping Join: the tab auto-rejoins and the ink save restores.
+  // No tapping Join: the tab auto-rejoins and the saved night restores to
+  // the same location and event.
   await expect(phone.getByText("The Church", { exact: true })).toBeVisible({
     timeout: 30_000,
   });

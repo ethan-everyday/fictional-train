@@ -1,0 +1,318 @@
+import type { LocationContent } from "./index";
+
+// Authored by the content fan-out, validated against the contract.
+export const slums: LocationContent = {
+  "activities": [
+    {
+      "id": "slums_mend",
+      "location": "slums",
+      "name": "Mend what's broken",
+      "blurb": "Roofs, fences, and broken things the families can't fix alone."
+    },
+    {
+      "id": "slums_listen",
+      "location": "slums",
+      "name": "Walk the lanes",
+      "blurb": "The narrow ways hear everything in Hollowbrook before it's said aloud."
+    },
+    {
+      "id": "slums_petition",
+      "location": "slums",
+      "name": "Take up the petition",
+      "blurb": "There's a paper going hand to hand, bound for the lord's fair-day court."
+    }
+  ],
+  "events": [
+    {
+      "id": "slums_mend_roof",
+      "location": "slums",
+      "activities": [
+        "slums_mend"
+      ],
+      "weight": 3,
+      "text": "An old widow's roof has gone to holes before the autumn rains, and she has no coin and no son to climb up for her.",
+      "check": {
+        "stat": "craft",
+        "dc": 4
+      },
+      "pass": {
+        "text": "You strip the rotten thatch and lay new before dark. She has nothing to pay you but bread and blessing, and gives both freely.",
+        "outcome": "rethatched a widow's roof before the rains and was paid in bread and blessing.",
+        "stats": {
+          "craft": 1,
+          "will": 1
+        }
+      },
+      "fail": {
+        "text": "The beams are softer than they looked and one gives under you. You patch what you can and climb down sore, the worst of the holes closed but the job half-done.",
+        "outcome": "patched a leaking roof and came down sore for it.",
+        "stats": {
+          "will": 1
+        }
+      }
+    },
+    {
+      "id": "slums_share_bread",
+      "location": "slums",
+      "activities": [
+        "slums_mend",
+        "slums_listen"
+      ],
+      "forbids": [
+        "noble_born"
+      ],
+      "weight": 2,
+      "text": "A clutch of children watch you eat with the patience of the truly hungry. You have more in your pack than you need tonight.",
+      "choices": [
+        {
+          "label": "Share out the food",
+          "effect": {
+            "text": "You hand it round and it's gone in moments. Their mothers will hear of it by morning, and in these lanes a kindness is never forgotten and never quiet.",
+            "outcome": "shared their supper with the wall-side children and bought a good name in the lanes.",
+            "stats": {
+              "will": 1
+            },
+            "flags": [
+              "slums_well_liked"
+            ]
+          }
+        },
+        {
+          "label": "Keep your pack closed",
+          "effect": {
+            "text": "You finish your meal and the children drift off, expecting nothing, as they've learned to. You leave with a full pack and a thin, practical sort of feeling.",
+            "outcome": "kept their own supper while the lane went hungry.",
+            "stats": {
+              "wealth": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "slums_lane_whisper",
+      "location": "slums",
+      "activities": [
+        "slums_listen"
+      ],
+      "requires": [
+        "met_steward"
+      ],
+      "weight": 2,
+      "text": "An errand-girl tugs your sleeve. She's seen you with the steward, she says, and the lanes have something the steward would pay to hear.",
+      "effect": {
+        "text": "She tells it plain: which barns are short, which families will be ruined by the reckoning, what the castle still doesn't know. Carried up the hill, it's worth more than coin.",
+        "outcome": "gathered the lanes' secrets to carry up the castle hill.",
+        "stats": {
+          "intelligence": 1,
+          "will": 1
+        },
+        "flags": [
+          "knows_the_tax"
+        ]
+      }
+    },
+    {
+      "id": "slums_gather_names",
+      "location": "slums",
+      "activities": [
+        "slums_petition"
+      ],
+      "weight": 3,
+      "text": "The petition wants names, and the families that most need it are the ones most afraid to sign. It will take a soft voice and a steady hand to go door to door.",
+      "check": {
+        "stat": "will",
+        "dc": 4
+      },
+      "pass": {
+        "text": "Lane by lane you talk them round, until the paper is dense with marks and crosses. Folk who'd never met your eye now nod when you pass.",
+        "outcome": "gathered a lane full of names for the petition.",
+        "stats": {
+          "will": 1,
+          "craft": 1
+        },
+        "flags": [
+          "slums_petition_ready"
+        ]
+      },
+      "fail": {
+        "text": "Door after door stays shut. Fear runs deeper than you reckoned, and you come away with a half-empty page and a lesson in how little the poor dare hope.",
+        "outcome": "knocked the lanes for names and came away with a half-empty page.",
+        "stats": {
+          "intelligence": 1
+        }
+      }
+    },
+    {
+      "id": "slums_deliver_petition",
+      "location": "slums",
+      "activities": [
+        "slums_petition"
+      ],
+      "requires": [
+        "slums_petition_ready"
+      ],
+      "weight": 3,
+      "text": "The petition is full and folded in your coat. Now it must reach the lord's fair-day court, and someone respectable must be willing to carry it past the gate.",
+      "check": {
+        "stat": "agility",
+        "dc": 5
+      },
+      "pass": {
+        "text": "You catch the steward on his way down the hill and press the paper into his hand before his guards can wave you off. He reads it, sighs, and tucks it away with a look that says he'll see it heard.",
+        "outcome": "got the lanes' petition into the steward's own hand.",
+        "stats": {
+          "agility": 1,
+          "will": 1
+        },
+        "flags": [
+          "steward_favour"
+        ]
+      },
+      "fail": {
+        "text": "The gate-men know your face for a wall-side one and turn you about twice. You leave the paper with a sympathetic clerk and hope, which in fair week is most of what the poor have.",
+        "outcome": "left the petition with a clerk and hoped it would be read.",
+        "stats": {
+          "will": 1
+        }
+      }
+    },
+    {
+      "id": "slums_bailiff_mark",
+      "location": "slums",
+      "activities": [
+        "slums_mend",
+        "slums_listen"
+      ],
+      "weight": 2,
+      "text": "The bailiff is collaring a man over a debt he plainly can't pay, with more relish than the law requires. The lane has gone quiet and watchful. He notices you watching.",
+      "choices": [
+        {
+          "label": "Step in and cool it down",
+          "effect": {
+            "text": "You talk the bailiff back a pace and the man slips home. The lane breathes again, but the bailiff fixes your face in his memory, and not fondly.",
+            "outcome": "faced down the bailiff and won a man another day.",
+            "stats": {
+              "will": 1
+            },
+            "flags": [
+              "slums_bailiff_eye",
+              "slums_well_liked"
+            ]
+          }
+        },
+        {
+          "label": "Keep your head down",
+          "effect": {
+            "text": "You find something to study on the far wall. The man is hauled off, and you tell yourself it was never your fight. The lane remembers who looked away.",
+            "outcome": "looked the other way while the bailiff did his worst.",
+            "stats": {
+              "intelligence": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "slums_bailiff_reckoning",
+      "location": "slums",
+      "activities": [
+        "slums_listen",
+        "slums_mend"
+      ],
+      "requires": [
+        "slums_bailiff_eye"
+      ],
+      "weight": 2,
+      "text": "The bailiff has been waiting for you. He blocks the lane's mouth with two men behind him and asks, pleasantly, whether you've your papers and your reasons for being among his poor.",
+      "check": {
+        "stat": "agility",
+        "dc": 5
+      },
+      "pass": {
+        "text": "You're over a low wall and three roofs gone before his men have unstuck their boots. The children, who know every gap in the lanes, whoop you on your way.",
+        "outcome": "gave the bailiff and his men the slip across the rooftops.",
+        "stats": {
+          "agility": 1,
+          "will": 1
+        }
+      },
+      "fail": {
+        "text": "There's no running it tonight. He searches you slow and finds nothing, which sours him further, and you spend a cold hour against the wall before he tires of it.",
+        "outcome": "spent a cold hour against the wall under the bailiff's hands.",
+        "stats": {
+          "will": 1
+        }
+      }
+    },
+    {
+      "id": "slums_well_water",
+      "location": "slums",
+      "activities": [
+        "slums_mend"
+      ],
+      "weight": 2,
+      "text": "The lane's only good well has caved at the lip and the bucket-rope frays where it rubs. A handful of grandmothers direct you with great authority and no help.",
+      "effect": {
+        "text": "You shore the lip with stone and re-reeve the rope properly. Clean water without a half-mile walk is a small miracle here, and they treat it as one.",
+        "outcome": "mended the lane's well and earned a chorus of grandmotherly thanks.",
+        "stats": {
+          "craft": 1,
+          "strength": 1
+        },
+        "flags": [
+          "slums_well_liked"
+        ]
+      }
+    },
+    {
+      "id": "slums_fence_offer",
+      "location": "slums",
+      "activities": [
+        "slums_listen"
+      ],
+      "weight": 1,
+      "text": "A wiry man works a corner where no torch reaches, moving goods that left other hands without asking. He sizes you up and offers a cut to run a parcel three lanes over, no questions.",
+      "check": {
+        "stat": "agility",
+        "dc": 6
+      },
+      "pass": {
+        "text": "You take the back ways at a pace, drop the parcel where he said, and he counts coin into your palm with a thief's quick respect. Best not to wonder what was in it.",
+        "outcome": "ran a no-questions parcel through the lanes for ready coin.",
+        "stats": {
+          "agility": 1,
+          "wealth": 1
+        }
+      },
+      "fail": {
+        "text": "You're halfway when the watch turns the corner and you have to ditch the parcel down a privy and walk on whistling. The fence is unimpressed; you keep your skin, which is the main thing.",
+        "outcome": "ditched a smuggled parcel down a privy to dodge the watch.",
+        "stats": {
+          "agility": 1
+        }
+      }
+    },
+    {
+      "id": "slums_lanes_repay",
+      "location": "slums",
+      "activities": [
+        "slums_listen",
+        "slums_petition"
+      ],
+      "requires": [
+        "slums_well_liked"
+      ],
+      "weight": 2,
+      "text": "Word has run ahead of you down every lane: this is one of the good ones. Doors that stay shut to the bailiff open to you, and an old man beckons you into the dark of his.",
+      "effect": {
+        "text": "He's the lanes' true memory: births, debts, betrayals, who really owns what. He gives you an hour of it because the children vouched for you, and an hour of it is a fortune.",
+        "outcome": "was let into the lanes' long memory by the people they trust.",
+        "stats": {
+          "intelligence": 1,
+          "will": 1
+        }
+      }
+    }
+  ]
+};

@@ -18,11 +18,9 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - name: Compile + validate ink stories
-        run: npm run stories
       - name: Typecheck
         run: npx tsc --noEmit
-      - name: Unit + protocol tests
+      - name: Unit + protocol + content-contract tests
         run: npm test
       - name: Production build
         run: npm run build

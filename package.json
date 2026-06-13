@@ -4,11 +4,8 @@
   "private": true,
   "main": "electron/main.js",
   "scripts": {
-    "stories": "node scripts/compile-stories.mjs",
-    "predev": "npm run stories",
     "dev": "next dev",
     "ws": "node server.js --dev",
-    "prebuild": "npm run stories",
     "build": "next build",
     "serve": "node server.js",
     "game": "npm run build && node server.js",
@@ -43,7 +40,6 @@
     }
   },
   "dependencies": {
-    "inkjs": "^2.4.0",
     "next": "14.2.35",
     "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
