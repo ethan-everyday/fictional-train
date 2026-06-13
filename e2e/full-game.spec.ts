@@ -11,7 +11,7 @@ test.describe.configure({ mode: "serial" });
 /** Pass the title screen (Start) and read the lobby's room code. */
 async function readRoomCode(host: Page): Promise<string> {
   await host.getByRole("button", { name: "Start", exact: true }).click();
-  const codeEl = host.locator("p.font-mono.text-8xl");
+  const codeEl = host.locator("p.font-mono.text-7xl");
   await expect(codeEl).toBeVisible({ timeout: 20_000 });
   const code = (await codeEl.textContent())?.trim() ?? "";
   expect(code).toMatch(/^[A-Z0-9]{4}$/);
@@ -116,7 +116,7 @@ async function playWeek(
     await playStorylet(phone);
   }
 
-  await expect(host.getByText(`Week ${week} · What happened out there`)).toBeVisible({
+  await expect(host.getByText(`Around the fire, week ${week}`)).toBeVisible({
     timeout: 30_000,
   });
   const advance =
@@ -165,7 +165,7 @@ test("two phones play a full seven-week game, then start a second", async ({
 
   // Epilogue: scoreboard + each player's seven-week recap.
   await expect(host.getByText("SEVEN WEEKS, ENDED")).toBeVisible();
-  await expect(host.getByText("The seven weeks, week by week")).toBeVisible();
+  await expect(host.getByText("What became of each of you")).toBeVisible();
   await expect(host.getByText("W7", { exact: true })).toHaveCount(2);
   await expect(alice.getByText("Your seven weeks")).toBeVisible();
   await expect(alice.getByText("W7", { exact: true })).toBeVisible();
@@ -226,7 +226,7 @@ test("a phone refresh mid-storylet auto-rejoins and resumes the story", async ({
   });
   await playStorylet(phone);
 
-  await expect(host.getByText("Week 1 · What happened out there")).toBeVisible({
+  await expect(host.getByText("Around the fire, week 1")).toBeVisible({
     timeout: 30_000,
   });
   await expect(host.getByText("Solo")).toBeVisible({ timeout: 30_000 });

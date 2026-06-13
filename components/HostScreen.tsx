@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { DeltaChips } from "@/components/StatBits";
 import TitleScreen from "@/components/TitleScreen";
+import { CampfireScene, SeaScene } from "@/components/Scenes";
 import {
   KEY_CHARACTER,
   kickPlayer,
@@ -52,7 +53,7 @@ import {
   useNight,
   usePhase,
 } from "@/lib/game/state";
-import { townEnding } from "@/lib/game/finale";
+import { playerEnding, townEnding } from "@/lib/game/finale";
 import {
   audioUnlocked,
   isMuted,
@@ -442,50 +443,67 @@ function useClock(intervalMs: number): number {
 
 // --------------------------------------------------------------- PROLOGUE
 
+/** The SETTING prologue — the 1348 doom and the Herald's vision. Big white
+ * text over the sea scene; shown on the lobby while players build characters. */
+function SettingProse() {
+  return (
+    <div className="fade-up mx-auto max-w-3xl space-y-5 text-center text-xl leading-relaxed text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.95)]">
+      <p>
+        It is 1348. God, angry with His creation, looses war, plague and famine
+        across the continent. Millions begin to die of a black death spreading
+        out of the east; the lords bar themselves in their castles while their
+        serfs die in their thousands.
+      </p>
+      <p>
+        You are fugitives, bound for England aboard the{" "}
+        <span className="italic">St Michael's Fortune</span>, lucky to have
+        outrun the brigands, the starving mobs, and the plague itself — for a
+        time. Ahead lies the ancient fortress town of St Sebastian.
+      </p>
+      <p className="font-display text-2xl leading-snug text-red-300 [text-shadow:0_0_22px_rgba(220,40,40,0.5)]">
+        On a moonless night a vision comes — a pair of glowing red eyes in the
+        black: “YOU ARE MY HERALD. THIS TOWN HOLDS SECRET THINGS, PRECIOUS TO
+        ME. SAVE IT, AND I SHALL REWARD THEE. FAIL — AND YOU WILL PERISH, AS ALL
+        MUST IN THE END.”
+      </p>
+      <p className="text-white/90">
+        Seven weeks before the world's end. Choose who you are.
+      </p>
+    </div>
+  );
+}
+
+/** The TOWN prologue — arrival at St Sebastian, after the party is assembled. */
 function PrologueScreen({ onBegin }: { onBegin: () => void }) {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 px-8 py-12">
-      <div className="fade-up max-w-3xl space-y-5 text-lg leading-relaxed text-parch-300">
-        <p className="story-prose text-parch-200">
-          It is 1348. God, angry with His creation, looses war, plague and
-          famine across the continent. As hundreds of thousands die on its
-          battlefields, millions more begin to die of a black death spreading
-          out of the east. Food grows scarce; the lords bar themselves in their
-          draughty castles to ride out the ruin while their serfs die in their
-          thousands.
-        </p>
-        <p>
-          You are fugitives, fleeing the destruction toward England, where the
-          reckoning has not yet come. Your party boards the{" "}
-          <span className="italic text-parch-100">St Michael's Fortune</span>,
-          lucky to have outrun the brigands, the starving mobs, and the plague
-          itself — for a time. As the ship beats toward the ancient fortress
-          town of St Sebastian, you can only pray the anarchy stays on the far
-          shore. You fear you are wrong.
-        </p>
-        <p>
-          On a moonless night at the dark heart of the crossing, a vision comes.
-          A pair of glowing red eyes peers from the black, and speaks:
-        </p>
-        <p className="border-l-2 border-red-700/70 pl-5 font-display text-2xl leading-snug text-red-300">
-          “THE CITY WILL FALL, AS ALL CITIES HAVE FALLEN. YOU CAN CHANGE THAT.
-          THE RICH COWER IN THEIR CASTLES; THE POOR BUTCHER ONE ANOTHER IN THE
-          STREETS. YOU ARE MY HERALD. THIS TOWN HOLDS SECRET THINGS, PRECIOUS TO
-          ME. SAVE IT, AND I SHALL REWARD THEE. FAIL — AND YOU WILL PERISH, AS
-          ALL MUST IN THE END.”
-        </p>
-        <p className="text-parch-200">
-          Seven weeks before the world's end. Save the city, or leave it to burn
-          and save yourselves. The decision is yours alone.
-        </p>
-      </div>
-      <button
-        onClick={onBegin}
-        className="font-display mt-2 rounded-xl bg-amber-500 px-12 py-4 text-2xl text-night hover:bg-amber-400"
-      >
-        Make landfall →
-      </button>
-    </main>
+    <SeaScene>
+      <main className="flex min-h-screen flex-col items-center justify-center gap-7 px-8 py-12">
+        <div className="fade-up max-w-3xl space-y-5 text-center text-xl leading-relaxed text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.95)]">
+          <p>
+            At dawn the ship rounds the headland and St Sebastian rises from the
+            sea-mist: grey walls older than any living memory, a squat keep, a
+            huddle of roofs above a working harbour. Gulls wheel. Bells ring for
+            no reason you can name.
+          </p>
+          <p>
+            The town is loud and blind and busy — fishermen crying their catch,
+            traders haggling, children underfoot — a place that does not yet know
+            it is already dead. Behind you the open sea is empty. Ahead, the
+            gangplank comes down.
+          </p>
+          <p className="font-display text-2xl text-amber-300">
+            You are the only ones who know what is coming. Make landfall, and
+            begin.
+          </p>
+        </div>
+        <button
+          onClick={onBegin}
+          className="font-display rounded-xl bg-amber-500 px-12 py-4 text-2xl text-night hover:bg-amber-400"
+        >
+          Make landfall →
+        </button>
+      </main>
+    </SeaScene>
   );
 }
 
@@ -513,26 +531,26 @@ function LobbyScreen({
     players.length > 0 && connected.every(hasCharacter);
 
   return (
-    <main className="flex min-h-screen flex-col items-center gap-8 p-10">
+    <SeaScene>
+      <main className="flex min-h-screen flex-col items-center gap-7 px-6 py-10">
+      <SettingProse />
       <header className="text-center">
-        <h1 className="text-3xl font-black tracking-tight text-parch-400">
-          SEVEN NIGHTS
-        </h1>
-        <p className="mt-4 text-2xl text-parch-300">Join on your phone</p>
-        <p className="my-2 font-mono text-8xl font-black tracking-[0.2em] text-amber-400">
+        <p className="text-xl text-white/80 [text-shadow:0_2px_10px_rgba(0,0,0,0.9)]">
+          Join on your phone
+        </p>
+        <p className="my-1 font-mono text-7xl font-black tracking-[0.2em] text-amber-400 [text-shadow:0_2px_16px_rgba(0,0,0,0.9)]">
           {roomCode}
         </p>
-        <p className="text-lg text-parch-500">{joinUrl}</p>
+        <p className="text-base text-white/50">{joinUrl}</p>
         <button
           onClick={() => {
-            // Full wipe, not just our saved room: Playroom keeps its own
-            // session state in storage, and a stale/kicked identity makes
-            // the next insertCoin hang forever on "Opening room".
+            // Full wipe, not just our saved room: a stale/kicked identity in
+            // this browser would make the next connection hang.
             localStorage.clear();
             sessionStorage.clear();
             window.location.reload();
           }}
-          className="mt-3 text-sm text-parch-600 underline hover:text-parch-400"
+          className="mt-3 text-sm text-white/40 underline hover:text-white/70"
         >
           Start a fresh room
         </button>
@@ -553,10 +571,10 @@ function LobbyScreen({
         </p>
       </div>
 
-      <section className="w-full max-w-2xl">
-        <h2 className="mb-4 text-center text-xl font-bold text-parch-400">
+      <section className="w-full max-w-2xl rounded-2xl bg-night/55 p-5 backdrop-blur-sm">
+        <h2 className="mb-4 text-center text-xl font-bold text-white/85">
           {players.length === 0
-            ? "Waiting for players…"
+            ? "Waiting for fugitives to come ashore…"
             : `${readyCount} of ${players.length} have chosen their lot`}
         </h2>
         <ul className="flex flex-col gap-3">
@@ -624,12 +642,13 @@ function LobbyScreen({
           </button>
         )}
         {players.length === 1 && allReady && (
-          <p className="mt-2 text-center text-sm text-parch-500">
+          <p className="mt-2 text-center text-sm text-white/50">
             (Solo works for testing; it's better with 2–6.)
           </p>
         )}
       </section>
-    </main>
+      </main>
+    </SeaScene>
   );
 }
 
@@ -810,43 +829,52 @@ function ResolveScreen({
   }, [shown, results.length, night]);
 
   return (
-    <main className="flex min-h-screen flex-col gap-8 p-10">
-      <div className="flex flex-col items-center gap-4">
-        <NightDots night={night} />
-        <h1 className="text-center text-4xl font-black text-parch-300">
-          Week {night} · What happened out there
-        </h1>
-      </div>
-      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5">
-        {results.slice(0, shown).map(({ player, result }) => (
-          <div
-            key={player.id}
-            className="rounded-2xl border border-bark bg-oak/50 p-6"
-          >
-            <p className="text-2xl leading-snug">
-              <span className="font-black" style={{ color: playerColor(player) }}>
-                {playerName(player)}
-              </span>{" "}
-              <span className="text-parch-200">{result!.outcome}</span>
-            </p>
-            <div className="mt-3">
-              <DeltaChips deltas={result!.deltas} />
+    <CampfireScene>
+      <main className="flex min-h-screen flex-col gap-6 p-10">
+        <div className="flex flex-col items-center gap-3">
+          <NightDots night={night} />
+          <h1 className="font-display text-center text-3xl text-amber-200/90 [text-shadow:0_2px_12px_rgba(0,0,0,0.9)]">
+            Around the fire, week {night}
+          </h1>
+          <p className="text-center text-white/55">
+            You take stock of the day, and tell each other what you saw.
+          </p>
+        </div>
+        <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center gap-4">
+          {results.slice(0, shown).map(({ player, result }) => (
+            <div
+              key={player.id}
+              className="fade-up rounded-2xl border border-amber-900/40 bg-black/45 p-5 backdrop-blur-sm"
+            >
+              <p className="text-2xl leading-snug">
+                <span
+                  className="font-display"
+                  style={{ color: playerColor(player) }}
+                >
+                  {playerName(player)}
+                </span>
+                <span className="text-white/60"> — </span>
+                <span className="text-white/95">{result!.outcome}</span>
+              </p>
+              <div className="mt-3">
+                <DeltaChips deltas={result!.deltas} />
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-      <button
-        onClick={() => {
-          if (!advanced.current) {
-            advanced.current = true;
-            endNight(night, players);
-          }
-        }}
-        className="font-display mx-auto rounded-xl border border-bark-light px-8 py-3 text-lg text-parch-400 hover:border-parch-500"
-      >
-        {night >= NIGHT_COUNT ? "To the reckoning →" : `On to week ${night + 1} →`}
-      </button>
-    </main>
+          ))}
+        </div>
+        <button
+          onClick={() => {
+            if (!advanced.current) {
+              advanced.current = true;
+              endNight(night, players);
+            }
+          }}
+          className="font-display mx-auto rounded-xl border border-amber-700/50 px-8 py-3 text-lg text-amber-200/80 hover:border-amber-400"
+        >
+          {night >= NIGHT_COUNT ? "To the reckoning →" : `On to week ${night + 1} →`}
+        </button>
+      </main>
+    </CampfireScene>
   );
 }
 
@@ -990,7 +1018,7 @@ function EpilogueScreen({ players }: { players: PlayerState[] }) {
       </table>
       <section className="w-full max-w-6xl">
         <h2 className="mb-4 text-center text-xl font-bold text-parch-400">
-          The seven weeks, week by week
+          What became of each of you
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {players.map((p) => (
@@ -998,11 +1026,15 @@ function EpilogueScreen({ players }: { players: PlayerState[] }) {
               key={p.id}
               className="rounded-2xl border border-bark bg-oak/40 p-5"
             >
-              <p className="mb-3 flex items-center gap-2 text-lg font-bold">
+              <p className="mb-2 flex items-center gap-2 text-lg font-bold">
                 <PlayerDot player={p} />
                 {playerName(p)}
               </p>
-              <ol className="flex flex-col gap-1.5 text-sm leading-snug text-parch-400">
+              {/* Everyone sees every player's ending. */}
+              <p className="story-prose mb-3 text-sm leading-relaxed text-parch-200">
+                {playerEnding(playerFlags(p))}
+              </p>
+              <ol className="flex flex-col gap-1.5 text-sm leading-snug text-parch-500">
                 {playerHistory(p).map((h) => (
                   <li key={h.night}>
                     <span className="font-mono font-bold text-amber-400/80">

@@ -148,13 +148,15 @@ function setupWeek(night: number, players: PlayerState[]): void {
   setShared(KEY_NIGHT, night);
 }
 
-/** Start the game: set up week 1 and show the prologue (the Herald's vision). */
+/** Once everyone has built a character, set up week 1 and play the TOWN
+ * prologue (arriving at St Sebastian). The SETTING prologue — the 1348 doom
+ * and the Herald's vision — plays earlier, on the lobby, during selection. */
 export function startGame(players: PlayerState[]): void {
   setupWeek(1, players);
   setShared(KEY_PHASE, "prologue");
 }
 
-/** Leave the prologue and begin week 1 proper. */
+/** Leave the town prologue and begin week 1 proper. */
 export function beginAfterPrologue(): void {
   setShared(KEY_PHASE, "night-intro");
 }
