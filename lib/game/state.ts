@@ -131,17 +131,14 @@ export function averageStats(all: PlayerStats[]): PlayerStats {
   return out;
 }
 
-export function startGame(players: PlayerState[]): void {
-  beginNightIntro(1, players);
-}
-
-export function beginNightIntro(night: number, players: PlayerState[]): void {
+/** Set up a week's shared state (assignments, deadline, drama event, number)
+ * without choosing the phase — callers pick prologue vs night-intro. */
+function setupWeek(night: number, players: PlayerState[]): void {
   setShared(KEY_ASSIGNMENTS, null);
-  // Clear the old deadline too: if Playroom delivers these writes out of
-  // order, a phone could briefly see choose-location with last night's
-  // expired timer.
+  // Clear the old deadline too: if a write arrives out of order, a phone
+  // could briefly see choose-location with last week's expired timer.
   setShared(KEY_DEADLINE, 0);
-  // Roll the night's drama event off the party's average stats.
+  // Roll the week's drama event off the party's average stats.
   const avg = averageStats(players.map(playerStats));
   const event =
     players.length > 0
@@ -149,6 +146,21 @@ export function beginNightIntro(night: number, players: PlayerState[]): void {
       : null;
   setShared(KEY_EVENT, event ? { id: event.id, night } : null);
   setShared(KEY_NIGHT, night);
+}
+
+/** Start the game: set up week 1 and show the prologue (the Herald's vision). */
+export function startGame(players: PlayerState[]): void {
+  setupWeek(1, players);
+  setShared(KEY_PHASE, "prologue");
+}
+
+/** Leave the prologue and begin week 1 proper. */
+export function beginAfterPrologue(): void {
+  setShared(KEY_PHASE, "night-intro");
+}
+
+export function beginNightIntro(night: number, players: PlayerState[]): void {
+  setupWeek(night, players);
   setShared(KEY_PHASE, "night-intro");
 }
 

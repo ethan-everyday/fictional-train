@@ -83,6 +83,22 @@ describe("content contract", () => {
     }
   });
 
+  it("keeps week gates within 1–7 and min ≤ max", () => {
+    for (const ev of EVENTS) {
+      if (ev.minWeek !== undefined) {
+        expect(ev.minWeek, `${ev.id} minWeek`).toBeGreaterThanOrEqual(1);
+        expect(ev.minWeek, `${ev.id} minWeek`).toBeLessThanOrEqual(7);
+      }
+      if (ev.maxWeek !== undefined) {
+        expect(ev.maxWeek, `${ev.id} maxWeek`).toBeGreaterThanOrEqual(1);
+        expect(ev.maxWeek, `${ev.id} maxWeek`).toBeLessThanOrEqual(7);
+      }
+      if (ev.minWeek !== undefined && ev.maxWeek !== undefined) {
+        expect(ev.minWeek, `${ev.id} min≤max`).toBeLessThanOrEqual(ev.maxWeek);
+      }
+    }
+  });
+
   it("keeps stat checks to real stats within the cap", () => {
     for (const ev of EVENTS) {
       if (!ev.check) continue;

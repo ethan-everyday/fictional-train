@@ -1,16 +1,20 @@
 # Seven Nights (working title)
 
-A 7-night narrative party game: one host screen (TV/laptop), 2–6 phones as
+A narrative party game: one host screen (TV/laptop), 2–6 phones as
 controllers, driven by a data-defined event engine.
 
-Setting: grounded medieval — seven nights before the Michaelmas Fair in the
-village of Hollowbrook. Each player builds a character (1 of 6 **roles** ×
-1 of 6 **backgrounds**, which set hidden base stats), then spends each night
-at one of seven locations. Each location offers 2–4 **activities**; doing one
-draws a random **event** from that location's pool. Events chain across the
-week — meet the lord's steward at the tavern and the castle gate opens later.
-**Stats are never shown as requirements**; they tilt hidden checks behind the
-prose. The week remembers everything you did.
+Setting: St Sebastian, 1348. The party are fugitives who fled war, plague and
+famine on the continent and landed at an English fortress town — where a
+red-eyed patron has named them its Herald. Seven weeks before the apocalypse
+reaches the walls: save the town, or let it burn and flee. Each player builds
+a character (1 of 6 **roles** × 1 of 6 **backgrounds**, which set hidden base
+stats), then spends each week at one of seven locations. Each offers 2–4
+**activities**; doing one fires a random **event** from that location's pool.
+Events chain and escalate week by week — meet the lord's steward and the
+castle opens; the warband arrives only in the last weeks. **Stats are never
+shown as requirements**; they tilt hidden checks behind the prose. What the
+party achieves across the week decides which of seven town-fates befalls
+St Sebastian.
 
 ## Architecture: local-first, Steam-shaped
 
@@ -117,6 +121,15 @@ A dev-only tool (never shipped) for laying out the story:
   valid shapes, dc within cap, 6 roles / 6 backgrounds…). **Save** writes the
   content + origins JSON the game imports — and refuses to save anything
   that would fail the build.
+
+## Planning the story on paper
+
+`STORY.md` (repo root) is a complete, readable snapshot of the whole story —
+every character, location, activity, event (with prose, outcomes, stat
+changes, and connections), plus a **flag index** that lays out the wiring of
+the week. Edit it freely to plan; hand it back and the changes get folded
+into the game's content. It's a generated view of the JSON below — JSON is
+the source of truth, `STORY.md` is the human-readable mirror.
 
 ## Writing content (by hand)
 

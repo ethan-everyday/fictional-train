@@ -4,101 +4,83 @@
       "id": "church_confession",
       "location": "church",
       "name": "Kneel at the confessional",
-      "blurb": "Unburden a sin, true or invented, and see what the priest gives back."
+      "blurb": "Sit in the dark of the box and trade the priest a sin for a word in return."
     },
     {
-      "id": "church_charity",
+      "id": "church_lastrites",
       "location": "church",
-      "name": "Help at the alms door",
-      "blurb": "Hand out the parish dole and learn who in the village is truly desperate."
+      "name": "Tend the dying and the dead",
+      "blurb": "Carry water to the fevered, close the eyes of the gone, and learn what the sickness is."
     },
     {
-      "id": "church_vigil",
+      "id": "church_crypt",
       "location": "church",
-      "name": "Keep the night vigil",
-      "blurb": "Sit the long candle-lit watch when the nave is empty and dark."
+      "name": "Go down into the crypt",
+      "blurb": "Beneath the nave, behind the bones of dead priests, the parish keeps what it does not speak of."
     },
     {
-      "id": "church_tithe",
+      "id": "church_bells",
       "location": "church",
-      "name": "Mind the tithe ledger",
-      "blurb": "Tally sacks of grain and coin against the column with everyone's name in it."
+      "name": "Stand the bell-tower watch",
+      "blurb": "Climb to the ropes and the cold, where the whole doomed town lies open below you."
     }
   ],
   "events": [
     {
-      "id": "church_relic_rumour",
+      "id": "church_wrath_sermon",
       "location": "church",
       "activities": [
         "church_confession",
-        "church_tithe"
+        "church_bells"
       ],
+      "maxWeek": 2,
       "weight": 3,
-      "text": "The verger cannot keep a secret to save his soul. Polishing the candlesticks, he lets slip that the priest means to bring out a saint's finger-bone for the fair, and that it is kept somewhere most folk would never think to look.",
+      "text": "Father Anselm preaches to a near-empty nave, his voice cracking on the stone. The plague on the continent is God's scourge for a sinful age, he says, and St Sebastian will be spared only if it repents. You know better than he does how little repenting will save anyone.",
+      "choices": [
+        {
+          "label": "Stand and say the wrath is already coming here",
+          "effect": {
+            "text": "You speak up from the back: the smoke on the sea-wind is no sermon, and it is sailing for them. The priest's face whitens; a few heads turn. You have made an enemy of his comfort, but a friend of the frightened.",
+            "outcome": "warned the priest's flock that the wrath was already on its way.",
+            "stats": {
+              "will": 1
+            },
+            "flags": [
+              "church_warned"
+            ]
+          }
+        },
+        {
+          "label": "Hold your tongue and let him preach",
+          "effect": {
+            "text": "You let the old man have his comfort and the flock theirs. Better they kneel in peace tonight than learn from a stranger's mouth what is rowing toward their harbour.",
+            "outcome": "kept silent while the priest preached false comfort.",
+            "stats": {
+              "intelligence": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "church_verger_rumour",
+      "location": "church",
+      "activities": [
+        "church_confession",
+        "church_crypt"
+      ],
+      "maxWeek": 4,
+      "weight": 3,
+      "text": "The verger, Gybe, cannot hold his tongue against a flask. Sweeping the chancel, he lets slip that the priest sits the night by the crypt steps now, guarding something the bishop himself sent here for hiding, and that he will not say its name even drunk.",
       "effect": {
-        "text": "You let him talk himself dry. By the time the wax is cold you know more about that relic, and where it sleeps, than the bishop does.",
-        "outcome": "wheedled the relic's hiding place out of the verger.",
+        "text": "You buy his thirst a little and let him talk himself dry. By the time the candle gutters you know there is a thing beneath the floor of this church worth a bishop's secrecy, and roughly where the stair to it lies.",
+        "outcome": "wheedled a rumour of the crypt's secret out of the verger.",
         "stats": {
           "intelligence": 1
         },
         "flags": [
-          "relic_known"
+          "relic_clue"
         ]
-      }
-    },
-    {
-      "id": "church_relic_guard",
-      "location": "church",
-      "activities": [
-        "church_vigil"
-      ],
-      "requires": [
-        "relic_known"
-      ],
-      "weight": 3,
-      "text": "Knowing where the relic lies, you understand why the priest looks so haggard. He asks, quietly, whether you would sit the watch over it tonight, for a fair-week reliquary is a thief's whole Christmas.",
-      "check": {
-        "stat": "will",
-        "dc": 5
-      },
-      "pass": {
-        "text": "You hold the dark and the cold and the creeping certainty that the saint is watching you back. At matins the bone is where it should be, and the priest looks at you as a man looks at something he can finally trust.",
-        "outcome": "sat the relic watch unbroken and earned the priest's trust.",
-        "stats": {
-          "will": 1,
-          "intelligence": 1
-        },
-        "flags": [
-          "relic_warden"
-        ]
-      },
-      "fail": {
-        "text": "You nod off near the third hour. Nothing is taken, but the priest finds you slumped against the altar rail at dawn and says nothing, which is worse than if he had.",
-        "outcome": "dozed off on the relic watch and was found at the altar rail.",
-        "stats": {
-          "will": 1
-        }
-      }
-    },
-    {
-      "id": "church_warden_fair",
-      "location": "church",
-      "activities": [
-        "church_vigil",
-        "church_tithe"
-      ],
-      "requires": [
-        "relic_warden"
-      ],
-      "weight": 2,
-      "text": "With the fair a day off, the priest names you to carry the relic in the procession. It is an honour the whole valley will see, and a few coins find their way to a trusted warden's hand.",
-      "effect": {
-        "text": "You walk the bone through the village under every eye in the parish. Pilgrims press pennies on you for the touch of it, and the priest calls you indispensable where the steward can hear.",
-        "outcome": "bore the relic in the fair procession as its trusted warden.",
-        "stats": {
-          "wealth": 1,
-          "will": 1
-        }
       }
     },
     {
@@ -108,14 +90,14 @@
         "church_confession"
       ],
       "weight": 2,
-      "text": "The priest is old and sharp and has heard every lie this valley can tell. He sits you down not to scold but to listen, and somehow you end up telling him more truth than you meant to.",
+      "text": "Father Anselm is old and frightened and has heard every lie this coast can tell. He sits you in the box not to scold but to take your measure, and the dark and his patience draw more truth from you than you meant to give.",
       "check": {
         "stat": "intelligence",
         "dc": 4
       },
       "pass": {
-        "text": "You speak well and honestly, and he counsels you better than any tavern friend could. He marks you as a soul worth his time, and that, in a parish, is a kind of currency.",
-        "outcome": "won the old priest's counsel and his confidence.",
+        "text": "You speak plainly of what you fled and what you have seen, and he listens like a man clutching a rope. He names you a soul he can trust in the dark days he feels coming, and in a dying parish that trust is a key to many doors.",
+        "outcome": "won the frightened old priest's trust.",
         "stats": {
           "intelligence": 1,
           "will": 1
@@ -125,172 +107,248 @@
         ]
       },
       "fail": {
-        "text": "You hedge and trim and try to seem cleverer than you are. He sees straight through it, but he is kind about it, and you leave with a penance and a faint sense of being seen too clearly.",
-        "outcome": "tried to outwit the priest at confession and was gently seen through.",
+        "text": "You hedge and trim and try to seem holier than you are. He sees clean through it, but he is too tired to mind, and you leave with a penance and the sense of having been weighed and found slight.",
+        "outcome": "tried to outwit the priest and was gently seen through.",
         "stats": {
           "will": 1
         }
       }
     },
     {
-      "id": "church_sealed_letter",
+      "id": "church_organise_healers",
       "location": "church",
       "activities": [
-        "church_tithe",
-        "church_confession"
+        "church_lastrites"
       ],
       "requires": [
         "priest_trusts"
       ],
+      "minWeek": 4,
       "weight": 3,
-      "text": "The priest draws you aside with a sealed letter. It must reach the castle steward before the fair, he says, and there are matters in it the bishop would rather the lord heard from a churchman than a tax-man.",
-      "choices": [
-        {
-          "label": "Carry it faithfully, seal unbroken",
-          "effect": {
-            "text": "You deliver it as given, the wax intact. The priest blesses the errand and the steward notes a face the Church vouches for, two men of weight who now know your name.",
-            "outcome": "carried the priest's sealed letter to the castle, seal unbroken.",
-            "stats": {
-              "will": 1,
-              "intelligence": 1
-            },
-            "flags": [
-              "met_steward"
-            ]
-          }
-        },
-        {
-          "label": "Steam the seal and read it first",
-          "effect": {
-            "text": "A kettle and a patient hand, and the letter gives up its news: what the parish truly owes, and what it has hidden from the reckoning. You reseal it near enough to pass and deliver it, none the wiser to anyone but you.",
-            "outcome": "steamed open the priest's letter and learned the parish's hidden accounts.",
-            "stats": {
-              "intelligence": 1,
-              "craft": 1
-            },
-            "flags": [
-              "knows_the_tax"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "church_alms_door",
-      "location": "church",
-      "activities": [
-        "church_charity"
-      ],
-      "weight": 2,
-      "text": "The alms door draws a long line in fair week: the hungry, the wheedling, and the genuinely ruined, all in one queue. The dole is small, and you must judge who gets what.",
-      "check": {
-        "stat": "will",
-        "dc": 4
-      },
-      "pass": {
-        "text": "You give shrewdly and kindly both, turning away the chancers without cruelty and the desperate with bread. The line blesses your name, and blessings travel further than coin in a village this size.",
-        "outcome": "worked the alms door with a fair hand and earned the parish's blessing.",
-        "stats": {
-          "will": 1,
-          "intelligence": 1
-        }
-      },
-      "fail": {
-        "text": "You are soft where you should be firm, and the bread runs out before the line does. The last few faces leaving empty-handed are the ones you will see again in the night.",
-        "outcome": "gave the parish dole away too freely and ran the bread dry.",
-        "stats": {
-          "will": 1
-        }
-      }
-    },
-    {
-      "id": "church_tithe_short",
-      "location": "church",
-      "activities": [
-        "church_tithe"
-      ],
-      "requires": [
-        "knows_the_tax"
-      ],
-      "weight": 2,
-      "text": "Knowing what the lord means to demand at the fair, you can see the tithe column is short, and you can see exactly whose sacks were quietly logged light. The priest does not yet know.",
-      "choices": [
-        {
-          "label": "Quietly balance the books for him",
-          "effect": {
-            "text": "You make the figures whole before the priest ever sees the gap, sparing him a hard reckoning with the lord. He never learns there was a hole, but you do good work, and good work is its own coin.",
-            "outcome": "quietly balanced the church's short tithe before the lord could find it.",
-            "stats": {
-              "intelligence": 1,
-              "craft": 1
-            }
-          }
-        },
-        {
-          "label": "Show the priest exactly who came up short",
-          "effect": {
-            "text": "You lay the light sacks out by name. The priest's face goes grey, then grateful: better he learns it now than the lord learns it at the fair. He owes you a debt the parish will remember.",
-            "outcome": "showed the priest which parishioners had cheated the tithe.",
-            "stats": {
-              "intelligence": 1,
-              "will": 1
-            },
-            "flags": [
-              "priest_trusts"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "church_candle_money",
-      "location": "church",
-      "activities": [
-        "church_vigil",
-        "church_charity"
-      ],
-      "forbids": [
-        "owes_innkeep"
-      ],
-      "weight": 2,
-      "text": "A hundred candles burn for souls nobody will admit to lighting, and the offering box beneath them is fat and unwatched. In an empty nave at midnight, the coin would be the easiest you ever took.",
+      "text": "The first of the poor are coughing blood now, and Father Anselm has no plan but prayer. He begs your help: the few widows and almsfolk who will still touch the sick must be marshalled into something, or the whole quarter rots untended.",
       "check": {
         "stat": "will",
         "dc": 5
       },
       "pass": {
-        "text": "You weigh the box in your hand, think of the long candle-lit watch ahead, and set it down again. Walking out clean feels better than the coin would have, and habits of honesty are noticed in a small parish.",
-        "outcome": "left the candle-offering box untouched and walked out clean.",
+        "text": "You set the willing to boiling linen, parting the sick from the sound, and burying the worst rags deep. It is grim, stinking work, but by dawn there is order where there was only panic, and the sick are tended by hands that know what they are doing.",
+        "outcome": "marshalled the church's almsfolk into a band of healers.",
+        "stats": {
+          "will": 1,
+          "intelligence": 1
+        },
+        "flags": [
+          "healers_organized"
+        ]
+      },
+      "fail": {
+        "text": "You try, but the widows quarrel and the able-bodied scatter at the first cough that brings up blood, and you spend the small hours holding one dying weaver's hand because there is no one else left to do even that. He weeps red into the rushlight and asks you to pray, and you do, and it does not help. Some good was done. Nowhere near enough.",
+        "outcome": "could not hold the healers together as the sick poured in.",
+        "stats": {
+          "will": 1
+        }
+      }
+    },
+    {
+      "id": "church_burn_the_dead",
+      "location": "church",
+      "activities": [
+        "church_lastrites",
+        "church_crypt"
+      ],
+      "minWeek": 5,
+      "weight": 3,
+      "text": "The churchyard is full and the dead keep coming, carted in faster than holy ground can take them. Father Anselm wrings his hands over consecrated burial; but the corpses are bleeding, and bleeding corpses spread the rot. Someone must decide.",
+      "choices": [
+        {
+          "label": "Burn the bodies in a pit beyond the wall",
+          "effect": {
+            "text": "You dig the pit, stack the dead, and put the torch to them yourself while the priest weeps over the lack of rites. The stink clings to you for days, but the bleeding dead stop infecting the living, and the town breathes a fraction easier.",
+            "outcome": "burned the plague dead in a pit to stop the spreading.",
+            "stats": {
+              "will": 1,
+              "strength": 1
+            },
+            "flags": [
+              "dead_burned"
+            ]
+          }
+        },
+        {
+          "label": "Bury them whole in hallowed ground, as he wishes",
+          "effect": {
+            "text": "You give each their rites and a Christian grave, and the priest blesses you for it through his tears. But the churchyard mud runs pink under your boots, the rain carries the rot down into the well-springs, and by morning two of the gravediggers are bent double, coughing up the same dark blood they shovelled under all night.",
+            "outcome": "buried the plague dead whole, rites and all, and the rot spread on.",
+            "stats": {
+              "will": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "church_descend_crypt",
+      "location": "church",
+      "activities": [
+        "church_crypt"
+      ],
+      "requires": [
+        "relic_clue"
+      ],
+      "weight": 3,
+      "text": "You know now where the stair lies. While the priest sleeps slumped at the altar rail, you take a candle down past the bone-shelves of dead clergy to a low iron door the bishop's own seal still guards. Whatever the town does not speak of, it is on the other side.",
+      "check": {
+        "stat": "craft",
+        "dc": 5
+      },
+      "pass": {
+        "text": "The lock yields to patience and a thin blade. Behind the door, in a casket of black wood, lies a thing that should not be here: a relic that drinks the candlelight rather than catching it, cold as the grave and humming faintly against your teeth. This is what the Herald's red eyes wanted you to find.",
+        "outcome": "broke into the crypt and found the town's hidden secret.",
+        "stats": {
+          "craft": 1,
+          "intelligence": 1
+        },
+        "flags": [
+          "secret_found"
+        ]
+      },
+      "fail": {
+        "text": "The lock defeats you, and your candle gutters in a draught that has no business in a sealed crypt. In the half-dark you feel it through the iron: the thing behind the door turning slowly toward you, taking your measure as surely as you take its. You climb back up empty-handed, your hands shaking, and certain past all reason that you will come again.",
+        "outcome": "failed the crypt lock but is sure of what waits behind it.",
+        "stats": {
+          "will": 1
+        }
+      }
+    },
+    {
+      "id": "church_red_eyes_speak",
+      "location": "church",
+      "activities": [
+        "church_crypt",
+        "church_bells"
+      ],
+      "requires": [
+        "secret_found"
+      ],
+      "weight": 3,
+      "text": "Alone with the cold relic, the crypt darkens past what one candle can explain, and the dark itself seems to breathe. The pair of red eyes from the crossing open again in the black a hand's breadth from your face. THIS IS THE SECRET THING, the Herald says, and the words arrive without sound, scraped straight onto the inside of your skull. KEEP IT FROM THE OTHERS. SERVE ME, AND ST SEBASTIAN MAY YET STAND. THE CHOICE REMAINS THINE.",
+      "effect": {
+        "text": "You kneel on the cold stone before the red eyes and give your word. The relic warms once against your chest, slow, like a thing turning over in its sleep, and the eyes close, satisfied. You have the Herald's favour now, and the weight of it settles behind your ribs and beats there like a second heart that is not your own.",
+        "outcome": "knelt to the red eyes in the crypt and won the Herald's favour.",
+        "stats": {
+          "will": 2
+        },
+        "flags": [
+          "herald_favour"
+        ]
+      }
+    },
+    {
+      "id": "church_offering_box",
+      "location": "church",
+      "activities": [
+        "church_bells",
+        "church_lastrites"
+      ],
+      "minWeek": 5,
+      "weight": 2,
+      "text": "The plague has stripped the nave of all but the desperate, who still light candles for the dying and feed the offering box beneath them out of terror. In an empty, reeking church at midnight, that box is fat and unwatched, and the dead have no use for coin.",
+      "check": {
+        "stat": "will",
+        "dc": 5
+      },
+      "pass": {
+        "text": "You weigh the box in your hand, think of the widows you set to tending the sick, and set it back down. Whatever comes for this town, you will not have robbed its dying to meet it. The choice costs you, and you feel it.",
+        "outcome": "left the dying parish's offering box untouched.",
         "stats": {
           "will": 2
         }
       },
       "fail": {
-        "text": "You take a handful, not all, you tell yourself, just a handful. The coin is warm and the guilt is warmer, and you spend the rest of the watch certain every saint in the glass is staring.",
-        "outcome": "skimmed the candle-offering box and spent the night in guilt.",
+        "text": "You take it all, telling yourself the dead and the soon-dead won't miss it. The coin is heavy and slick with candle-grease, and as you carry it out the painted saints in the dark glass seem to lean after you, their gilded eyes following your back to the door and out into the reeking night. You do not sleep.",
+        "outcome": "emptied the dying parish's offering box into their own purse.",
         "stats": {
-          "wealth": 1,
+          "wealth": 2,
           "will": -1
         }
       }
     },
     {
-      "id": "church_grave_digging",
+      "id": "church_sell_the_secret",
       "location": "church",
       "activities": [
-        "church_charity",
-        "church_vigil"
+        "church_crypt",
+        "church_confession"
       ],
-      "weight": 2,
-      "text": "The sexton is too gout-ridden to dig, and there is a pauper to be in the ground by morning. It is cold, honest, back-breaking work that no one else will touch in fair week.",
-      "effect": {
-        "text": "You break the frost and dig the grave square and deep by lantern-light. The priest pays you in coin and the rarer wage of a clergyman who remembers a willing back.",
-        "outcome": "dug a pauper's grave by lantern-light when no one else would.",
-        "stats": {
-          "strength": 1,
-          "wealth": 1
+      "requires": [
+        "secret_found"
+      ],
+      "minWeek": 6,
+      "weight": 3,
+      "text": "A grey-faced merchant has heard you went down into the crypt and lived. With the warband on the horizon and the last ship loading, he offers a year's passage and a purse for the bishop's relic, no questions, gone by the next tide. Father Anselm would never know who took it, or would die before he could.",
+      "choices": [
+        {
+          "label": "Sell the relic and buy your way onto the last ship",
+          "effect": {
+            "text": "You hand over the casket and take the purse and the berth. The merchant's men are already at the gangplank; whatever the Herald wanted, whatever the town needed, it sails out of your reach tonight, and so, gladly, do you.",
+            "outcome": "sold the church's secret and bought passage on the last ship.",
+            "stats": {
+              "wealth": 2,
+              "will": -1
+            },
+            "flags": [
+              "passage_secured",
+              "turned_to_darkness"
+            ]
+          }
+        },
+        {
+          "label": "Refuse, and carry the relic back to the priest",
+          "effect": {
+            "text": "You turn the merchant out and bear the casket back down to the priest, telling him only that it is safer in his keeping than yours. He does not understand, but he weeps and blesses you, and you have kept faith with something — the town, the Herald, or only yourself.",
+            "outcome": "refused to sell the relic and gave it back to the priest.",
+            "stats": {
+              "will": 2
+            }
+          }
         }
-      }
+      ]
+    },
+    {
+      "id": "church_toll_the_warband",
+      "location": "church",
+      "activities": [
+        "church_bells"
+      ],
+      "minWeek": 6,
+      "weight": 2,
+      "text": "From the bell-tower you see them at last: a tattered column crawling toward the walls under a black banner, close enough now to count, close enough to see that half of them are dead on their feet and march anyway. The bell-rope is cold and rough in your hands. You can haul on it and wake the whole town to the horror, or let them have one last quiet night before they learn what is coming for them.",
+      "choices": [
+        {
+          "label": "Toll the great bell and rouse the town to its walls",
+          "effect": {
+            "text": "You haul the rope and the bronze voice rolls out over St Sebastian, dragging men from their beds to the gate and the wall. Some curse you for the panic. But the town that meets the warband awake is a town that might, just might, meet the dawn.",
+            "outcome": "tolled the great bell and roused the town to face the warband.",
+            "stats": {
+              "will": 1,
+              "strength": 1
+            },
+            "flags": [
+              "town_roused"
+            ]
+          }
+        },
+        {
+          "label": "Stay your hand and keep the watch alone",
+          "effect": {
+            "text": "You let the rope hang and keep the cold watch alone, granting the town one last unbroken night. You tell yourself there is nothing they could do in the dark that morning would not do better. Below you, the camp-fires of the dying bloom one by one in the black fields, and the bell hangs silent above a town that sleeps on, dreaming it is safe.",
+            "outcome": "kept silent in the tower and let the town sleep on unwarned.",
+            "stats": {
+              "will": 1
+            }
+          }
+        }
+      ]
     }
   ]
 }

@@ -32,6 +32,7 @@ import {
   STAT_SHORT,
 } from "@/lib/game/constants";
 import { baseStats, roleDef, startingFlags } from "@/lib/game/character";
+import { playerEnding } from "@/lib/game/finale";
 import {
   useActiveEvent,
   useAssignments,
@@ -280,10 +281,18 @@ function PhoneGame({ room }: { room: string }) {
         );
       }
       return <PhoneLobby stats={effectiveStats} character={character} />;
+    case "prologue":
+      return (
+        <Waiting
+          title="A vision in the dark"
+          line="Watch the big screen — the Herald's charge is read aloud."
+          stats={effectiveStats}
+        />
+      );
     case "night-intro":
       return (
         <Waiting
-          title={`Night ${night}`}
+          title={`Week ${night}`}
           line={activeEvent?.introOverride ?? nightIntro(night)}
           stats={effectiveStats}
         />
@@ -311,7 +320,7 @@ function PhoneGame({ room }: { room: string }) {
     case "resolve":
       return (
         <Waiting
-          title="The night resolves"
+          title="The week resolves"
           line="Watch the screen…"
           stats={effectiveStats}
           deltas={result?.night === night ? result.deltas : undefined}
@@ -385,7 +394,7 @@ function PhoneChoose({
   return (
     <main className="flex min-h-screen flex-col gap-4 p-5">
       <h1 className="text-center text-2xl font-black">
-        Night {night} · Where will you go?
+        Week {night} · Where will you go?
       </h1>
       <div className="grid grid-cols-2 gap-3">
         {LOCATIONS.map((loc) => {
@@ -415,10 +424,10 @@ function PhoneChoose({
       </div>
       <p className="text-center text-parch-400">
         {locked
-          ? "Locked in. The night begins…"
+          ? "Locked in. The week begins…"
           : current
             ? `Heading to ${locationDef(current).name}. Tap another to change.`
-            : "Tap a place to spend the night."}
+            : "Tap a place to spend the week."}
       </p>
       <StatsBar stats={stats} />
     </main>
@@ -448,7 +457,7 @@ function PhoneStorylet({
   if (result?.night === night) {
     return (
       <Waiting
-        title="Your night is over"
+        title="Your week is over"
         line="Watch the screen — the others are still out there."
         stats={stats}
         deltas={result.deltas}
@@ -459,7 +468,7 @@ function PhoneStorylet({
     return (
       <Waiting
         title="Sit this one out"
-        line="You joined mid-night; you're in from the next one."
+        line="You joined mid-week; you're in from the next one."
         stats={stats}
       />
     );
@@ -529,8 +538,11 @@ function PhoneEpilogue({
   const week = [...history].sort((a, b) => a.night - b.night);
   return (
     <main className="flex min-h-screen flex-col items-center gap-6 p-6 py-10">
-      <h1 className="text-3xl font-black">Your week</h1>
+      <h1 className="text-3xl font-black">Your seven weeks</h1>
       <StatsBar stats={stats} big />
+      <p className="story-prose max-w-md text-center text-parch-200">
+        {playerEnding(flags)}
+      </p>
       {week.length > 0 && (
         <ol className="flex w-full max-w-md flex-col gap-2">
           {week.map((h) => (
@@ -539,7 +551,7 @@ function PhoneEpilogue({
               className="rounded-xl border border-bark bg-oak/50 px-4 py-3 text-sm"
             >
               <span className="font-mono font-bold text-amber-400">
-                N{h.night}
+                W{h.night}
               </span>{" "}
               <span className="font-bold text-parch-300">
                 {locationDef(h.location).name}
@@ -552,7 +564,7 @@ function PhoneEpilogue({
       {flags.length > 0 && (
         <div className="text-center">
           <p className="mb-2 text-sm font-bold uppercase tracking-widest text-parch-500">
-            Marks the week left on you
+            What the weeks left on you
           </p>
           <p className="text-parch-300">
             {flags.map((f) => f.replaceAll("_", " ")).join(" · ")}

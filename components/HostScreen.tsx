@@ -29,8 +29,8 @@ import {
   STAT_LABELS,
 } from "@/lib/game/constants";
 import {
-  averageStats,
   backToLobby,
+  beginAfterPrologue,
   beginChooseLocation,
   beginEpilogue,
   beginResolve,
@@ -52,7 +52,7 @@ import {
   useNight,
   usePhase,
 } from "@/lib/game/state";
-import { finaleEnding } from "@/lib/game/finale";
+import { townEnding } from "@/lib/game/finale";
 import {
   audioUnlocked,
   isMuted,
@@ -336,6 +336,8 @@ function HostGame({ roomCode }: { roomCode: string }) {
     switch (phase) {
     case "lobby":
       return <LobbyScreen roomCode={roomCode} players={players} />;
+    case "prologue":
+      return <PrologueScreen onBegin={beginAfterPrologue} />;
     case "night-intro":
       return (
         <Centered>
@@ -345,7 +347,7 @@ function HostGame({ roomCode }: { roomCode: string }) {
               ❦
             </p>
             <h1 className="mt-2 text-8xl font-black tracking-tight">
-              NIGHT {night}
+              WEEK {night}
             </h1>
             {activeEvent ? (
               <>
@@ -413,7 +415,7 @@ function NightDots({ night }: { night: number }) {
   return (
     <div
       className="flex justify-center gap-2 text-base"
-      aria-label={`Night ${night} of ${NIGHT_COUNT}`}
+      aria-label={`Week ${night} of ${NIGHT_COUNT}`}
     >
       {Array.from({ length: NIGHT_COUNT }, (_, i) => (
         <span
@@ -436,6 +438,55 @@ function useClock(intervalMs: number): number {
     return () => clearInterval(id);
   }, [intervalMs]);
   return now;
+}
+
+// --------------------------------------------------------------- PROLOGUE
+
+function PrologueScreen({ onBegin }: { onBegin: () => void }) {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-center gap-6 px-8 py-12">
+      <div className="fade-up max-w-3xl space-y-5 text-lg leading-relaxed text-parch-300">
+        <p className="story-prose text-parch-200">
+          It is 1348. God, angry with His creation, looses war, plague and
+          famine across the continent. As hundreds of thousands die on its
+          battlefields, millions more begin to die of a black death spreading
+          out of the east. Food grows scarce; the lords bar themselves in their
+          draughty castles to ride out the ruin while their serfs die in their
+          thousands.
+        </p>
+        <p>
+          You are fugitives, fleeing the destruction toward England, where the
+          reckoning has not yet come. Your party boards the{" "}
+          <span className="italic text-parch-100">St Michael's Fortune</span>,
+          lucky to have outrun the brigands, the starving mobs, and the plague
+          itself — for a time. As the ship beats toward the ancient fortress
+          town of St Sebastian, you can only pray the anarchy stays on the far
+          shore. You fear you are wrong.
+        </p>
+        <p>
+          On a moonless night at the dark heart of the crossing, a vision comes.
+          A pair of glowing red eyes peers from the black, and speaks:
+        </p>
+        <p className="border-l-2 border-red-700/70 pl-5 font-display text-2xl leading-snug text-red-300">
+          “THE CITY WILL FALL, AS ALL CITIES HAVE FALLEN. YOU CAN CHANGE THAT.
+          THE RICH COWER IN THEIR CASTLES; THE POOR BUTCHER ONE ANOTHER IN THE
+          STREETS. YOU ARE MY HERALD. THIS TOWN HOLDS SECRET THINGS, PRECIOUS TO
+          ME. SAVE IT, AND I SHALL REWARD THEE. FAIL — AND YOU WILL PERISH, AS
+          ALL MUST IN THE END.”
+        </p>
+        <p className="text-parch-200">
+          Seven weeks before the world's end. Save the city, or leave it to burn
+          and save yourselves. The decision is yours alone.
+        </p>
+      </div>
+      <button
+        onClick={onBegin}
+        className="font-display mt-2 rounded-xl bg-amber-500 px-12 py-4 text-2xl text-night hover:bg-amber-400"
+      >
+        Make landfall →
+      </button>
+    </main>
+  );
 }
 
 // ------------------------------------------------------------------ LOBBY
@@ -603,7 +654,7 @@ function ChooseScreen({
       <header className="flex items-baseline justify-between">
         <div className="flex items-baseline gap-6">
           <h1 className="text-4xl font-black">
-            Night {night} · Where is everyone going?
+            Week {night} · Where is everyone going?
           </h1>
           <NightDots night={night} />
         </div>
@@ -667,7 +718,7 @@ function StoryletsScreen({
     <main className="flex min-h-screen flex-col items-center justify-center gap-10 p-10">
       <NightDots night={night} />
       <h1 className="text-5xl font-black text-parch-300">
-        Night {night} unfolds…
+        Week {night} in St Sebastian…
       </h1>
       <ul className="flex w-full max-w-3xl flex-col gap-4">
         {assigned.map((p) => {
@@ -709,7 +760,7 @@ function StoryletsScreen({
         onClick={() => {
           if (
             window.confirm(
-              "End the night now? Players still mid-story won't get an outcome, and a permanently disconnected phone drops out of the finale.",
+              "End the week now? Players still mid-story won't get an outcome, and a permanently disconnected phone drops out of the reckoning.",
             )
           ) {
             beginResolve();
@@ -717,7 +768,7 @@ function StoryletsScreen({
         }}
         className="rounded-lg border border-bark px-5 py-2 text-sm text-parch-600 hover:border-parch-600 hover:text-parch-400"
       >
-        A phone died? End the night without them →
+        A phone died? End the week without them →
       </button>
     </main>
   );
@@ -763,7 +814,7 @@ function ResolveScreen({
       <div className="flex flex-col items-center gap-4">
         <NightDots night={night} />
         <h1 className="text-center text-4xl font-black text-parch-300">
-          Night {night} · What happened out there
+          Week {night} · What happened out there
         </h1>
       </div>
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5">
@@ -793,7 +844,7 @@ function ResolveScreen({
         }}
         className="font-display mx-auto rounded-xl border border-bark-light px-8 py-3 text-lg text-parch-400 hover:border-parch-500"
       >
-        {night >= NIGHT_COUNT ? "To the finale →" : `On to night ${night + 1} →`}
+        {night >= NIGHT_COUNT ? "To the reckoning →" : `On to week ${night + 1} →`}
       </button>
     </main>
   );
@@ -808,8 +859,11 @@ function FinaleScreen({ players }: { players: PlayerState[] }) {
   // to shared state so it survives a host refresh.
   useEffect(() => {
     if (players.length === 0 || getPublishedEnding()) return;
-    const avg = averageStats(players.map(playerStats));
-    publishEnding(finaleEnding(avg));
+    const party = players.map((p) => ({
+      stats: playerStats(p),
+      flags: playerFlags(p),
+    }));
+    publishEnding(townEnding(party));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [players.length]);
 
@@ -822,7 +876,7 @@ function FinaleScreen({ players }: { players: PlayerState[] }) {
 
   return (
     <main className="flex min-h-screen flex-col items-center gap-8 p-10">
-      <h1 className="text-5xl font-black">THE SEVENTH NIGHT ENDS</h1>
+      <h1 className="text-5xl font-black">THE SEVENTH WEEK ENDS</h1>
       <div className="max-w-3xl space-y-5 text-center">
         {ending ? (
           ending.map((p, i) => (
@@ -839,7 +893,7 @@ function FinaleScreen({ players }: { players: PlayerState[] }) {
           ))
         ) : (
           <p className="animate-pulse text-2xl text-parch-500">
-            Hollowbrook adds up the week…
+            St Sebastian waits to learn its fate…
           </p>
         )}
       </div>
@@ -892,7 +946,7 @@ function EpilogueScreen({ players }: { players: PlayerState[] }) {
 
   return (
     <main className="flex min-h-screen flex-col items-center gap-10 p-10">
-      <h1 className="text-5xl font-black">SEVEN NIGHTS, SURVIVED</h1>
+      <h1 className="text-5xl font-black">SEVEN WEEKS, ENDED</h1>
       {wildest && (
         <p className="text-2xl text-parch-300">
           The village agrees:{" "}
@@ -936,7 +990,7 @@ function EpilogueScreen({ players }: { players: PlayerState[] }) {
       </table>
       <section className="w-full max-w-6xl">
         <h2 className="mb-4 text-center text-xl font-bold text-parch-400">
-          The week, night by night
+          The seven weeks, week by week
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {players.map((p) => (
@@ -952,7 +1006,7 @@ function EpilogueScreen({ players }: { players: PlayerState[] }) {
                 {playerHistory(p).map((h) => (
                   <li key={h.night}>
                     <span className="font-mono font-bold text-amber-400/80">
-                      N{h.night}
+                      W{h.night}
                     </span>{" "}
                     {h.outcome}
                   </li>

@@ -2,117 +2,79 @@
   "roles": [
     {
       "id": "knight",
-      "name": "Knight",
-      "blurb": "Sworn to the sword. Doors open to steel and a hard stare.",
-      "bonus": {
-        "strength": 3,
-        "will": 2
-      }
+      "name": "Landless Knight",
+      "blurb": "A sword that fled a lost field on the continent. Doors still open to steel.",
+      "bonus": { "strength": 3, "will": 2 }
     },
     {
       "id": "scholar",
-      "name": "Scholar",
-      "blurb": "Letters, ledgers, and the patience to read a room.",
-      "bonus": {
-        "intelligence": 3,
-        "craft": 2
-      }
+      "name": "Physician",
+      "blurb": "Trained at a plague-struck university. You know how a sickness moves.",
+      "bonus": { "intelligence": 3, "craft": 2 }
     },
     {
       "id": "merchant",
-      "name": "Merchant",
-      "blurb": "Coin is a language, and you are fluent.",
-      "bonus": {
-        "wealth": 3,
-        "intelligence": 2
-      }
+      "name": "Ruined Merchant",
+      "blurb": "You got out with a strongbox and little else. Coin still talks.",
+      "bonus": { "wealth": 3, "intelligence": 2 }
     },
     {
       "id": "outlaw",
-      "name": "Outlaw",
-      "blurb": "Quick hands, quicker exits, no master but the night.",
-      "bonus": {
-        "agility": 3,
-        "will": 2
-      }
+      "name": "Deserter",
+      "blurb": "You slipped away from an army already dead on its feet. Quick hands, quicker exits.",
+      "bonus": { "agility": 3, "will": 2 }
     },
     {
       "id": "cleric",
-      "name": "Cleric",
-      "blurb": "The church's word carries where coin and steel cannot.",
-      "bonus": {
-        "will": 3,
-        "intelligence": 2
-      }
+      "name": "Friar",
+      "blurb": "You fled a burning monastery with your faith intact. The Church's word still carries.",
+      "bonus": { "will": 3, "intelligence": 2 }
     },
     {
       "id": "smith",
-      "name": "Smith",
-      "blurb": "Honest craft and an arm like a trip-hammer.",
-      "bonus": {
-        "craft": 3,
-        "strength": 2
-      }
+      "name": "Journeyman Smith",
+      "blurb": "Your workshop is ash; your hands and your craft remain.",
+      "bonus": { "craft": 3, "strength": 2 }
     }
   ],
   "backgrounds": [
     {
       "id": "noble",
-      "name": "Noble-born",
-      "blurb": "A name that turns heads, and a purse to match.",
-      "bonus": {
-        "wealth": 2,
-        "will": 1
-      },
+      "name": "Fallen Noble",
+      "blurb": "Your house was sacked, but the name still turns a head and the purse still has weight.",
+      "bonus": { "wealth": 2, "will": 1 },
       "startFlag": "noble_born"
     },
     {
       "id": "peasant",
-      "name": "Peasant",
-      "blurb": "Raised on the land. Strong back, longer memory.",
-      "bonus": {
-        "strength": 2,
-        "craft": 1
-      }
+      "name": "Runaway Villein",
+      "blurb": "A serf who ran when the lord's lands burned. Strong back, longer memory.",
+      "bonus": { "strength": 2, "craft": 1 }
     },
     {
       "id": "foreigner",
-      "name": "Foreigner",
-      "blurb": "New to Hollowbrook, and you see what locals miss.",
-      "bonus": {
-        "intelligence": 1,
-        "agility": 1,
-        "wealth": 1
-      },
+      "name": "Far-Traveller",
+      "blurb": "From distant lands — you read a strange town faster than its own folk do.",
+      "bonus": { "intelligence": 1, "agility": 1, "wealth": 1 },
       "startFlag": "outsider"
     },
     {
       "id": "orphan",
-      "name": "Orphan",
-      "blurb": "Brought yourself up. Light-footed and hard to rattle.",
-      "bonus": {
-        "agility": 2,
-        "will": 1
-      }
+      "name": "Plague-Orphan",
+      "blurb": "It took everyone but you. Light-footed, and very hard to rattle.",
+      "bonus": { "agility": 2, "will": 1 }
     },
     {
       "id": "guild",
-      "name": "Guild-raised",
-      "blurb": "Apprenticed young; a trade and the gossip that comes with it.",
-      "bonus": {
-        "craft": 2,
-        "intelligence": 1
-      }
+      "name": "Guild Journeyman",
+      "blurb": "Apprenticed young — a trade in your hands and an ear for a town's gossip.",
+      "bonus": { "craft": 2, "intelligence": 1 }
     },
     {
       "id": "soldier",
-      "name": "Soldier's child",
-      "blurb": "Camp-raised: handy, watchful, and used to marching orders.",
-      "bonus": {
-        "strength": 1,
-        "will": 1,
-        "agility": 1
-      }
+      "name": "Camp-Follower",
+      "blurb": "Raised among armies: handy, watchful, and used to the very worst.",
+      "bonus": { "strength": 1, "will": 1, "agility": 1 }
     }
   ]
 }

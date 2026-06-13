@@ -115,6 +115,15 @@ function validate(locations, origins) {
     if (shapes !== 1) {
       errors.push(`${ev.id}: must have exactly one resolution shape (has ${shapes})`);
     }
+    if (ev.minWeek !== undefined && !(ev.minWeek >= 1 && ev.minWeek <= 7)) {
+      errors.push(`${ev.id}: minWeek out of range 1–7`);
+    }
+    if (ev.maxWeek !== undefined && !(ev.maxWeek >= 1 && ev.maxWeek <= 7)) {
+      errors.push(`${ev.id}: maxWeek out of range 1–7`);
+    }
+    if (ev.minWeek !== undefined && ev.maxWeek !== undefined && ev.minWeek > ev.maxWeek) {
+      errors.push(`${ev.id}: minWeek after maxWeek`);
+    }
     if (ev.check) {
       if (!STAT_IDS.includes(ev.check.stat)) {
         errors.push(`${ev.id}: check uses unknown stat "${ev.check.stat}"`);

@@ -4,14 +4,13 @@ import {
   applyEffect,
   checkPasses,
   eligibleEvents,
-  eventById,
   pickEvent,
   resolveEffect,
   selectionSeed,
 } from "@/lib/game/events";
 import { baseStats, ROLES, BACKGROUNDS } from "@/lib/game/character";
 import { ACTIVITIES, EVENTS } from "@/lib/game/content";
-import { STAT_CAP } from "@/lib/game/constants";
+import { LOCATIONS, STAT_CAP } from "@/lib/game/constants";
 import type { GameEvent, PlayerStats } from "@/lib/game/types";
 
 const ZERO: PlayerStats = {
@@ -23,86 +22,131 @@ const ZERO: PlayerStats = {
   wealth: 0,
 };
 
+// These engine tests are deliberately CONTENT-AGNOSTIC: they probe the rules
+// against whatever events exist, so editing the story never breaks them.
+
 describe("activities", () => {
-  it("returns only the activities for a location", () => {
-    const acts = activitiesFor("tavern");
-    expect(acts.length).toBeGreaterThanOrEqual(2);
-    expect(acts.every((a) => a.location === "tavern")).toBe(true);
+  it("returns only the activities for a location, and every location has some", () => {
+    for (const loc of LOCATIONS) {
+      const acts = activitiesFor(loc.id);
+      expect(acts.length, loc.id).toBeGreaterThanOrEqual(2);
+      expect(acts.every((a) => a.location === loc.id)).toBe(true);
+    }
   });
 });
 
-describe("eligibility & prerequisite chains", () => {
-  it("hides an event until its required flag is set (cross-location)", () => {
-    const without = eligibleEvents("castle", "castle_gate", [], []);
-    expect(without.some((e) => e.id === "audience_with_lord")).toBe(false);
-
-    const withFlag = eligibleEvents("castle", "castle_gate", ["met_steward"], []);
-    expect(withFlag.some((e) => e.id === "audience_with_lord")).toBe(true);
-  });
-
-  it("forbids an event once a blocking flag is present", () => {
-    const open = eligibleEvents("castle", "castle_gate", [], []);
-    expect(open.some((e) => e.id === "turned_away")).toBe(true);
-    const blocked = eligibleEvents("castle", "castle_gate", ["met_steward"], []);
-    expect(blocked.some((e) => e.id === "turned_away")).toBe(false);
-  });
-
+describe("eligibility rules", () => {
   it("drops a once-only event after it has been seen", () => {
-    const fresh = eligibleEvents("tavern", "tavern_gossip", [], []);
-    expect(fresh.some((e) => e.id === "steward_in_cups")).toBe(true);
-    const seen = eligibleEvents("tavern", "tavern_gossip", [], ["steward_in_cups"]);
-    expect(seen.some((e) => e.id === "steward_in_cups")).toBe(false);
+    const ev = EVENTS.find((e) => !e.repeatable && e.activities.length > 0);
+    expect(ev, "a once-only, activity-bound event exists").toBeTruthy();
+    const act = ev!.activities[0];
+    const fresh = eligibleEvents(ev!.location, act, [], []);
+    expect(fresh.some((e) => e.id === ev!.id)).toBe(true);
+    const seen = eligibleEvents(ev!.location, act, [], [ev!.id]);
+    expect(seen.some((e) => e.id === ev!.id)).toBe(false);
   });
 
-  it("respects the activity an event is bound to", () => {
-    const gambleEvents = eligibleEvents("tavern", "tavern_gamble", [], []);
-    expect(gambleEvents.some((e) => e.id === "gamblers_table")).toBe(true);
-    const gossipEvents = eligibleEvents("tavern", "tavern_gossip", [], []);
-    expect(gossipEvents.some((e) => e.id === "gamblers_table")).toBe(false);
+  it("hides a required-flag event until the flag is present (the chain mechanism)", () => {
+    const ev = EVENTS.find((e) => e.requires && e.requires.length > 0);
+    expect(ev, "some event has a prerequisite").toBeTruthy();
+    const act = ev!.activities[0] ?? "";
+    const without = eligibleEvents(ev!.location, act, [], []);
+    expect(without.some((e) => e.id === ev!.id)).toBe(false);
+    const withFlags = eligibleEvents(ev!.location, act, ev!.requires!, []);
+    expect(withFlags.some((e) => e.id === ev!.id)).toBe(true);
+  });
+
+  it("blocks a forbidden-flag event once the flag is present", () => {
+    const ev = EVENTS.find(
+      (e) => e.forbids && e.forbids.length > 0 && (e.requires?.length ?? 0) === 0,
+    );
+    if (!ev) return; // no pure-forbid event; fine
+    const act = ev.activities[0] ?? "";
+    const open = eligibleEvents(ev.location, act, [], []);
+    expect(open.some((e) => e.id === ev.id)).toBe(true);
+    const blocked = eligibleEvents(ev.location, act, [ev.forbids![0]], []);
+    expect(blocked.some((e) => e.id === ev.id)).toBe(false);
+  });
+
+  it("respects week gates", () => {
+    const ev = EVENTS.find((e) => e.minWeek && e.minWeek > 1);
+    if (!ev) return;
+    const act = ev.activities[0] ?? "";
+    const early = eligibleEvents(ev.location, act, ev.requires ?? [], [], 1);
+    expect(early.some((e) => e.id === ev.id)).toBe(false);
+    const onTime = eligibleEvents(ev.location, act, ev.requires ?? [], [], ev.minWeek!);
+    expect(onTime.some((e) => e.id === ev.id)).toBe(true);
+  });
+
+  it("only returns events bound to the chosen activity", () => {
+    const ev = EVENTS.find((e) => e.activities.length === 1);
+    expect(ev).toBeTruthy();
+    const otherAct = ACTIVITIES.find(
+      (a) => a.location === ev!.location && a.id !== ev!.activities[0],
+    );
+    if (!otherAct) return;
+    const elsewhere = eligibleEvents(ev!.location, otherAct.id, [], []);
+    expect(elsewhere.some((e) => e.id === ev!.id)).toBe(false);
   });
 });
 
 describe("event selection", () => {
   it("is stable for the same seed (survives a refresh)", () => {
-    const seed = selectionSeed("player-1", 1, "tavern_gossip");
-    const a = pickEvent("tavern", "tavern_gossip", [], [], seed);
-    const b = pickEvent("tavern", "tavern_gossip", [], [], seed);
+    const loc = "tavern" as const;
+    const act = activitiesFor(loc)[0].id;
+    const seed = selectionSeed("player-1", 1, act);
+    const a = pickEvent(loc, act, [], [], seed, 1);
+    const b = pickEvent(loc, act, [], [], seed, 1);
     expect(a.id).toBe(b.id);
   });
 
   it("always returns an event, falling back when the pool is dry", () => {
-    const allSeen = EVENTS.filter((e) => e.location === "tavern").map((e) => e.id);
-    const picked = pickEvent("tavern", "tavern_gossip", [], allSeen, 123);
-    expect(picked).toBeTruthy();
+    const loc = "tavern" as const;
+    const act = activitiesFor(loc)[0].id;
+    const allSeen = EVENTS.filter((e) => e.location === loc).map((e) => e.id);
+    const picked = pickEvent(loc, act, [], allSeen, 123, 1);
     expect(picked.id).toBe("quiet_tavern");
   });
 });
 
-describe("hidden stat checks", () => {
+describe("hidden stat checks (synthetic)", () => {
+  const checkEvent: GameEvent = {
+    id: "x",
+    location: "tavern",
+    activities: [],
+    check: { stat: "will", dc: 4 },
+    text: "t",
+    pass: { text: "p", outcome: "passed." },
+    fail: { text: "f", outcome: "failed." },
+  };
+
   it("passes only when the stat meets the dc", () => {
-    const ev = eventById("audience_with_lord") as GameEvent;
-    expect(ev.check).toBeTruthy();
-    const weak = { ...ZERO, will: 3 };
-    const strong = { ...ZERO, will: 4 };
-    expect(checkPasses(ev, weak)).toBe(false);
-    expect(checkPasses(ev, strong)).toBe(true);
+    expect(checkPasses(checkEvent, { ...ZERO, will: 3 })).toBe(false);
+    expect(checkPasses(checkEvent, { ...ZERO, will: 4 })).toBe(true);
   });
 
   it("resolves to the pass or fail branch by the check", () => {
-    const ev = eventById("gamblers_table") as GameEvent;
-    const lucky = resolveEffect(ev, { ...ZERO, agility: 9 });
-    const unlucky = resolveEffect(ev, { ...ZERO, agility: 0 });
-    expect(lucky).toBe(ev.pass);
-    expect(unlucky).toBe(ev.fail);
+    expect(resolveEffect(checkEvent, { ...ZERO, will: 9 })).toBe(checkEvent.pass);
+    expect(resolveEffect(checkEvent, { ...ZERO, will: 0 })).toBe(checkEvent.fail);
   });
 });
 
-describe("choice events", () => {
+describe("choice events (synthetic)", () => {
+  const choiceEvent: GameEvent = {
+    id: "c",
+    location: "tavern",
+    activities: [],
+    text: "t",
+    choices: [
+      { label: "A", effect: { text: "a", outcome: "did a." } },
+      { label: "B", effect: { text: "b", outcome: "did b." } },
+    ],
+  };
+
   it("needs a choice index, then resolves to that option", () => {
-    const ev = eventById("round_for_the_room") as GameEvent;
-    expect(resolveEffect(ev, ZERO)).toBeNull();
-    expect(resolveEffect(ev, ZERO, 0)).toBe(ev.choices?.[0].effect);
-    expect(resolveEffect(ev, ZERO, 1)).toBe(ev.choices?.[1].effect);
+    expect(resolveEffect(choiceEvent, ZERO)).toBeNull();
+    expect(resolveEffect(choiceEvent, ZERO, 0)).toBe(choiceEvent.choices![0].effect);
+    expect(resolveEffect(choiceEvent, ZERO, 1)).toBe(choiceEvent.choices![1].effect);
   });
 });
 
@@ -114,9 +158,9 @@ describe("applying effects", () => {
       outcome: "",
       stats: { wealth: -3, strength: 5 },
     });
-    expect(stats.wealth).toBe(0); // clamped at floor, not -2
+    expect(stats.wealth).toBe(0);
     expect(deltas.wealth).toBe(-1);
-    expect(stats.strength).toBe(STAT_CAP); // clamped at ceiling
+    expect(stats.strength).toBe(STAT_CAP);
     expect(deltas.strength).toBe(0);
   });
 });
@@ -124,12 +168,9 @@ describe("applying effects", () => {
 describe("character creation", () => {
   it("builds base stats from floor + role + background", () => {
     const stats = baseStats({ role: "knight", background: "soldier" });
-    // floor 1 + knight strength 3 + soldier strength 1
-    expect(stats.strength).toBe(5);
-    // floor 1 + knight will 2 + soldier will 1
-    expect(stats.will).toBe(4);
-    // floor only
-    expect(stats.craft).toBe(1);
+    expect(stats.strength).toBe(5); // 1 + 3 + 1
+    expect(stats.will).toBe(4); // 1 + 2 + 1
+    expect(stats.craft).toBe(1); // floor only
   });
 
   it("offers exactly six roles and six backgrounds", () => {

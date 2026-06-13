@@ -1,315 +1,360 @@
 {
   "activities": [
     {
-      "id": "slums_mend",
+      "id": "slums_tend",
       "location": "slums",
-      "name": "Mend what's broken",
-      "blurb": "Roofs, fences, and broken things the families can't fix alone."
+      "name": "Tend the wall-side families",
+      "blurb": "Bring water, splint a limb, sit with the sick the rest of the town won't touch."
     },
     {
-      "id": "slums_listen",
+      "id": "slums_lanes",
       "location": "slums",
       "name": "Walk the lanes",
-      "blurb": "The narrow ways hear everything in Hollowbrook before it's said aloud."
+      "blurb": "The crowded ways hear of every death and every grudge before the bailiff does."
     },
     {
-      "id": "slums_petition",
+      "id": "slums_watch",
       "location": "slums",
-      "name": "Take up the petition",
-      "blurb": "There's a paper going hand to hand, bound for the lord's fair-day court."
+      "name": "Stand with the bailiff's watch",
+      "blurb": "One failing man and a few cudgels against a quarter that is coming apart."
     }
   ],
   "events": [
     {
-      "id": "slums_mend_roof",
+      "id": "slums_first_night",
       "location": "slums",
       "activities": [
-        "slums_mend"
+        "slums_tend",
+        "slums_lanes"
       ],
+      "maxWeek": 2,
       "weight": 3,
-      "text": "An old widow's roof has gone to holes before the autumn rains, and she has no coin and no son to climb up for her.",
-      "check": {
-        "stat": "craft",
-        "dc": 4
-      },
-      "pass": {
-        "text": "You strip the rotten thatch and lay new before dark. She has nothing to pay you but bread and blessing, and gives both freely.",
-        "outcome": "rethatched a widow's roof before the rains and was paid in bread and blessing.",
+      "text": "The wall-side families take you for what you are at a glance: another mouth blown in off the sea with nothing. Still, a woman with a swollen ankle lets you near enough to bind it, and her neighbours stop pretending not to watch.",
+      "effect": {
+        "text": "You splint the ankle with a barrel-stave and a strip of your own shirt. It is poor work and it holds. By dark you have a corner out of the wind and the wary half-trust of people who own nothing worth the stealing.",
+        "outcome": "won a foothold among the wall-side poor by binding a stranger's ankle.",
         "stats": {
           "craft": 1,
           "will": 1
-        }
-      },
-      "fail": {
-        "text": "The beams are softer than they looked and one gives under you. You patch what you can and climb down sore, the worst of the holes closed but the job half-done.",
-        "outcome": "patched a leaking roof and came down sore for it.",
-        "stats": {
-          "will": 1
-        }
+        },
+        "flags": [
+          "slums_trusted"
+        ]
       }
     },
     {
-      "id": "slums_share_bread",
+      "id": "slums_bailiff_failing",
       "location": "slums",
       "activities": [
-        "slums_mend",
-        "slums_listen"
+        "slums_watch",
+        "slums_lanes"
       ],
-      "forbids": [
-        "noble_born"
-      ],
-      "weight": 2,
-      "text": "A clutch of children watch you eat with the patience of the truly hungry. You have more in your pack than you need tonight.",
-      "choices": [
-        {
-          "label": "Share out the food",
-          "effect": {
-            "text": "You hand it round and it's gone in moments. Their mothers will hear of it by morning, and in these lanes a kindness is never forgotten and never quiet.",
-            "outcome": "shared their supper with the wall-side children and bought a good name in the lanes.",
-            "stats": {
-              "will": 1
-            },
-            "flags": [
-              "slums_well_liked"
-            ]
-          }
+      "maxWeek": 4,
+      "weight": 3,
+      "text": "The bailiff is a heavy, frightened man with too few cudgels and too much quarter to hold. He is hauling a thief off a bread-cart while three more empty it behind his back. He sees you see it, and something in him sags.",
+      "check": {
+        "stat": "strength",
+        "dc": 4
+      },
+      "pass": {
+        "text": "You wade in, crack two heads together, and put your back to the cart until the rest scatter into the lanes. The bailiff looks at you the way a drowning man looks at a thrown rope, and tells you his name as though it were a confession.",
+        "outcome": "saved the bailiff's bread-cart and earned a drowning man's gratitude.",
+        "stats": {
+          "strength": 1,
+          "will": 1
         },
-        {
-          "label": "Keep your pack closed",
-          "effect": {
-            "text": "You finish your meal and the children drift off, expecting nothing, as they've learned to. You leave with a full pack and a thin, practical sort of feeling.",
-            "outcome": "kept their own supper while the lane went hungry.",
-            "stats": {
-              "wealth": 1
-            }
-          }
-        }
-      ]
+        "flags": [
+          "slums_bailiff_broken"
+        ]
+      },
+      "fail": {
+        "text": "You grab for a wrist and a fist finds your mouth, and by the time you have your feet under you the cart is bare boards. The bailiff helps you up out of the muck. We are losing this, he says quietly, as though you had not noticed.",
+        "outcome": "lost the bread-cart with the bailiff and tasted how far gone the quarter is.",
+        "stats": {
+          "will": 1
+        },
+        "flags": [
+          "slums_bailiff_broken"
+        ]
+      }
     },
     {
-      "id": "slums_lane_whisper",
+      "id": "slums_red_eyes_alley",
       "location": "slums",
       "activities": [
-        "slums_listen"
+        "slums_lanes"
       ],
-      "requires": [
-        "met_steward"
-      ],
+      "maxWeek": 3,
       "weight": 2,
-      "text": "An errand-girl tugs your sleeve. She's seen you with the steward, she says, and the lanes have something the steward would pay to hear.",
+      "text": "Down a lane too narrow for two abreast, a beggar with a clouded eye grips your sleeve and will not let go. He says he has seen them too, the red eyes, watching the wall-side from the dark and waiting to see what you will do with these people. He asks if you are the one come to save them, or to sell them.",
       "effect": {
-        "text": "She tells it plain: which barns are short, which families will be ruined by the reckoning, what the castle still doesn't know. Carried up the hill, it's worth more than coin.",
-        "outcome": "gathered the lanes' secrets to carry up the castle hill.",
+        "text": "You give him no answer, for you have none. He laughs, a wet rattling thing, and tells you the patron's hidden things lie where the sickness will dig them up, and that you will know the place by its stink. Then he is only a beggar again, holding out his hand for bread.",
+        "outcome": "was named by a beggar who has also seen the red eyes in the dark.",
         "stats": {
           "intelligence": 1,
           "will": 1
         },
         "flags": [
-          "knows_the_tax"
+          "slums_omen_heard"
         ]
       }
     },
     {
-      "id": "slums_gather_names",
+      "id": "slums_first_blood",
       "location": "slums",
       "activities": [
-        "slums_petition"
+        "slums_tend"
       ],
-      "weight": 3,
-      "text": "The petition wants names, and the families that most need it are the ones most afraid to sign. It will take a soft voice and a steady hand to go door to door.",
+      "minWeek": 5,
+      "weight": 4,
+      "text": "A carter's boy lies on a pallet of rags, and his nose has bled since noon and will not stop. There is blood at the corners of his eyes now too, a thin red weeping, and his mother prays to a saint who has plainly stopped his ears. No one in the lane has seen the like. You have heard what it means.",
       "check": {
         "stat": "will",
-        "dc": 4
-      },
-      "pass": {
-        "text": "Lane by lane you talk them round, until the paper is dense with marks and crosses. Folk who'd never met your eye now nod when you pass.",
-        "outcome": "gathered a lane full of names for the petition.",
-        "stats": {
-          "will": 1,
-          "craft": 1
-        },
-        "flags": [
-          "slums_petition_ready"
-        ]
-      },
-      "fail": {
-        "text": "Door after door stays shut. Fear runs deeper than you reckoned, and you come away with a half-empty page and a lesson in how little the poor dare hope.",
-        "outcome": "knocked the lanes for names and came away with a half-empty page.",
-        "stats": {
-          "intelligence": 1
-        }
-      }
-    },
-    {
-      "id": "slums_deliver_petition",
-      "location": "slums",
-      "activities": [
-        "slums_petition"
-      ],
-      "requires": [
-        "slums_petition_ready"
-      ],
-      "weight": 3,
-      "text": "The petition is full and folded in your coat. Now it must reach the lord's fair-day court, and someone respectable must be willing to carry it past the gate.",
-      "check": {
-        "stat": "agility",
         "dc": 5
       },
       "pass": {
-        "text": "You catch the steward on his way down the hill and press the paper into his hand before his guards can wave you off. He reads it, sighs, and tucks it away with a look that says he'll see it heard.",
-        "outcome": "got the lanes' petition into the steward's own hand.",
+        "text": "You do not run. You wash the blood away as fast as it comes, hold the others back at the threshold, and stay until the small breaths stop near dawn. You have seen the first of it now, plainly, with your own eyes, and you know in your gut it will not be the last.",
+        "outcome": "sat with the first plague death in the lanes and did not look away.",
         "stats": {
-          "agility": 1,
-          "will": 1
+          "will": 2
         },
         "flags": [
-          "steward_favour"
+          "slums_plague_seen"
         ]
       },
       "fail": {
-        "text": "The gate-men know your face for a wall-side one and turn you about twice. You leave the paper with a sympathetic clerk and hope, which in fair week is most of what the poor have.",
-        "outcome": "left the petition with a clerk and hoped it would be read.",
+        "text": "Your nerve goes before the boy does. You back out into the lane and stand shaking against the wall while his mother wails behind you. You have seen what is coming for them all, and the seeing has emptied something out of you that will not soon fill again.",
+        "outcome": "fled the lanes' first plague death with the screaming still in their ears.",
+        "stats": {
+          "intelligence": 1
+        },
+        "flags": [
+          "slums_plague_seen"
+        ]
+      }
+    },
+    {
+      "id": "slums_trace_the_fever",
+      "location": "slums",
+      "activities": [
+        "slums_lanes",
+        "slums_tend"
+      ],
+      "requires": [
+        "slums_plague_seen"
+      ],
+      "minWeek": 5,
+      "weight": 3,
+      "text": "Every house that has buried someone backs onto the same fouled ditch at the foot of the wall, where the lane's filth and a black, sweet-rotten standing water meet. The beggar said you would know the place by its stink. You know it now.",
+      "check": {
+        "stat": "intelligence",
+        "dc": 5
+      },
+      "pass": {
+        "text": "You walk the deaths back one by one and they all run to the ditch like rain downhill. Something lies buried in that muck the patron wants found, and whatever it is kills the poor first and nearest. You mark the spot in your mind and tell no one yet.",
+        "outcome": "traced every plague death to the fouled ditch beneath the wall.",
+        "stats": {
+          "intelligence": 1,
+          "will": 1
+        },
+        "flags": [
+          "slums_fever_traced"
+        ]
+      },
+      "fail": {
+        "text": "You half-see the shape of it and then lose it in the sheer crush of the dying. There are too many now to count cleanly, and the ditch keeps its secret a while longer while you go on burying your dead.",
+        "outcome": "groped after the plague's source and lost the thread among the dead.",
         "stats": {
           "will": 1
         }
       }
     },
     {
-      "id": "slums_bailiff_mark",
+      "id": "slums_seal_the_lane",
       "location": "slums",
       "activities": [
-        "slums_mend",
-        "slums_listen"
+        "slums_tend",
+        "slums_watch"
       ],
-      "weight": 2,
-      "text": "The bailiff is collaring a man over a debt he plainly can't pay, with more relish than the law requires. The lane has gone quiet and watchful. He notices you watching.",
+      "requires": [
+        "slums_fever_traced"
+      ],
+      "minWeek": 6,
+      "weight": 4,
+      "text": "You have the source now: the ditch, and a thing rotting in it that has no business there. The sickness creeps from the wall-side outward, lane by lane. You can dam the ditch, drag the stricken houses behind a rope, and seal this quarter off from the rest of St Sebastian. But the families behind the rope will know they have been shut in to die together.",
       "choices": [
         {
-          "label": "Step in and cool it down",
+          "label": "Seal the quarter and dam the source",
           "effect": {
-            "text": "You talk the bailiff back a pace and the man slips home. The lane breathes again, but the bailiff fixes your face in his memory, and not fondly.",
-            "outcome": "faced down the bailiff and won a man another day.",
+            "text": "You drive stakes, sling a rope, and tell the wall-side families the plain truth: the rest of the town lives only if they stay inside it. Most of them do. You dam the black ditch and dig out what fouls it, and beneath the muck your fingers close on something cold and carved that the patron has wanted from the first.",
+            "outcome": "sealed the plague quarter, dammed the source, and pulled the patron's relic from the muck.",
             "stats": {
-              "will": 1
+              "will": 1,
+              "craft": 1
             },
             "flags": [
-              "slums_bailiff_eye",
-              "slums_well_liked"
+              "quarantine_set",
+              "plague_source_found",
+              "relic_clue"
             ]
           }
         },
         {
-          "label": "Keep your head down",
+          "label": "Leave the rope coiled and let them scatter",
           "effect": {
-            "text": "You find something to study on the far wall. The man is hauled off, and you tell yourself it was never your fight. The lane remembers who looked away.",
-            "outcome": "looked the other way while the bailiff did his worst.",
+            "text": "You cannot bring yourself to fence the dying in to die. The rope stays coiled in your hands and the wall-side families scatter into the town with the sickness riding on them. You learn the source too late for it to matter, and what is buried there stays buried in the dark.",
+            "outcome": "refused to seal the lanes and let the plague run loose into St Sebastian.",
             "stats": {
-              "intelligence": 1
-            }
+              "will": 1
+            },
+            "flags": [
+              "plague_source_found"
+            ]
           }
         }
       ]
     },
     {
-      "id": "slums_bailiff_reckoning",
+      "id": "slums_bailiff_recruits",
       "location": "slums",
       "activities": [
-        "slums_listen",
-        "slums_mend"
+        "slums_watch"
       ],
       "requires": [
-        "slums_bailiff_eye"
+        "slums_bailiff_broken"
       ],
-      "weight": 2,
-      "text": "The bailiff has been waiting for you. He blocks the lane's mouth with two men behind him and asks, pleasantly, whether you've your papers and your reasons for being among his poor.",
+      "minWeek": 5,
+      "weight": 3,
+      "text": "The bailiff cannot hold the quarter with cudgels and prayer. He has coin from somewhere and a notion that the wall-side men, hard and desperate and with nothing left to lose, would arm well if one they trusted asked it of them. He looks at you. They will follow you, he says, where they will never follow me.",
       "check": {
-        "stat": "agility",
+        "stat": "will",
         "dc": 5
       },
       "pass": {
-        "text": "You're over a low wall and three roofs gone before his men have unstuck their boots. The children, who know every gap in the lanes, whoop you on your way.",
-        "outcome": "gave the bailiff and his men the slip across the rooftops.",
+        "text": "You go door to door and put the case plain: take up arms now, or be butchered for the last of your bread when the worst comes down the road. By dusk you have two score men with billhooks and fish-knives drilling badly in a dead market square. It is no garrison. It will have to serve.",
+        "outcome": "raised an armed militia from the wall-side men the bailiff could not reach.",
         "stats": {
-          "agility": 1,
-          "will": 1
-        }
-      },
-      "fail": {
-        "text": "There's no running it tonight. He searches you slow and finds nothing, which sours him further, and you spend a cold hour against the wall before he tires of it.",
-        "outcome": "spent a cold hour against the wall under the bailiff's hands.",
-        "stats": {
-          "will": 1
-        }
-      }
-    },
-    {
-      "id": "slums_well_water",
-      "location": "slums",
-      "activities": [
-        "slums_mend"
-      ],
-      "weight": 2,
-      "text": "The lane's only good well has caved at the lip and the bucket-rope frays where it rubs. A handful of grandmothers direct you with great authority and no help.",
-      "effect": {
-        "text": "You shore the lip with stone and re-reeve the rope properly. Clean water without a half-mile walk is a small miracle here, and they treat it as one.",
-        "outcome": "mended the lane's well and earned a chorus of grandmotherly thanks.",
-        "stats": {
-          "craft": 1,
+          "will": 1,
           "strength": 1
         },
         "flags": [
-          "slums_well_liked"
+          "militia_armed"
+        ]
+      },
+      "fail": {
+        "text": "Too many doors stay barred. The men are too sick, too frightened, or too far past caring to take up arms for a town that never spared them a crust. You raise a ragged handful and know in your bones it is not enough for what is coming.",
+        "outcome": "tried to arm the wall-side men and raised only a frightened handful.",
+        "stats": {
+          "will": 1
+        }
+      }
+    },
+    {
+      "id": "slums_the_mob",
+      "location": "slums",
+      "activities": [
+        "slums_lanes",
+        "slums_watch"
+      ],
+      "minWeek": 6,
+      "weight": 4,
+      "text": "Hunger and fever have finished what fear began. A mob has gathered in the wall-side dark, torches and cleavers, and they mean to break the few houses still holding food and take it, and to drag out the sick and put the quarter to the torch the clean way, the way you burn a plague ship at anchor. They have seen you stand with the bailiff. They want to know whose side you are on, and there is no third answer they will take.",
+      "choices": [
+        {
+          "label": "Lead them, take the food, burn the sick out",
+          "effect": {
+            "text": "You put yourself at the front and let the worst of it off the leash. You break the hoarders' doors and haul the grain into the street, and when the torches go to the fever-houses you do not stay their hands. The screaming does not last long. By morning you are fed, and feared, and something in you has gone as cold and red as the eyes that watch from the dark.",
+            "outcome": "led the mob, seized the food, and burned the plague-sick out of their homes.",
+            "stats": {
+              "strength": 1,
+              "wealth": 1,
+              "will": -1
+            },
+            "flags": [
+              "turned_to_darkness",
+              "hoarders_broken"
+            ]
+          }
+        },
+        {
+          "label": "Stand in the lane's mouth and turn them back",
+          "effect": {
+            "text": "You plant yourself in the lane's mouth with the bailiff at your shoulder and will not be moved. You take a cleaver's edge across the arm and a thrown cobble to the brow, but you talk and you bleed and you shame them until the torches gutter and the worst of them slink home. The sick keep another night. So, barely, do you.",
+            "outcome": "stood alone against the mob and turned them back from the fever-houses, bleeding.",
+            "stats": {
+              "will": 2
+            },
+            "flags": [
+              "slums_held_the_line"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "slums_burn_the_dead",
+      "location": "slums",
+      "activities": [
+        "slums_tend",
+        "slums_watch"
+      ],
+      "requires": [
+        "quarantine_set"
+      ],
+      "minWeek": 6,
+      "weight": 3,
+      "text": "Behind the rope the dead are past the counting, and the ground at the wall's foot is too hard and too shallow to take so many. The pit you dug yesterday is already full and brimming. The bailiff says the thing no one will say first: they must be burned, all of them, tonight, or the living behind the rope are next into the pit.",
+      "effect": {
+        "text": "You build the fire with your own hands and you tend it through the long night, naming each one you can as the flames take them, because someone should. The smoke hangs over the wall-side until dawn, and the whole town wakes to the smell of it and knows. It is the worst thing your hands have ever done, and it saves the few lanes that are left.",
+        "outcome": "burned the plague-dead through the night so the living behind the rope might last.",
+        "stats": {
+          "will": 1,
+          "strength": 1
+        },
+        "flags": [
+          "dead_burned"
         ]
       }
     },
     {
-      "id": "slums_fence_offer",
+      "id": "slums_last_offer",
       "location": "slums",
       "activities": [
-        "slums_listen"
-      ],
-      "weight": 1,
-      "text": "A wiry man works a corner where no torch reaches, moving goods that left other hands without asking. He sizes you up and offers a cut to run a parcel three lanes over, no questions.",
-      "check": {
-        "stat": "agility",
-        "dc": 6
-      },
-      "pass": {
-        "text": "You take the back ways at a pace, drop the parcel where he said, and he counts coin into your palm with a thief's quick respect. Best not to wonder what was in it.",
-        "outcome": "ran a no-questions parcel through the lanes for ready coin.",
-        "stats": {
-          "agility": 1,
-          "wealth": 1
-        }
-      },
-      "fail": {
-        "text": "You're halfway when the watch turns the corner and you have to ditch the parcel down a privy and walk on whistling. The fence is unimpressed; you keep your skin, which is the main thing.",
-        "outcome": "ditched a smuggled parcel down a privy to dodge the watch.",
-        "stats": {
-          "agility": 1
-        }
-      }
-    },
-    {
-      "id": "slums_lanes_repay",
-      "location": "slums",
-      "activities": [
-        "slums_listen",
-        "slums_petition"
+        "slums_lanes",
+        "slums_tend"
       ],
       "requires": [
-        "slums_well_liked"
+        "slums_held_the_line"
       ],
-      "weight": 2,
-      "text": "Word has run ahead of you down every lane: this is one of the good ones. Doors that stay shut to the bailiff open to you, and an old man beckons you into the dark of his.",
-      "effect": {
-        "text": "He's the lanes' true memory: births, debts, betrayals, who really owns what. He gives you an hour of it because the children vouched for you, and an hour of it is a fortune.",
-        "outcome": "was let into the lanes' long memory by the people they trust.",
-        "stats": {
-          "intelligence": 1,
-          "will": 1
+      "minWeek": 6,
+      "weight": 3,
+      "text": "The wall-side families know now what you stood in front of for their sake. An old woman who has buried all her own beckons you into the dark of a fever-house and presses a bundle into your hands: a child, sleeping, fever-cool at last, hers no longer to keep. Take the little one to the docks, she says. There is one place left on the last ship, and the poor will never be let aboard. You might.",
+      "choices": [
+        {
+          "label": "Take the place, carry the child to the last ship",
+          "effect": {
+            "text": "You cannot save the town, but you can save this one small life, and your own with it. You carry the child down through the dying streets to the harbour, buy the passage with the bailiff's coin, and stand at the rail as the gangplank lifts away. The wall-side burns at your back. The child sleeps on, and does not see it.",
+            "outcome": "took the last ship's place, carried a wall-side child aboard, and left the town to burn.",
+            "stats": {
+              "agility": 1,
+              "wealth": -1
+            },
+            "flags": [
+              "passage_secured"
+            ]
+          }
+        },
+        {
+          "label": "Give the place to the child alone and stay",
+          "effect": {
+            "text": "You will not take a dying town's last seat for yourself. You find a fleeing family at the docks who will swear before God to raise the child as their own, and you put the little one into their arms and watch the ship pull away without you. Then you turn and walk back up into the lanes, toward whatever is coming, with empty hands and a clean name.",
+            "outcome": "gave the last ship's place to a wall-side child and stayed to face the end.",
+            "stats": {
+              "will": 2
+            }
+          }
         }
-      }
+      ]
     }
   ]
 }

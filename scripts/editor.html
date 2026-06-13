@@ -367,6 +367,11 @@ function eventForm(ev) {
   ));
   f.appendChild(el("label", { style: "display:flex;align-items:center;gap:6px;margin-top:8px" },
     el("input", { type: "checkbox", checked: ev.repeatable ? true : false, style: "width:auto", onchange: e => { if (e.target.checked) ev.repeatable = true; else delete ev.repeatable; markDirty(); } }), "Repeatable (can fire more than once)"));
+  f.appendChild(el("div", { class: "row", style: "margin-top:8px" },
+    el("div", {}, el("label", {}, "Earliest week (1–7, blank = any)"),
+      el("input", { type: "number", value: ev.minWeek ?? "", oninput: e => { const v = parseInt(e.target.value,10); if (v>=1&&v<=7) ev.minWeek = v; else delete ev.minWeek; markDirty(); } })),
+    el("div", {}, el("label", {}, "Latest week (1–7, blank = any)"),
+      el("input", { type: "number", value: ev.maxWeek ?? "", oninput: e => { const v = parseInt(e.target.value,10); if (v>=1&&v<=7) ev.maxWeek = v; else delete ev.maxWeek; markDirty(); } })));
 
   f.appendChild(el("label", {}, "Triggered by activities"));
   f.appendChild(el("div", { class: "flagbox" },

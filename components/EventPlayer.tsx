@@ -73,7 +73,7 @@ export default function EventPlayer({
   const event: GameEvent | null = useMemo(() => {
     if (!activityId) return null;
     const seed = selectionSeed(playerId, night, activityId);
-    return pickEvent(location, activityId, flags, seen, seed);
+    return pickEvent(location, activityId, flags, seen, seed, night);
     // flags/seen are stable for the duration of one night's resolution.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activityId, location, night, playerId]);

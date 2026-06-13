@@ -1,345 +1,382 @@
 {
   "activities": [
     {
-      "id": "farms_harvest",
+      "id": "farms_reaping",
       "location": "farms",
-      "name": "Bring in the Harvest",
-      "blurb": "Day-labour in the lord's fields. An aching back, an honest few coins, and every grumble worth hearing."
+      "name": "Work the Failing Fields",
+      "blurb": "The barley came up blighted and thin. Whatever can still be cut is cut, and a hungry town counts every sheaf."
     },
     {
       "id": "farms_reeve",
       "location": "farms",
-      "name": "Square the Reeve's Ledger",
-      "blurb": "The Shire Reeve sits at the barn door with his great book. Everyone's debts are in it. So is yours."
+      "name": "Stand at the Reeve's Ledger",
+      "blurb": "The manor reeve guards the granary with his great book and a tally of who has eaten and who has not."
     },
     {
-      "id": "farms_poach",
+      "id": "farms_roads",
       "location": "farms",
-      "name": "Walk the Lord's Wood",
-      "blurb": "The deer are fat before the fair, and the wood is dark. The verderer is not always watching."
+      "name": "Watch the Outer Roads",
+      "blurb": "Beyond the last field the lanes run empty toward the burning country. Whatever comes for St Sebastian comes by these roads first."
     },
     {
-      "id": "farms_barn",
+      "id": "farms_byre",
       "location": "farms",
-      "name": "Linger at the Byres",
-      "blurb": "Where the cottars take their bread and their grievances. Nothing happens here that isn't known by morning."
+      "name": "Sit with the Farmhands",
+      "blurb": "In the cattle byre the cottars share what little there is and say aloud what the town will not. Hungry men, and angry ones."
     }
   ],
   "events": [
     {
-      "id": "farms_long_day",
+      "id": "farms_blighted_harvest",
       "location": "farms",
       "activities": [
-        "farms_harvest"
+        "farms_reaping"
       ],
+      "maxWeek": 3,
       "weight": 3,
-      "text": "The reeve wants the last of the lord's barley in before the fair, and there is more of it than there are hands. A bailiff points you at a scythe and says the pay is by the sheaf.",
+      "text": "The reeve sets you among the rows with a sickle and a grim instruction: take everything that is not yet rotted, and say nothing the priest might overhear. Half the ears crumble to black dust in your fist before they ever reach the basket.",
       "check": {
         "stat": "strength",
-        "dc": 5
+        "dc": 4
       },
       "pass": {
-        "text": "You cut a clean swathe and keep cutting long after the others have sat down in the stubble. By dusk you have raised the biggest stook in the field, and the bailiff counts your sheaves twice because he can't believe the first count.",
-        "outcome": "out-mowed the whole field and was paid by the sheaf.",
+        "text": "You work the rows till your palms split, sorting the sound grain from the spoiled with a patience the others have lost. By dusk there is a wagon's worth saved where there might have been nothing, and the reeve marks it down without quite bringing himself to thank you.",
+        "outcome": "salvaged a wagon of sound grain from the blighted fields.",
         "stats": {
           "strength": 1,
           "wealth": 1
-        }
+        },
+        "flags": [
+          "forage_secured"
+        ]
       },
       "fail": {
-        "text": "The scythe is heavier than it looks and the day is longer than the scythe. You bring in your share, but your back will remember it, and the bailiff pays you for honest middling work and no more.",
-        "outcome": "brought in an honest share of the barley and a sore back.",
+        "text": "The blight has gone deeper than the husk; for every basket you fill, half is fit only for swine, and the reek of it follows you down the rows. You bring in what you can. It is a thin offering, and the reeve's silence says he expected no better, of the harvest or of you.",
+        "outcome": "brought in a thin, blighted share and little else.",
         "stats": {
           "strength": 1
         }
       }
     },
     {
-      "id": "farms_reeve_ledger",
+      "id": "farms_reeve_count",
       "location": "farms",
       "activities": [
         "farms_reeve"
       ],
+      "maxWeek": 4,
       "weight": 3,
-      "text": "The Shire Reeve runs a blunt finger down the great ledger and finds your name. There is a figure beside it from a season you'd half forgotten. He looks up, patient as a millstone, and waits.",
+      "text": "The reeve runs a cracked nail down his ledger: so many mouths, so many bushels, and the two columns no longer meet however he adds them. He looks up at you, a stranger off the foreign ship, and asks plainly whether you have come to eat his stores or to help fill them.",
       "choices": [
         {
-          "label": "Pay what the book says",
+          "label": "Offer to help bring the granary up",
           "effect": {
-            "text": "You count the coin into his palm. He licks his thumb, makes a careful stroke through your name, and for the first time all week looks at you as a man and not a number. A debt squared before the fair is a rare and noticed thing.",
-            "outcome": "paid the reeve's ledger clean and earned a careful nod.",
+            "text": "You pledge your back to the gleaning and your wits to the count, and something in the old man unclenches. He shows you the empty bins and the full, and where a careful hand might yet make the difference between a fed town and a starved one.",
+            "outcome": "won the reeve's trust and a hand in the granary.",
             "stats": {
-              "wealth": -1,
               "will": 1
             },
             "flags": [
-              "squared_the_ledger"
+              "reeve_trusts_you"
             ]
           }
         },
         {
-          "label": "Talk the figure down",
+          "label": "Ask what a stranger gets for the trouble",
           "effect": {
-            "text": "You remind him the field flooded that year, that half the parish owed the same, that the lord wants goodwill before the fair more than he wants this scraping. The reeve sighs, wets his thumb, and shaves the figure down to something a man can pay.",
-            "outcome": "argued the reeve down to a figure worth paying.",
+            "text": "You name your price before you have lifted a finger, and the reeve's face shutters like a barn door against the wind. He gives you a day's bread and not a crumb more, and you feel his eyes follow you out, counting you now among the mouths and not the hands.",
+            "outcome": "haggled with the reeve and was counted a burden, not a help.",
             "stats": {
-              "intelligence": 1
+              "wealth": 1
             }
-          }
-        },
-        {
-          "label": "Swear you'll pay after the fair",
-          "effect": {
-            "text": "You promise it on your mother's grave and the saint's bones both. The reeve has heard every oath there is; he writes a small mark beside your name that you don't like the look of, and waves you on.",
-            "outcome": "talked his way out of the reeve's book for now.",
-            "stats": {
-              "agility": 1
-            },
-            "flags": [
-              "in_the_reeves_book"
-            ]
           }
         }
       ]
     },
     {
-      "id": "farms_reeve_clerk",
+      "id": "farms_fill_the_granary",
       "location": "farms",
       "activities": [
-        "farms_reeve"
+        "farms_reeve",
+        "farms_reaping"
       ],
       "requires": [
-        "squared_the_ledger"
+        "reeve_trusts_you",
+        "forage_secured"
       ],
+      "maxWeek": 5,
       "weight": 2,
-      "text": "The reeve remembers a man who pays. He's drowning in figures with the fair two days off, and his own clerk has gone down with the flux. He pushes the great ledger an inch toward you and asks if your letters are any good.",
+      "text": "The reeve hands you the granary keys for one night and a hard task to go with them: every sack of salvaged grain weighed, sorted, and stored against the lean weeks the red-eyed thing in your dreams keeps promising. Get it wrong and the whole town goes short when there is nothing left to spare.",
       "check": {
         "stat": "intelligence",
         "dc": 6
       },
       "pass": {
-        "text": "You take up the quill and put the parish's tangled debts in order before the candle gutters: who owes, who's paid, who's lying. The reeve reads it over, grunts the grunt of a satisfied man, and says he'll remember the favour where it counts.",
-        "outcome": "set the reeve's whole ledger straight in a single night.",
+        "text": "You weigh and ledger through the small hours by a guttering lamp, rooting out the spoiled sacks before they can rot the sound, until the bins stand full and squared and counted twice over. When the lean weeks come, St Sebastian will eat a little longer for this one night's work.",
+        "outcome": "filled and squared the town granary against the hunger to come.",
         "stats": {
           "intelligence": 1,
           "will": 1
         },
         "flags": [
-          "reeve_owes_you"
+          "granary_filled"
         ]
       },
       "fail": {
-        "text": "The columns swim and the figures won't sit still, and twice you cross out a name that turns out to be owed money. The reeve takes the quill back gently, the way you'd take a knife from a child, and finds the rest of the night's work himself.",
-        "outcome": "muddled the reeve's ledger and was quietly relieved of the quill.",
+        "text": "The figures swim and the sacks blur, and somewhere in the dark you miscount a bin and leave the rot to spread unseen beneath the good. The reeve finds the spoilage at dawn and takes the keys back without a word, and a portion of the town's bread is lost before the hunger has even begun.",
+        "outcome": "fumbled the granary count and let good grain spoil.",
         "stats": {
           "craft": 1
         }
       }
     },
     {
-      "id": "farms_steward_rents",
+      "id": "farms_empty_lanes",
       "location": "farms",
       "activities": [
-        "farms_reeve",
-        "farms_barn"
+        "farms_roads"
       ],
-      "requires": [
-        "met_steward"
-      ],
+      "minWeek": 2,
+      "maxWeek": 4,
       "weight": 2,
-      "text": "The lord's steward has ridden down to watch the reeve collect, and he picks you out of the yard with a thin smile of recognition. He could use a man who knows the parish to tell him which farmers are truly poor and which only play at it before the fair.",
-      "choices": [
-        {
-          "label": "Name the ones who are hiding coin",
-          "effect": {
-            "text": "You point out the cottar with the new roof and the widow with the fat geese, and the steward's clerk writes busily. It is not work that will make you friends at the byres, but the castle counts you useful now, and useful men are kept close.",
-            "outcome": "named the parish's hidden purses to the steward.",
-            "stats": {
-              "intelligence": 1
-            },
-            "flags": [
-              "lords_eye"
-            ]
-          }
-        },
-        {
-          "label": "Tell him the parish is honestly poor",
-          "effect": {
-            "text": "You swear the harvest was thin and the people thinner, and you say it with enough plain conviction that he believes you, or chooses to. Word gets back to the byres that you stood for them, and a man can eat on that kind of standing.",
-            "outcome": "swore the parish poor and won the cottars' goodwill.",
-            "stats": {
-              "will": 1
-            },
-            "flags": [
-              "barn_friends"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "farms_buck_in_the_glade",
-      "location": "farms",
-      "activities": [
-        "farms_poach"
-      ],
-      "weight": 2,
-      "text": "Past the boundary stones, the lord's wood breathes cold and dark. A great buck steps into a moonlit glade not forty paces off, the lord's deer in the lord's wood, and the verderer's gallows for any man caught with venison before the fair. But you mark the trails it walks, and the wallow it favours, and the deadfall where a snare would sit unseen.",
-      "effect": {
-        "text": "You don't take it tonight; only a fool rushes a hanging matter. But you learn the wood the way the deer knows it, and you know now exactly where you'd lie in wait. The glade keeps your secret until you're ready for it.",
-        "outcome": "marked the lord's buck and the trails it walks.",
+      "text": "You walk the outer lanes where the carriers' carts used to rattle by daily. The road is silent now, the verges grown wild, and on the far hills a single thread of smoke stands where a village ought to be. The country is emptying, and it is emptying toward you.",
+      "check": {
+        "stat": "intelligence",
+        "dc": 4
+      },
+      "pass": {
+        "text": "You read the road the way a tracker reads a wood: ruts gone cold, milestones unswept, a child's shoe left in the ditch with no child anywhere near it. Whatever drove these people off is coming this way, and you mark the pace of it days before the town will let itself believe you.",
+        "outcome": "read the empty roads and guessed the ruin coming toward St Sebastian.",
         "stats": {
-          "intelligence": 1
+          "intelligence": 1,
+          "will": 1
         },
         "flags": [
-          "marked_the_deer"
+          "watching_the_roads"
         ]
+      },
+      "fail": {
+        "text": "You walk a long way and learn little that a frightened farmer could not have told you: the roads are empty, the smoke is real. You turn back at dusk no wiser than you set out, the dread sitting heavy in you with no shape you can give it and no name.",
+        "outcome": "walked the empty roads and came back with only dread.",
+        "stats": {
+          "will": 1
+        }
       }
     },
     {
-      "id": "farms_take_the_deer",
+      "id": "farms_take_the_scout",
       "location": "farms",
       "activities": [
-        "farms_poach"
+        "farms_roads"
       ],
       "requires": [
-        "marked_the_deer"
+        "watching_the_roads"
       ],
+      "minWeek": 3,
+      "maxWeek": 6,
       "weight": 2,
-      "text": "You return to the glade you scouted, snare in hand and the buck's trails fixed in your mind. Somewhere off in the dark the verderer's hound coughs once and goes quiet. Now is the moment, if there is one.",
+      "text": "A lone rider keeps to the treeline at the field's edge, counting the town's walls and gates with a soldier's eye, then wheeling his horse to ride back the way he came. A scout, plainly, for something far larger behind him. He has not yet seen you crouched low in the stubble.",
       "check": {
         "stat": "agility",
         "dc": 6
       },
       "pass": {
-        "text": "You move the way the wood moves, set the snare where the trail narrows, and have the buck down and gutted before the hound's master rounds the far ridge. By dawn the venison is jointed and hidden, worth a small fortune to the right cook before the fair.",
-        "outcome": "took the lord's buck clean and sold the venison quietly.",
+        "text": "You take him out of the saddle in the high barley before he can cry out, a knee on his chest and his own knife at his throat. He is half-starved under his mail, and terrified, and you have him bound and dragged to the byre before the light fails. He will talk.",
+        "outcome": "ran down the warband's scout and took him alive.",
         "stats": {
           "agility": 1,
-          "wealth": 2
+          "strength": 1
         },
         "flags": [
-          "venison_to_sell"
+          "scout_taken"
         ]
       },
       "fail": {
-        "text": "A twig goes off like a struck bell and the hound is suddenly very loud and very near. You leave the snare and most of your dignity in the bracken and run blind for the boundary stones, lucky to clear the wood with your neck unstretched.",
-        "outcome": "spooked the verderer's hound and fled the wood empty-handed.",
+        "text": "Your boot finds a dry furrow and the crack of it turns his head; he is spurring away before you have cleared the rows, low over the horse's neck and gone into the dusk. He knows the town keeps watch now, and worse, you know for certain the town is being watched.",
+        "outcome": "lost the scout in the dusk and learned the town is being watched.",
         "stats": {
           "agility": 1
         }
       }
     },
     {
-      "id": "farms_verderer_bribe",
+      "id": "farms_scout_speaks",
       "location": "farms",
       "activities": [
-        "farms_poach",
-        "farms_barn"
+        "farms_roads",
+        "farms_byre"
       ],
       "requires": [
-        "venison_to_sell"
+        "scout_taken"
       ],
-      "forbids": [
-        "lords_eye"
-      ],
-      "weight": 2,
-      "text": "The verderer finds you at the edge of the wood with a knowing look and a nose that's smelled blood before. He doesn't ask where the buck went. He asks, very reasonably, what's in it for a man who keeps his mouth shut.",
+      "minWeek": 4,
+      "weight": 3,
+      "text": "The bound scout sweats in the byre's lamplight, the fever already bright behind his eyes. The farmhands want him hanged from the rafter where he sits; you want what he carries in his skull. He licks his cracked lips and offers to trade the truth for water and a clean death.",
       "choices": [
         {
-          "label": "Cut him in on the venison",
+          "label": "Give him water and hear him out",
           "effect": {
-            "text": "You name him a joint of the best and a fair share of the coin. He weighs it, finds it fair, and decides the wood was empty tonight after all. A bought silence is the only kind worth having out here.",
-            "outcome": "bought the verderer's silence with a cut of the kill.",
+            "text": "He drinks, and then he talks: a warband of the dying, hundreds strong, sick men with nothing left to lose and nothing left to fear, marching on St Sebastian for its walls and its stores. He gives you their numbers, their road, their days of march. It is the warning the town has refused to hear, and now you carry it whole.",
+            "outcome": "drew the truth from the scout and laid the warband bare.",
             "stats": {
-              "wealth": -1,
-              "craft": 1
+              "intelligence": 1,
+              "will": 1
             },
             "flags": [
-              "verderer_silenced"
+              "warband_sighted",
+              "relic_clue"
             ]
           }
         },
         {
-          "label": "Stare him down and walk on",
+          "label": "Let the farmhands have their hanging",
           "effect": {
-            "text": "You meet his look and let the quiet stretch until it's plain you'll give nothing and admit less. He grunts, spits, and lets you pass, but he marks your face, and a verderer's memory is longer than his patience.",
-            "outcome": "faced down the verderer and kept the whole kill.",
+            "text": "You step back and the cottars do the rest, and the scout dies cursing in a tongue not one of you knows. The byre is grimly satisfied, and you have made yourself their man, but whatever he knew of the host at his back swings now from the rafter, gone past all asking.",
+            "outcome": "let the farmhands hang the scout and lost what he knew.",
             "stats": {
               "will": 1
             },
             "flags": [
-              "verderer_marked_you"
+              "warband_sighted"
             ]
           }
         }
       ]
     },
     {
-      "id": "farms_byre_talk",
+      "id": "farms_byre_grievance",
       "location": "farms",
       "activities": [
-        "farms_barn"
+        "farms_byre"
       ],
+      "maxWeek": 5,
       "weight": 2,
-      "text": "The cottars share black bread and thin ale in the warmth of the byre, and the talk turns, as it always does this week, to the reeve and the steward and what the lord will skin them for at the fair. An old herdsman beckons you to sit, on condition you've ears to listen and not to carry.",
+      "text": "The farmhands pass a single loaf six ways and talk low about the castle hoarding grain behind its walls while the fields fail. They eye you sidelong, the foreigner who came in on the cursed ship, and an old ploughman asks whether you have come to lord it over them like the rest, or to stand at their shoulder.",
       "check": {
         "stat": "will",
         "dc": 4
       },
       "pass": {
-        "text": "You sit quiet, trade your own grievance to earn theirs, and by the second cup they've forgotten you're not one of them. You leave knowing exactly how the lord means to set this year's rents, and what the parish plans to swear to keep them down.",
-        "outcome": "won the cottars' trust and learned how the rents will fall.",
+        "text": "You take the smallest share of the loaf and lay out your own grievance plain, and by the second round of thin ale they have decided you are one of their own. These are hard hands and harder backs, and if it ever comes to defending the fields, they will look to you to lead them.",
+        "outcome": "won the farmhands' trust over a shared loaf.",
         "stats": {
           "will": 1,
-          "intelligence": 1
+          "strength": 1
         },
         "flags": [
-          "knows_the_tax",
-          "barn_friends"
+          "farmhands_trusted"
         ]
       },
       "fail": {
-        "text": "You ask one question too many and too sharp, and the herdsman's eyes go flat. The talk turns abruptly to weather and worms, and a younger man walks you politely but firmly back out into the cold.",
-        "outcome": "asked one question too many and got walked out of the byre.",
+        "text": "You misjudge the room and put one word too soft on the lord, and the byre goes cold around you in an instant. The loaf passes from hand to hand without ever reaching yours, and the old ploughman turns his shoulder, and his talk, away from the stranger in their midst.",
+        "outcome": "lost the byre's room with one wrong word.",
         "stats": {
           "intelligence": 1
         }
       }
     },
     {
-      "id": "farms_michaelmas_goose",
+      "id": "farms_arm_the_hands",
       "location": "farms",
       "activities": [
-        "farms_barn",
-        "farms_harvest"
+        "farms_byre"
       ],
       "requires": [
-        "barn_friends"
+        "farmhands_trusted"
       ],
-      "weight": 2,
-      "text": "Word's got round the byres that you stood for the parish, or at least didn't sell it. A widow with the fattest geese in the hundred presses one into your arms for the Michaelmas table; a Michaelmas goose is a gift with weight, and a debt of the gentler kind.",
-      "effect": {
-        "text": "You take the goose with the proper show of refusing it first, the way it's done. The cottars count you a friend now, plainly, and friends in the byres are friends who don't forget, at the fair or after it.",
-        "outcome": "was gifted a Michaelmas goose and counted a friend of the parish.",
+      "minWeek": 5,
+      "weight": 3,
+      "text": "With the warband's smoke now plain on the hills, you put it to the farmhands straight: scythes can be set straight on poles, billhooks ground sharp, hayforks turned to spears. They are not soldiers, and never will be, but they are many, and they are angry, and they have nowhere left in the world to run.",
+      "check": {
+        "stat": "craft",
+        "dc": 6
+      },
+      "pass": {
+        "text": "You spend two days between the smithy and the byre, lashing blades to shafts and drilling frightened men into something that holds a line. By the end they stand in rough ranks with edged tools and grim faces, a militia of farmhands ready to hold the fields. It is not much. It may be enough.",
+        "outcome": "forged the farmhands into an armed militia for the walls.",
         "stats": {
-          "will": 1,
-          "wealth": 1
+          "craft": 1,
+          "will": 1
+        },
+        "flags": [
+          "militia_armed"
+        ]
+      },
+      "fail": {
+        "text": "The hafts split, the lashings slip, and the men handle the makeshift spears like the farm tools they have always been. You arm them after a fashion, but a fashion is all it is, and you both know that the first true charge will scatter them across the stubble like chaff.",
+        "outcome": "armed the farmhands poorly and prayed it would not be tested.",
+        "stats": {
+          "craft": 1
         }
       }
     },
     {
-      "id": "farms_quiet_furrow",
+      "id": "farms_refugees_at_the_gate",
       "location": "farms",
-      "activities": [],
-      "weight": 1,
-      "text": "A grey, ordinary morning in the fields. No reeve, no steward, no buck in the glade, only the long furrow ahead and the rooks arguing over what the plough turns up. You set your shoulder to honest work and let your mind go quiet.",
-      "effect": {
-        "text": "Nothing happens that anyone will remember. But a day at the plough leaves you steadier in yourself than a day of scheming ever did, and you walk back to the village with the smell of turned earth and a clearer head.",
-        "outcome": "spent a plain day at the plough and came back steadier.",
-        "stats": {
-          "will": 1
+      "activities": [
+        "farms_reeve",
+        "farms_roads"
+      ],
+      "requires": [
+        "granary_filled"
+      ],
+      "minWeek": 6,
+      "weight": 4,
+      "text": "They come up the lanes you once walked empty: a column of refugees, gaunt and grey, with children who do not cry because they have not the strength left to cry. They can smell the granary on the wind. The reeve looks to you, the keys cold in his hand, and the whole hungry winter hangs on what you say next.",
+      "choices": [
+        {
+          "label": "Bar the granary and turn them away",
+          "effect": {
+            "text": "You take the keys and turn the lock, and tell the column there is nothing here for them. There is, of course; it is behind the very door you have just barred against them. The grain will see St Sebastian through, and the strangers on the road are not St Sebastian's, you tell yourself, over and over, until you very nearly believe it.",
+            "outcome": "barred the granary and turned the starving refugees away.",
+            "stats": {
+              "will": 1,
+              "wealth": 1
+            },
+            "flags": [
+              "turned_to_darkness"
+            ]
+          }
+        },
+        {
+          "label": "Open the stores and feed them",
+          "effect": {
+            "text": "You break out the bread you laboured to store and the column falls upon it weeping into the dirt. The reeve does not stop you; perhaps he no longer can. You have spent the town's hard margin in one afternoon of mercy, and the lean weeks just grew leaner, but no child died at your locked door today.",
+            "outcome": "opened the stores and fed the starving at the town's own cost.",
+            "stats": {
+              "will": 2,
+              "wealth": -1
+            },
+            "flags": [
+              "fed_the_refugees"
+            ]
+          }
         }
+      ]
+    },
+    {
+      "id": "farms_scouts_on_the_roads",
+      "location": "farms",
+      "activities": [
+        "farms_roads",
+        "farms_byre"
+      ],
+      "requires": [
+        "warband_sighted"
+      ],
+      "minWeek": 6,
+      "weight": 3,
+      "text": "The warband's outriders no longer trouble to hide. They sit their horses openly on the rise above the fields at dawn, counting heads and weighing the walls, close enough now that you can see the plague rotting them in the saddle. Behind them the smoke is no longer a distant thread. The reckoning the red eyes foretold is days away, perhaps only hours.",
+      "effect": {
+        "text": "You stand in the cold stubble and watch them watch the town, and feel the dream-vision settle at last over the waking world: the city will fall, as all cities have fallen. You carry the count of them back through the gates while the light still holds, and whatever St Sebastian does now, it does with its eyes open.",
+        "outcome": "watched the warband's outriders gather and carried the warning in.",
+        "stats": {
+          "intelligence": 1,
+          "will": 1
+        },
+        "flags": [
+          "warband_sighted"
+        ]
       }
     }
   ]

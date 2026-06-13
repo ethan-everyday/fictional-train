@@ -57,13 +57,13 @@ export interface LocationDef {
 }
 
 export const LOCATIONS: LocationDef[] = [
-  { id: "church", name: "The Church", blurb: "The priest, the candles, the tithe." },
-  { id: "tavern", name: "The Tavern", blurb: "The innkeep pours, the gamblers deal." },
-  { id: "market", name: "The Market", blurb: "Butcher, armourer, and every stall between." },
-  { id: "farms", name: "The Farms", blurb: "Harvest hands wanted; the reeve is counting." },
-  { id: "castle", name: "The Castle", blurb: "The lord's hall, if they'll let you in." },
-  { id: "slums", name: "The Slums", blurb: "Crowded, cold, and nobody lies to you here." },
-  { id: "docks", name: "The Docks", blurb: "Foreign traders, heavy cargo, loose talk." },
+  { id: "church", name: "The Church", blurb: "The priest preaches God's wrath; the dead need burying." },
+  { id: "tavern", name: "The Tavern", blurb: "Panic, rumour, and deserters who can still hold a blade." },
+  { id: "market", name: "The Market", blurb: "Hoarders, bare stalls, and what little food is left." },
+  { id: "farms", name: "The Farms", blurb: "A failing harvest and the roads the warband will come down." },
+  { id: "castle", name: "The Castle", blurb: "The lord behind his walls, if they'll let you in." },
+  { id: "slums", name: "The Slums", blurb: "Where the sickness strikes first and the desperate gather." },
+  { id: "docks", name: "The Docks", blurb: "Refugees, the sick off the boats, and the last ship out." },
 ];
 
 export function locationDef(id: LocationId): LocationDef {
@@ -91,35 +91,36 @@ export interface DramaEvent {
 
 export const DRAMA_EVENTS: DramaEvent[] = [
   {
-    id: "kings_levy",
-    minNight: 4,
-    trigger: (avg) => avg.wealth >= 3,
+    id: "the_warband_nears",
+    minNight: 6,
+    trigger: () => true,
     introOverride:
-      "Word of the village's good fortune has travelled. The King's levy men ride in at dusk and shut the castle gates behind them — the lord is counting coin tonight, and so is everyone who has any.",
-    closedLocation: "castle",
+      "Scouts ride in white-faced: the warband is a day closer than anyone hoped — a tattered mass of dying, desperate men who burn what they cannot eat. The roads belong to them now. The farms are no place to be this week.",
+    closedLocation: "farms",
   },
   {
-    id: "fair_eve",
-    minNight: 3,
-    trigger: (avg) => avg.craft >= 4,
+    id: "the_castle_shuts",
+    minNight: 5,
+    trigger: (avg) => avg.will < 3,
     introOverride:
-      "The first fair wagons rolled in early, and the whole village smells of sawdust, pitch, and roasting nuts. Tonight Hollowbrook works late and gladly.",
+      "The lord has heard enough. The castle gates are barred from within, guests turned away at spear-point, the great hall gone dark. Whatever help was to come from that quarter is not coming this week.",
+    closedLocation: "castle",
   },
 ];
 
-/** One flavour line per night for the title card. Index = night - 1.
- * The week's arc: seven nights until the Michaelmas Fair, when the lord
- * reckons accounts — debts called in, fortunes made, reputations fixed. */
+/** One line per week for the title card (index = week - 1). The arc: seven
+ * weeks for fugitives to save St Sebastian — or flee it — as plague, famine,
+ * and a warband close in and the world ends. */
 export const NIGHT_INTROS: string[] = [
-  "Seven nights until the Michaelmas Fair, when the lord reckons all accounts. The village of Hollowbrook sharpens its knives and its manners.",
-  "Word travels fast in a small place. Last night's business is already this morning's gossip at the well.",
-  "The first fair wagons are a day out, they say. Prices in the market have started to drift upward accordingly.",
-  "The Shire Reeve has begun his rounds with the big ledger. People are suddenly remembering debts they meant to settle.",
-  "A ship from foreign parts tied up at the docks at dusk and is unloading by torchlight. The castle has noticed.",
-  "One night left before fair's eve. Whatever you've been putting off, it's now or never.",
-  "The seventh night. Tomorrow the lord holds court at the fair, and the whole week is weighed.",
+  "Your ship makes the dock at St Sebastian. The town bustles, blissfully unaware of the devastation creeping closer day by day.",
+  "Whispers of a great destruction spread through the streets. The priest calls it God's wrath for sinners abroad; the lord says foreign wars are no concern of a town with strong walls and a stronger garrison.",
+  "Fewer traders come, and those who do are desperate to leave again. A plume of smoke stands on the horizon, and messengers ride at breakneck speed toward the castle.",
+  "The smoke has not lifted. In the markets and taverns they speak of a strange sickness taking the poor — and word of it has reached the great lord himself.",
+  "The first death: blood pouring from the eyes and mouth, an awful drowning death. A band of horsemen is sighted, their purpose unknown. The castle turns guests away. Panic sets in.",
+  "The dead are carted to pits beyond the walls, refugees wait at the gate, and the markets are bare. A great warband crawls over the horizon — a tattered mass of dying men, vicious and desperate. One last ship remains.",
+  "The warband is at the gate. The dead lie in the streets, the castle is shut, the last ship slips its moorings. Behind barred doors, St Sebastian steals a few more hours of calm before the dark washes over it.",
 ];
 
 export function nightIntro(night: number): string {
-  return NIGHT_INTROS[night - 1] ?? `Night ${night} falls on Hollowbrook.`;
+  return NIGHT_INTROS[night - 1] ?? `Week ${night} falls on St Sebastian.`;
 }

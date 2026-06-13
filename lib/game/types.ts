@@ -2,6 +2,7 @@
 
 export type GamePhase =
   | "lobby"
+  | "prologue"
   | "night-intro"
   | "choose-location"
   | "storylets"
@@ -123,6 +124,10 @@ export interface GameEvent {
   forbids?: string[];
   /** Can fire more than once across the week? Default false (once only). */
   repeatable?: boolean;
+  /** Earliest week (1–7) this can fire. Omit = from the start. */
+  minWeek?: number;
+  /** Latest week (1–7) this can fire. Omit = until the end. */
+  maxWeek?: number;
   /** Relative selection weight among eligible events (default 1). */
   weight?: number;
   /** Setup prose, shown before any branch or choice. */

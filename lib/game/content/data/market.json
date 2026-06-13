@@ -1,305 +1,359 @@
 {
   "activities": [
     {
-      "id": "market_haggle",
+      "id": "market_scrounge",
       "location": "market",
-      "name": "Work the stalls",
-      "blurb": "Drift between the traders and see what your tongue can shave off a price."
+      "name": "Pick over the stalls",
+      "blurb": "Comb the thinning rows for food worth buying and rumour worth more."
+    },
+    {
+      "id": "market_factor",
+      "location": "market",
+      "name": "Deal with the grain-factor",
+      "blurb": "The man who holds the granary key holds the town's stomach. Get close to him."
     },
     {
       "id": "market_haul",
       "location": "market",
       "name": "Haul for the traders",
-      "blurb": "Strong backs are short in fair week, and the carts won't shift themselves."
+      "blurb": "Fewer carts come each week, and the ones that do pay for a strong back."
     },
     {
-      "id": "market_stall",
+      "id": "market_backrow",
       "location": "market",
-      "name": "Mind a stall",
-      "blurb": "Stand behind someone else's goods and learn what really sells."
+      "name": "Work the back row",
+      "blurb": "Where deserters sell their loot and no question is asked twice."
     }
   ],
   "events": [
     {
-      "id": "haggle_the_stalls",
+      "id": "market_thinning_rows",
       "location": "market",
       "activities": [
-        "market_haggle"
+        "market_scrounge"
       ],
+      "maxWeek": 3,
       "weight": 3,
-      "text": "A potter wants more for a glazed jug than it could ever be worth, and knows it. The trick is making him believe you'll walk.",
+      "text": "The stalls stand emptier than a town this size should allow, and what's left costs double what it did the day your ship made port. A widow weighs out a measure of barley with the care of a woman counting her last days on earth.",
       "check": {
         "stat": "intelligence",
         "dc": 4
       },
       "pass": {
-        "text": "You find the flaw in the glaze before he finds your purse, and talk him down by half while complimenting his work. He sells, scowling, and respects you for it.",
-        "outcome": "haggled the potter down to half and left him grudgingly impressed.",
+        "text": "You read the rows like a ledger: who is selling out and fleeing, who is buying up against worse to come. By dusk you know which stalls will stand bare by next week, and whose sacks are being held back for the day hunger drives the price past reason.",
+        "outcome": "read the dying market and learned who is hoarding against the famine.",
         "stats": {
-          "intelligence": 1,
-          "wealth": 1
-        }
+          "intelligence": 1
+        },
+        "flags": [
+          "market_watched"
+        ]
       },
       "fail": {
-        "text": "He's heard every gambit twice over and lets you tire yourself out against them. You leave with the jug and a thinner purse, telling yourself it was a fair price.",
-        "outcome": "lost a haggle to a potter and overpaid for a jug.",
+        "text": "You pay the widow's price for a thin measure of barley and call it supper. The traders mark you for a foreigner who does not yet grasp how short the bread is going to get, nor how soon.",
+        "outcome": "overpaid for a measure of barley and learned little.",
         "stats": {
           "wealth": -1
         }
       }
     },
     {
-      "id": "butcher_armourer_feud",
+      "id": "market_factor_courted",
       "location": "market",
       "activities": [
-        "market_haggle",
-        "market_stall"
+        "market_factor"
       ],
+      "maxWeek": 4,
       "weight": 3,
-      "text": "The butcher and the armourer have pitched their stalls side by side again, as they have for thirty years of mutual loathing. The armourer beckons you over, low and conspiratorial.",
-      "effect": {
-        "text": "He wants only that you tell the butcher his sausages have gone green, loudly, where the fair crowd can hear. You oblige. The butcher's takings sour for the day, and the armourer marks you down as a man he can use.",
-        "outcome": "carried the armourer's poison to the butcher and earned the armourer's regard.",
-        "stats": {
-          "craft": 1
-        },
-        "flags": [
-          "armourer_owes_you"
-        ]
-      }
-    },
-    {
-      "id": "armourers_commission",
-      "location": "market",
-      "activities": [
-        "market_haggle",
-        "market_haul"
-      ],
-      "requires": [
-        "armourer_owes_you"
-      ],
-      "weight": 4,
-      "text": "The armourer remembers the favour. He has a commission: a set of fair-day blades that must reach a buyer across the square before the butcher's cousin can underbid him.",
+      "text": "The grain-factor keeps the granary keys on a ring at his belt and a smile he never spends. He weighs every stranger by what they might be worth to him. He will talk, if you can make yourself worth the talking to.",
       "check": {
-        "stat": "craft",
+        "stat": "intelligence",
         "dc": 5
       },
       "pass": {
-        "text": "You broker it cleanly. The right buyer, the right price, the butcher's cousin left holding his cheaper steel and his temper. The armourer pays well and tells the other traders you can be trusted with coin.",
-        "outcome": "brokered the armourer's commission and built a name among the traders.",
+        "text": "You match his arithmetic and feed his vanity in equal measure, and at last the smile reaches you. He lets slip that the granary stands fuller than the town believes, and that a clever foreigner might help him decide where all that grain should go.",
+        "outcome": "won the grain-factor's confidence and a glimpse of the full granary.",
         "stats": {
-          "craft": 1,
-          "wealth": 2
-        }
+          "intelligence": 1,
+          "will": 1
+        },
+        "flags": [
+          "factor_marked"
+        ]
       },
       "fail": {
-        "text": "The deal slips through your fingers at the last word and the cousin's blades sell first. The armourer is sour, but you wore his trust honestly trying, and that he remembers.",
-        "outcome": "botched the armourer's commission but kept his trust by trying.",
+        "text": "He hears the accent, names you a beggar in better boots, and turns back to his ledger. The keys jingle as he goes, a small bright sound you will come to hate before the month is out.",
+        "outcome": "was dismissed by the grain-factor as a foreign beggar.",
         "stats": {
           "will": 1
         }
       }
     },
     {
-      "id": "lift_the_load",
+      "id": "market_open_the_granary",
       "location": "market",
       "activities": [
-        "market_haul"
-      ],
-      "weight": 3,
-      "text": "A wool merchant's cart has thrown a wheel in the gateway and his whole consignment is blocking the fair. He'll pay anyone who can clear it before the bailiff fines him.",
-      "check": {
-        "stat": "strength",
-        "dc": 5
-      },
-      "pass": {
-        "text": "You shoulder bale after bale clear of the gate and heave the cart up while a carter slides the wheel home. The merchant pays in good coin and points you out to the other traders as a back worth hiring.",
-        "outcome": "cleared a merchant's spilled cart single-handed and got paid for the muscle.",
-        "stats": {
-          "strength": 1,
-          "wealth": 1
-        }
-      },
-      "fail": {
-        "text": "The bales are heavier than they look and damp through. You shift what you can before younger backs arrive to finish it, and split the merchant's thin gratitude three ways.",
-        "outcome": "strained at a merchant's cart and split the coin three ways.",
-        "stats": {
-          "strength": 1
-        }
-      }
-    },
-    {
-      "id": "porter_work",
-      "location": "market",
-      "activities": [
-        "market_haul"
-      ],
-      "weight": 2,
-      "text": "Fair week wants more porters than the parish can muster. A factor hires anyone upright and pays by the trip.",
-      "effect": {
-        "text": "You haul crates from the wharf-road to the square till your shoulders sing, and pocket honest coin for every load. By dusk you know which stalls hide what, and which factor shorts his men.",
-        "outcome": "portered crates all day and learned which stalls hide what.",
-        "stats": {
-          "strength": 1,
-          "wealth": 1,
-          "intelligence": 1
-        }
-      }
-    },
-    {
-      "id": "the_unlabelled_stall",
-      "location": "market",
-      "activities": [
-        "market_haggle",
-        "market_stall"
-      ],
-      "weight": 2,
-      "text": "A stall with no name and no labels offers spice, silk, and a price too good to be lawful. The seller won't quite meet your eye, but the goods look real enough.",
-      "choices": [
-        {
-          "label": "Buy a bundle to sell on",
-          "effect": {
-            "text": "You hand over the coin and tuck the bundle under your arm. Only later, by lamplight, do you start to wonder what exactly you've bought, and from whom.",
-            "outcome": "bought a bundle of unlabelled goods from a nameless stall.",
-            "stats": {
-              "wealth": -1
-            },
-            "flags": [
-              "bought_the_swindle"
-            ]
-          }
-        },
-        {
-          "label": "Note the stall and walk on",
-          "effect": {
-            "text": "You memorise the seller's face and the gap in the row where he stands, and keep your coin. A bargain that good is a debt waiting to be called.",
-            "outcome": "smelled a swindle at the nameless stall and kept their coin.",
-            "stats": {
-              "intelligence": 1
-            }
-          }
-        }
-      ]
-    },
-    {
-      "id": "the_swindle_unwinds",
-      "location": "market",
-      "activities": [
-        "market_haggle",
-        "market_stall"
+        "market_factor"
       ],
       "requires": [
-        "bought_the_swindle"
+        "factor_marked"
       ],
+      "minWeek": 4,
       "weight": 4,
-      "text": "The bundle was stolen goods, and the man you bought from is gone. The rightful owner's friends are working the square, asking after a buyer of just your description.",
+      "text": "The sickness is in the poor quarters now, and the factor is frightened, which makes him pliable. The granary stands full while the town starves at its door. He will open it for the right argument, or the right threat.",
+      "check": {
+        "stat": "will",
+        "dc": 6
+      },
+      "pass": {
+        "text": "You press him hard: a dead town buys no grain, and a factor who fed the living will be remembered kindly when the reckoning comes. He hands you the spare key with his own shaking hand, and the queues form before the doors are full open. The town eats tonight.",
+        "outcome": "pried the granary open and filled the town's empty bellies.",
+        "stats": {
+          "will": 1,
+          "craft": 1
+        },
+        "flags": [
+          "granary_filled"
+        ]
+      },
+      "fail": {
+        "text": "He bolts the doors against you and your argument both, bawling for the bailiff. You walk away with the keys still on his belt and the hungry still in the street, and the patron's red eyes hang heavy on the back of your neck the whole way home.",
+        "outcome": "failed to move the factor, and the granary stayed shut.",
+        "stats": {
+          "will": 1
+        }
+      }
+    },
+    {
+      "id": "market_locate_the_hoard",
+      "location": "market",
+      "activities": [
+        "market_scrounge",
+        "market_backrow"
+      ],
+      "requires": [
+        "market_watched"
+      ],
+      "minWeek": 3,
+      "weight": 3,
+      "text": "You have marked the men who buy grain they never eat. Now you mean to find where they cache it. A boy who sweeps the back row will sell you the answer for a heel of bread and a promise to keep his name out of your mouth.",
       "check": {
         "stat": "agility",
         "dc": 5
       },
       "pass": {
-        "text": "You spot them before they spot you, slip the bundle back onto a passing barrow, and are three stalls away and innocent-faced by the time the questions reach where you stood.",
-        "outcome": "shed the stolen bundle and slipped the swindle's reckoning.",
+        "text": "You follow the carts after dark to a sealed cellar beneath a merchant's house, packed to the beams with grain held back for the day the price is desperation itself. You memorise the door, the bar across it, and the dog that guards it.",
+        "outcome": "tracked the hoarders' grain to a sealed cellar.",
         "stats": {
           "agility": 1,
           "intelligence": 1
-        }
+        },
+        "flags": [
+          "hoard_located"
+        ]
       },
       "fail": {
-        "text": "They corner you against the fish stalls. It costs you the bundle, the coin you paid, and a promise of more to keep your name out of the bailiff's ear, a lesson in bargains too good to be true.",
-        "outcome": "got cornered over the stolen bundle and paid twice to walk away clean.",
+        "text": "A watchman with a hoarder's coin already in his purse catches you in the wrong lane and walks you back to the square by your collar. You learn nothing for your trouble, save that the hoard is well guarded by men who answer to silver.",
+        "outcome": "was caught snooping and learned nothing of the hoard.",
         "stats": {
-          "wealth": -1,
           "will": 1
         }
       }
     },
     {
-      "id": "fairday_gouge",
+      "id": "market_break_the_hoarders",
       "location": "market",
       "activities": [
-        "market_stall"
+        "market_scrounge",
+        "market_haul"
       ],
       "requires": [
-        "knows_the_tax"
+        "hoard_located"
       ],
-      "weight": 2,
-      "text": "The stallholder you're minding wants the fair-day prices doubled while the crowd is thick and desperate. He leaves the chalk-board in your hand and goes to dinner.",
+      "minWeek": 5,
+      "weight": 4,
+      "text": "You know where the grain is hidden. The town is burying its first plague dead, and the starving have nothing left to lose. A word from you in the right ears and that cellar door will not hold an hour.",
       "choices": [
         {
-          "label": "Double the prices as he asked",
+          "label": "Lead the hungry to the cellar",
           "effect": {
-            "text": "You chalk up the gouge and the takings pour in. But you know the tax terms the lord will read out tomorrow, and the stallholder's greed will catch a fine. It won't be your name on the stall.",
-            "outcome": "gouged the fair-day crowd on a stall that wasn't theirs.",
+            "text": "You point the way and stand well back. The door comes down, the dog flees, and the grain pours out into the lanes in aprons and caps and bare cupped hands. The hoarders scream for the bailiff to men who no longer fear the rope more than they fear the grave.",
+            "outcome": "broke the hoarders' cellar and gave the grain to the starving.",
             "stats": {
-              "wealth": 1,
-              "craft": 1
-            }
+              "will": 1,
+              "strength": 1
+            },
+            "flags": [
+              "hoarders_broken"
+            ]
           }
         },
         {
-          "label": "Hold the prices fair",
+          "label": "Sell the cellar's location to its owner's rival",
           "effect": {
-            "text": "You keep the chalk honest. Knowing the lord means to make an example of the gougers tomorrow, you'd rather the crowd remember a fair hand than the bailiff remember this stall.",
-            "outcome": "kept a borrowed stall's prices honest ahead of the lord's reckoning.",
+            "text": "You sell the secret to a second hoarder instead, who empties the cellar by night and stacks it with his own. Not one grain reaches a single starving mouth, but your purse hangs heavier, and you have made a friend among the men who mean to outlast this town.",
+            "outcome": "sold the hoard to a rival and let the town starve a while longer.",
             "stats": {
-              "intelligence": 1,
-              "will": 1
-            }
+              "wealth": 2
+            },
+            "flags": [
+              "turned_to_darkness"
+            ]
           }
         }
       ]
     },
     {
-      "id": "fence_the_swindle",
+      "id": "market_forage_party",
       "location": "market",
       "activities": [
-        "market_stall",
-        "market_haggle"
+        "market_haul",
+        "market_scrounge"
       ],
-      "forbids": [
-        "owes_innkeep"
-      ],
-      "weight": 2,
-      "text": "A quiet woman at the back of the row deals in things that fell off carts. She'll cut you in on moving a few: no questions, decent coin, only nerve required.",
+      "minWeek": 3,
+      "maxWeek": 6,
+      "weight": 3,
+      "text": "With the carts no longer coming, the market reeve is sending parties out to strip the hedgerows and abandoned farms of anything that can be eaten. He wants strong backs and a leader with sense. The roads, he allows, are not safe.",
       "check": {
-        "stat": "will",
+        "stat": "strength",
         "dc": 5
       },
       "pass": {
-        "text": "You keep your face flat and your patter dull, and nothing about you invites a second look. By close she's moved her stock through your hands and counted you reliable, a useful sort of friend in a place like this.",
-        "outcome": "fenced a fence's goods without a flicker and earned her coin.",
+        "text": "You lead the party out past the walls and back before dark, the handcarts heavy with roots, late berries, and a slaughtered pig nobody had left to mind. It is not plenty, but it is days of life, and the reeve marks you as a man worth feeding first.",
+        "outcome": "led a forage party out and brought back days of food.",
         "stats": {
-          "will": 1,
-          "wealth": 1
-        }
+          "strength": 1,
+          "intelligence": 1
+        },
+        "flags": [
+          "forage_secured"
+        ]
       },
       "fail": {
-        "text": "Your nerve holds right up until a bailiff dawdles past, and your face does the rest. She waves the deal off and you slink away, lighter only in dignity.",
-        "outcome": "lost their nerve fencing goods and slunk off empty-handed.",
+        "text": "The party scatters at the sight of riders on the ridge, and you stumble home with half a sack and one man fewer than you set out with. The hedgerows, it turns out, were stripped bare a week ago by people quicker to be hungry than you were.",
+        "outcome": "lost a forage party to fear and brought back almost nothing.",
         "stats": {
-          "intelligence": 1
+          "will": 1
         }
       }
     },
     {
-      "id": "lords_warrant",
+      "id": "market_haul_what_remains",
       "location": "market",
       "activities": [
-        "market_haggle",
-        "market_stall"
+        "market_haul"
       ],
-      "requires": [
-        "lords_eye"
-      ],
-      "weight": 3,
-      "text": "Word that the lord knows your name has reached the square ahead of you. The market reeve, a careful man, asks quietly whether you'd vouch the fair's weights and measures true before the reckoning.",
+      "maxWeek": 4,
+      "weight": 2,
+      "text": "One of the last honest carters still risks the road in, and his load wants shifting before the crowd that has gathered decides to take it for free. He will pay anyone who'll guard a crate as readily as carry one.",
       "effect": {
-        "text": "You walk the row with him, testing scales and calling the short measures out by stall. The honest traders bless you and the crooked ones learn your face, but with the lord's eye on you, none dares cross it. The reeve will speak well of you at the castle.",
-        "outcome": "vouched the fair's weights for the reeve under the lord's own eye.",
+        "text": "You haul and you glower, and the crowd stays a crowd rather than becoming a mob. The carter pays you in coin and in the last of his good cheese, and tells you, low, that he doubts he will chance the road again.",
+        "outcome": "guarded a carter's last load and was paid in coin and cheese.",
         "stats": {
-          "craft": 1,
+          "strength": 1,
+          "wealth": 1
+        }
+      }
+    },
+    {
+      "id": "market_deserters_loot",
+      "location": "market",
+      "activities": [
+        "market_backrow"
+      ],
+      "minWeek": 4,
+      "weight": 3,
+      "text": "A deserter from some broken company hawks his loot off a blanket on the cobbles: a dead man's boots, a chain of office, a reliquary prised from its church. He drinks while he deals, and the wine has loosened his tongue with all he saw on the roads.",
+      "check": {
+        "stat": "intelligence",
+        "dc": 5
+      },
+      "pass": {
+        "text": "You buy nothing, only ply him with questions, and between boasts he tells of a town a week south taken by the sickness in three days flat, and of a saint's bone he sold to a churchman here who paid far, far too much for it. That relic, he swears, crossing himself, was no ordinary trinket.",
+        "outcome": "drew a deserter's tale of plague and a strangely prized relic.",
+        "stats": {
+          "intelligence": 1
+        },
+        "flags": [
+          "relic_clue"
+        ]
+      },
+      "fail": {
+        "text": "He grows wary of a stranger who asks so much and buys nothing, sweeps his loot back into the blanket, and tells you to spend or be gone. You learn nothing but the look of a man who has done worse things than desert his banner.",
+        "outcome": "pressed a deserter too hard and was waved off his blanket.",
+        "stats": {
           "will": 1
+        }
+      }
+    },
+    {
+      "id": "market_fleeing_trader",
+      "location": "market",
+      "activities": [
+        "market_scrounge",
+        "market_backrow"
+      ],
+      "minWeek": 5,
+      "weight": 3,
+      "text": "A trader is selling everything he owns at any price offered, his wagon already pointed at the docks. He has more grain in his store than he can carry, and a berth bought on a ship that sails while ships still sail. He looks at your foreign face and lowers his voice.",
+      "choices": [
+        {
+          "label": "Buy his grain to share out in the lanes",
+          "effect": {
+            "text": "You take the lot at a fleeing man's price and spend the evening measuring it into the hollow-cheeked queue at your door. Your purse is gutted and your arms ache to the bone, but a hundred souls will wake tomorrow who might not have.",
+            "outcome": "bought a fleeing trader's grain and shared it through the starving lanes.",
+            "stats": {
+              "will": 2,
+              "wealth": -2
+            },
+            "flags": [
+              "forage_secured"
+            ]
+          }
+        },
+        {
+          "label": "Buy his ship's berth instead",
+          "effect": {
+            "text": "You let the grain rot where it sits and buy the berth out from under him, coin for a name on a manifest. He curses you to your face and you find you do not care. Whatever fate this town is owed, a place on a sailing ship will be no part of it.",
+            "outcome": "bought a fleeing trader's berth and secured their own escape.",
+            "stats": {
+              "wealth": -1
+            },
+            "flags": [
+              "passage_secured"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "market_bare_stalls",
+      "location": "market",
+      "activities": [
+        "market_scrounge",
+        "market_backrow"
+      ],
+      "minWeek": 6,
+      "weight": 4,
+      "text": "There is no market now, only the memory of one: trestles overturned, a few wretches gnawing at things that were never food, and a smell hanging over it all that is not the smell of bread. A starving man offers you a fat dog on a rope, and will not say where the fat came from.",
+      "check": {
+        "stat": "will",
+        "dc": 6
+      },
+      "pass": {
+        "text": "You turn from the dog, and the man, and the thing you both know it has been fed on, and you keep your wits and your stomach together. In the wreck of a fishmonger's stall you turn up a forgotten cask of salt fish, enough to keep your own people breathing a few more days.",
+        "outcome": "kept their nerve in the dead market and salvaged a cask of salt fish.",
+        "stats": {
+          "will": 1,
+          "intelligence": 1
+        }
+      },
+      "fail": {
+        "text": "Hunger argues louder than sense, and you take the dog. You do not ask a second time where the fat came from; some part of you already knows. The meat sits ill in you, and so does the bargain, long after the bowl is wiped clean.",
+        "outcome": "took a starving man's dog in the dead market and asked no questions.",
+        "stats": {
+          "strength": 1,
+          "will": -1
         }
       }
     }

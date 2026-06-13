@@ -54,6 +54,7 @@ export function eligibleEvents(
   activityId: string,
   flags: Iterable<string>,
   seen: Iterable<string>,
+  week?: number,
 ): GameEvent[] {
   const flagSet = new Set(flags);
   const seenSet = new Set(seen);
@@ -63,6 +64,10 @@ export function eligibleEvents(
       return false;
     }
     if (!e.repeatable && seenSet.has(e.id)) return false;
+    if (week !== undefined) {
+      if (e.minWeek !== undefined && week < e.minWeek) return false;
+      if (e.maxWeek !== undefined && week > e.maxWeek) return false;
+    }
     if (e.requires && !e.requires.every((f) => flagSet.has(f))) return false;
     if (e.forbids && e.forbids.some((f) => flagSet.has(f))) return false;
     return true;
@@ -111,8 +116,9 @@ export function pickEvent(
   flags: Iterable<string>,
   seen: Iterable<string>,
   seed: number,
+  week?: number,
 ): GameEvent {
-  const candidates = eligibleEvents(location, activityId, flags, seen);
+  const candidates = eligibleEvents(location, activityId, flags, seen, week);
   if (candidates.length === 0) return fallbackEvent(location, activityId);
 
   const total = candidates.reduce((sum, e) => sum + (e.weight ?? 1), 0);
