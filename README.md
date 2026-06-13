@@ -93,10 +93,30 @@ Ground rules: multiplayer goes through `/lib/game`, all content is data in
 `/lib/game/content`, and every architectural choice gets a line in
 `DECISIONS.md`.
 
-## Writing content
+## Editing the story (visual editor)
 
-Content is plain TypeScript data in `lib/game/content/<location>.ts` (see
-`tavern.ts` as the reference). Each location exports `{ activities, events }`.
+```bash
+npm run editor      # → http://localhost:4100
+```
+
+A dev-only tool (never shipped) for laying out the story:
+
+- **Map** — the whole prerequisite graph: every event as a node under its
+  location, gold edges where one event's flag *unlocks* another, red dashed
+  edges where a flag *blocks* one. Click any node to edit it.
+- **Edit** — pick a location, edit its activities and events: setup prose,
+  the resolution shape (flat / hidden stat check / player choice), stat
+  changes, and the flags it sets. Wire connections by ticking **Requires**
+  / **Forbids** flags; the **Connections** panel shows, for the selected
+  event, exactly what it unlocks and what unlocks it.
+- **Live validation** mirrors the build contract (no orphan prerequisites,
+  valid shapes, dc within cap…). **Save** writes the content JSON the game
+  imports — and refuses to save anything that would fail the build.
+
+## Writing content (by hand)
+
+Content is JSON data in `lib/game/content/data/<location>.json` — the same
+files the editor reads and writes. Each location is `{ activities, events }`.
 
 - **Activities** (2–4 per location): the things a player can choose to do.
   Just `{ id, location, name, blurb }` — they never show stat requirements.

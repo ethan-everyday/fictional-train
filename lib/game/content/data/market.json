@@ -1,7 +1,4 @@
-import type { LocationContent } from "./index";
-
-// Authored by the content fan-out, validated against the contract.
-export const market: LocationContent = {
+{
   "activities": [
     {
       "id": "market_haggle",
@@ -307,4 +304,4 @@ export const market: LocationContent = {
       }
     }
   ]
-};
+}

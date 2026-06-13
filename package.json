@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "ws": "node server.js --dev",
+    "editor": "node scripts/editor-server.js",
     "build": "next build",
     "serve": "node server.js",
     "game": "npm run build && node server.js",

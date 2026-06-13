@@ -1,7 +1,4 @@
-import type { LocationContent } from "./index";
-
-// Authored by the content fan-out, validated against the contract.
-export const church: LocationContent = {
+{
   "activities": [
     {
       "id": "church_confession",
@@ -296,4 +293,4 @@ export const church: LocationContent = {
       }
     }
   ]
-};
+}

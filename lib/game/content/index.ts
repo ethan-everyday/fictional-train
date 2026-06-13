@@ -1,12 +1,14 @@
 import type { Activity, GameEvent, LocationId } from "../types";
 import { locationDef } from "../constants";
-import { tavern } from "./tavern";
-import { castle } from "./castle";
-import { church } from "./church";
-import { market } from "./market";
-import { farms } from "./farms";
-import { slums } from "./slums";
-import { docks } from "./docks";
+// Content is data: edit it with the visual editor (`npm run editor`), which
+// reads and writes these JSON files. The game imports them directly.
+import tavern from "./data/tavern.json";
+import castle from "./data/castle.json";
+import church from "./data/church.json";
+import market from "./data/market.json";
+import farms from "./data/farms.json";
+import slums from "./data/slums.json";
+import docks from "./data/docks.json";
 
 /** One location's content: the activities offered and the event pool. */
 export interface LocationContent {
@@ -22,7 +24,7 @@ const MODULES: LocationContent[] = [
   farms,
   slums,
   docks,
-];
+] as LocationContent[];
 
 export const ACTIVITIES: Activity[] = MODULES.flatMap((m) => m.activities);
 export const EVENTS: GameEvent[] = MODULES.flatMap((m) => m.events);

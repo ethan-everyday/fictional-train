@@ -1,7 +1,4 @@
-import type { LocationContent } from "./index";
-
-// Authored by the content fan-out, validated against the contract.
-export const docks: LocationContent = {
+{
   "activities": [
     {
       "id": "docks_haul",
@@ -283,4 +280,4 @@ export const docks: LocationContent = {
       ]
     }
   ]
-};
+}

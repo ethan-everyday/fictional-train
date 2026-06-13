@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Seven Nights — Story Editor</title>
+<style>
+  :root {
+    --night: #0f0b07; --oak: #26190f; --bark: #46351f; --bark2: #604b2e;
+    --p100: #f2e8ce; --p300: #dcc99f; --p400: #c3aa7d; --p500: #9d8459; --p600: #7c6845;
+    --gold: #d4a937; --amber: #f59e0b; --red: #ef4444; --green: #34d399; --blue: #60a5fa;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--night); color: var(--p100);
+    font: 14px/1.5 -apple-system, system-ui, "Segoe UI", sans-serif; }
+  h1, h2, h3 { font-family: Georgia, serif; }
+  header { display: flex; align-items: center; gap: 16px; padding: 10px 16px;
+    background: var(--oak); border-bottom: 1px solid var(--bark); position: sticky; top: 0; z-index: 10; }
+  header h1 { margin: 0; font-size: 18px; color: var(--gold); }
+  .tabs { display: flex; gap: 6px; }
+  .tab { padding: 6px 14px; border: 1px solid var(--bark2); border-radius: 8px;
+    background: var(--night); color: var(--p300); cursor: pointer; }
+  .tab.active { background: var(--amber); color: var(--night); border-color: var(--amber); font-weight: 700; }
+  .spacer { flex: 1; }
+  button { font: inherit; cursor: pointer; }
+  .btn { padding: 6px 14px; border-radius: 8px; border: 1px solid var(--bark2);
+    background: var(--night); color: var(--p100); }
+  .btn:hover { border-color: var(--amber); }
+  .btn.primary { background: var(--amber); color: var(--night); border-color: var(--amber); font-weight: 700; }
+  .btn.danger { color: var(--red); border-color: #6b1d1d; }
+  .btn:disabled { opacity: .4; cursor: default; }
+  #status { font-size: 13px; }
+  .ok { color: var(--green); } .err { color: var(--red); }
+
+  #view { padding: 14px; }
+
+  /* map */
+  #map-wrap { overflow: auto; border: 1px solid var(--bark); border-radius: 10px; background: #140d07; }
+  .legend { display: flex; gap: 18px; margin: 8px 2px; font-size: 12px; color: var(--p400); align-items: center; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 22px; height: 0; border-top: 2px solid var(--gold); }
+  .swatch.forbid { border-top: 2px dashed var(--red); }
+  .node { cursor: pointer; }
+  .node rect { fill: var(--oak); stroke: var(--bark2); rx: 6; }
+  .node:hover rect { stroke: var(--amber); }
+  .node.sel rect { stroke: var(--amber); stroke-width: 2; fill: #33240f; }
+  .node text { fill: var(--p100); font-size: 11px; }
+  .node .sub { fill: var(--p500); font-size: 9px; }
+  .col-head { fill: var(--gold); font-family: Georgia, serif; font-size: 13px; }
+
+  /* edit */
+  .edit-grid { display: grid; grid-template-columns: 260px 1fr 280px; gap: 14px; align-items: start; }
+  .panel { border: 1px solid var(--bark); border-radius: 10px; background: var(--oak); padding: 12px; }
+  .panel h2 { margin: 0 0 8px; font-size: 15px; color: var(--p300); }
+  .loc-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+  .loc-tab { padding: 4px 9px; border-radius: 7px; border: 1px solid var(--bark2);
+    background: var(--night); color: var(--p400); font-size: 12px; cursor: pointer; }
+  .loc-tab.active { background: var(--bark); color: var(--p100); border-color: var(--amber); }
+  .evlist { display: flex; flex-direction: column; gap: 4px; max-height: 60vh; overflow: auto; }
+  .evrow { padding: 6px 8px; border-radius: 7px; border: 1px solid transparent; background: var(--night);
+    cursor: pointer; font-size: 12px; }
+  .evrow:hover { border-color: var(--bark2); }
+  .evrow.sel { border-color: var(--amber); background: #33240f; }
+  .evrow .tag { font-size: 9px; padding: 1px 5px; border-radius: 5px; margin-left: 6px; }
+  .tag.effect { background: #243; color: var(--green); }
+  .tag.check { background: #234; color: var(--blue); }
+  .tag.choices { background: #432; color: var(--gold); }
+
+  label { display: block; font-size: 12px; color: var(--p400); margin: 10px 0 3px; }
+  input[type=text], input[type=number], textarea, select {
+    width: 100%; padding: 6px 8px; background: var(--night); color: var(--p100);
+    border: 1px solid var(--bark2); border-radius: 7px; font: inherit; }
+  textarea { min-height: 54px; resize: vertical; }
+  .row { display: flex; gap: 8px; }
+  .row > * { flex: 1; }
+  .stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+  .stats-grid label { margin: 0 0 2px; text-align: center; font-size: 10px; }
+  .stats-grid input { padding: 4px; text-align: center; }
+  .flagbox { max-height: 130px; overflow: auto; border: 1px solid var(--bark2); border-radius: 7px; padding: 6px; }
+  .flagbox label { display: flex; align-items: center; gap: 6px; margin: 2px 0; color: var(--p300); }
+  .flagbox input { width: auto; }
+  .addflag { display: flex; gap: 6px; margin-top: 6px; }
+  .addflag input { flex: 1; }
+  .branch { border: 1px solid var(--bark2); border-radius: 8px; padding: 10px; margin-top: 8px; }
+  .branch h3 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--gold); }
+  .conn { font-size: 12px; }
+  .conn .flag { color: var(--gold); font-family: monospace; }
+  .conn ul { margin: 2px 0 10px; padding-left: 16px; color: var(--p400); }
+  .muted { color: var(--p600); }
+  .errlist { margin: 0; padding-left: 18px; color: var(--red); font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Seven Nights · Story Editor</h1>
+  <div class="tabs">
+    <button class="tab active" data-view="map">Map</button>
+    <button class="tab" data-view="edit">Edit</button>
+  </div>
+  <div class="spacer"></div>
+  <span id="status"></span>
+  <button class="btn primary" id="save" disabled>Save</button>
+</header>
+<div id="view"></div>
+
+<script>
+const STATE = { data: null, view: "map", loc: "tavern", sel: null, dirty: false };
+const LOCS = ["church","tavern","market","farms","castle","slums","docks"];
+const LOC_NAMES = { church:"Church", tavern:"Tavern", market:"Market", farms:"Farms", castle:"Castle", slums:"Slums", docks:"Docks" };
+
+// ---- helpers ----
+function el(tag, props = {}, ...kids) {
+  const n = document.createElementNS(props.ns || "http://www.w3.org/1999/xhtml", tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === "ns") continue;
+    if (k === "class") n.setAttribute("class", v);
+    else if (k === "html") n.innerHTML = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else if (v === true) n.setAttribute(k, "");
+    else if (v !== false && v != null) n.setAttribute(k, v);
+  }
+  for (const kid of kids.flat()) {
+    if (kid == null || kid === false) continue;
+    n.appendChild(typeof kid === "string" ? document.createTextNode(kid) : kid);
+  }
+  return n;
+}
+const svg = (tag, props, ...kids) => el(tag, { ...props, ns: "http://www.w3.org/2000/svg" }, ...kids);
+
+function allEvents() { return LOCS.flatMap(l => STATE.data.locations[l].events.map(e => ({ ...e }))); }
+function locEvents(loc) { return STATE.data.locations[loc].events; }
+function locActs(loc) { return STATE.data.locations[loc].activities; }
+function shapeOf(ev) { return ev.choices && ev.choices.length ? "choices" : ev.check ? "check" : "effect"; }
+function branchesOf(ev) {
+  if (ev.choices) return ev.choices.map(c => c.effect).filter(Boolean);
+  if (ev.check) return [ev.pass, ev.fail].filter(Boolean);
+  return ev.effect ? [ev.effect] : [];
+}
+function setterFlags(ev) { return branchesOf(ev).flatMap(b => b.flags || []); }
+function producibleFlags() {
+  const s = new Set(STATE.data.originFlags || []);
+  for (const ev of allEvents()) setterFlags(ev).forEach(f => s.add(f));
+  return s;
+}
+function allFlags() {
+  const s = producibleFlags();
+  for (const ev of allEvents()) { (ev.requires||[]).forEach(f=>s.add(f)); (ev.forbids||[]).forEach(f=>s.add(f)); }
+  return [...s].sort();
+}
+
+// ---- validation (mirror of the build contract) ----
+function validate() {
+  const errs = [];
+  const prod = producibleFlags();
+  const allIds = allEvents().map(e => e.id);
+  if (new Set(allIds).size !== allIds.length) errs.push("Duplicate event ids");
+  for (const loc of LOCS) {
+    const n = locActs(loc).length;
+    if (n < 2 || n > 4) errs.push(`${LOC_NAMES[loc]}: needs 2–4 activities (has ${n})`);
+    for (const ev of locEvents(loc)) {
+      const shapes = [!!ev.effect, !!ev.check, !!(ev.choices&&ev.choices.length)].filter(Boolean).length;
+      if (shapes !== 1) errs.push(`${ev.id}: must be exactly one shape`);
+      if (!ev.text || !ev.text.trim()) errs.push(`${ev.id}: empty setup text`);
+      const acts = locActs(loc).map(a => a.id);
+      (ev.activities||[]).forEach(a => { if (!acts.includes(a)) errs.push(`${ev.id}: unknown activity "${a}"`); });
+      if (ev.check && !(ev.check.dc >= 1 && ev.check.dc <= STATE.data.statCap)) errs.push(`${ev.id}: dc out of range`);
+      for (const b of branchesOf(ev)) {
+        if (!b.text || !b.text.trim()) errs.push(`${ev.id}: a branch has empty text`);
+        if (!b.outcome || !b.outcome.trim()) errs.push(`${ev.id}: a branch has empty outcome`);
+      }
+      (ev.requires||[]).forEach(f => { if (!prod.has(f)) errs.push(`${ev.id}: requires "${f}" — nothing sets it`); });
+      (ev.forbids||[]).forEach(f => { if (!prod.has(f)) errs.push(`${ev.id}: forbids "${f}" — never set`); });
+    }
+  }
+  return errs;
+}
+
+function markDirty() { STATE.dirty = true; refreshStatus(); }
+function refreshStatus() {
+  const errs = validate();
+  const s = document.getElementById("status");
+  const save = document.getElementById("save");
+  if (errs.length) { s.className = "err"; s.textContent = `${errs.length} problem${errs.length>1?"s":""}`; save.disabled = true; }
+  else { s.className = "ok"; s.textContent = STATE.dirty ? "ready to save" : "all valid"; save.disabled = !STATE.dirty; }
+}
+
+// ---- MAP view ----
+function renderMap() {
+  const colW = 210, nodeW = 168, nodeH = 38, vGap = 10, top = 44, padL = 20;
+  const positions = {}; // eventId -> {x,y,cx of right, lx of left}
+  let maxRows = 0;
+  LOCS.forEach((loc, ci) => {
+    const x = padL + ci * colW;
+    locEvents(loc).forEach((ev, ri) => {
+      const y = top + ri * (nodeH + vGap);
+      positions[ev.id] = { x, y, loc };
+    });
+    maxRows = Math.max(maxRows, locEvents(loc).length);
+  });
+  const width = padL + LOCS.length * colW;
+  const height = top + maxRows * (nodeH + vGap) + 30;
+
+  const edges = [];
+  for (const ev of allEvents()) {
+    for (const f of (ev.requires||[])) {
+      for (const setter of allEvents()) {
+        if (setter.id !== ev.id && setterFlags(setter).includes(f)) edges.push({ from: setter.id, to: ev.id, flag: f, kind: "req" });
+      }
+    }
+    for (const f of (ev.forbids||[])) {
+      for (const setter of allEvents()) {
+        if (setter.id !== ev.id && setterFlags(setter).includes(f)) edges.push({ from: setter.id, to: ev.id, flag: f, kind: "forbid" });
+      }
+    }
+  }
+
+  const edgeEls = edges.map(e => {
+    const a = positions[e.from], b = positions[e.to];
+    if (!a || !b) return null;
+    const x1 = a.x + nodeW, y1 = a.y + nodeH/2, x2 = b.x, y2 = b.y + nodeH/2;
+    const mx = (x1 + x2) / 2;
+    return svg("path", {
+      d: `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`,
+      fill: "none", stroke: e.kind === "forbid" ? "var(--red)" : "var(--gold)",
+      "stroke-width": 1.5, "stroke-dasharray": e.kind === "forbid" ? "5 4" : "none",
+      opacity: 0.55,
+    });
+  }).filter(Boolean);
+
+  const heads = LOCS.map((loc, ci) =>
+    svg("text", { class: "col-head", x: padL + ci*colW + nodeW/2, y: 24, "text-anchor": "middle" }, LOC_NAMES[loc]));
+
+  const nodes = allEvents().map(ev => {
+    const p = positions[ev.id];
+    const sets = setterFlags(ev);
+    const g = svg("g", {
+      class: "node" + (STATE.sel === ev.id ? " sel" : ""),
+      transform: `translate(${p.x},${p.y})`,
+      onclick: () => { STATE.sel = ev.id; STATE.loc = p.loc; STATE.view = "edit"; render(); },
+    },
+      svg("rect", { width: nodeW, height: nodeH }),
+      svg("text", { x: 8, y: 15 }, ev.id.length > 24 ? ev.id.slice(0,23)+"…" : ev.id),
+      svg("text", { class: "sub", x: 8, y: 29 },
+        (ev.requires&&ev.requires.length ? "↳ needs "+ev.requires.join(", ") : sets.length ? "sets "+sets.join(", ") : shapeOf(ev))
+          .slice(0, 32)),
+    );
+    return g;
+  });
+
+  const view = document.getElementById("view");
+  view.innerHTML = "";
+  view.appendChild(el("div", { class: "legend" },
+    el("span", {}, el("span", { class: "swatch" }), "unlocks (sets → needs)"),
+    el("span", {}, el("span", { class: "swatch forbid" }), "blocks (forbids)"),
+    el("span", { class: "muted" }, "click any event to edit it"),
+  ));
+  const wrap = el("div", { id: "map-wrap" });
+  const s = svg("svg", { width, height, viewBox: `0 0 ${width} ${height}`, style: `width:${width}px;height:${height}px` },
+    ...edgeEls, ...heads, ...nodes);
+  wrap.appendChild(s);
+  view.appendChild(wrap);
+}
+
+// ---- EDIT view ----
+function effectEditor(effect, onChange, title) {
+  effect.stats = effect.stats || {};
+  const statInputs = STATE.data.stats.map(stat =>
+    el("div", {},
+      el("label", {}, stat.slice(0,4)),
+      el("input", { type: "number", value: effect.stats[stat] ?? 0, oninput: e => {
+        const v = parseInt(e.target.value, 10) || 0;
+        if (v === 0) delete effect.stats[stat]; else effect.stats[stat] = v;
+        markDirty();
+      }})));
+  return el("div", { class: "branch" },
+    title ? el("h3", {}, title) : null,
+    el("label", {}, "Prose shown to the player"),
+    el("textarea", { oninput: e => { effect.text = e.target.value; markDirty(); } }, effect.text || ""),
+    el("label", {}, "Outcome (host line: “<name> <outcome>”)"),
+    el("input", { type: "text", value: effect.outcome || "", oninput: e => { effect.outcome = e.target.value; markDirty(); } }),
+    el("label", {}, "Stat changes"),
+    el("div", { class: "stats-grid" }, ...statInputs),
+    el("label", {}, "Flags this sets (creates connections other events can need)"),
+    flagPicker(effect.flags || [], list => { effect.flags = list.length ? list : undefined; markDirty(); render(); }),
+  );
+}
+
+function flagPicker(current, onChange, opts = {}) {
+  const flags = allFlags();
+  const box = el("div", { class: "flagbox" },
+    ...flags.map(f => el("label", {},
+      el("input", { type: "checkbox", checked: current.includes(f) ? true : false, onchange: e => {
+        const set = new Set(current);
+        if (e.target.checked) set.add(f); else set.delete(f);
+        onChange([...set]);
+      }}), f)),
+    flags.length === 0 ? el("span", { class: "muted" }, "no flags yet") : null,
+  );
+  const add = el("div", { class: "addflag" },
+    el("input", { type: "text", placeholder: "new_flag_name" }),
+    el("button", { class: "btn" }, "Add"));
+  add.querySelector("button").addEventListener("click", () => {
+    const v = add.querySelector("input").value.trim().toLowerCase().replace(/\s+/g, "_");
+    if (v) { const set = new Set(current); set.add(v); onChange([...set]); }
+  });
+  return el("div", {}, box, add);
+}
+
+function renderEdit() {
+  const view = document.getElementById("view");
+  view.innerHTML = "";
+
+  // left: location tabs + activities + event list
+  const left = el("div", { class: "panel" });
+  left.appendChild(el("div", { class: "loc-tabs" },
+    ...LOCS.map(loc => el("button", {
+      class: "loc-tab" + (STATE.loc === loc ? " active" : ""),
+      onclick: () => { STATE.loc = loc; STATE.sel = null; render(); }
+    }, LOC_NAMES[loc]))));
+
+  // activities editor
+  left.appendChild(el("h2", {}, "Activities"));
+  const acts = locActs(STATE.loc);
+  acts.forEach((a, i) => {
+    left.appendChild(el("div", { style: "margin-bottom:6px" },
+      el("input", { type: "text", value: a.name, oninput: e => { a.name = e.target.value; markDirty(); } }),
+      el("input", { type: "text", value: a.blurb, style: "margin-top:3px;font-size:12px", oninput: e => { a.blurb = e.target.value; markDirty(); } }),
+      el("div", { class: "muted", style: "font-size:10px;margin-top:2px" }, a.id,
+        acts.length > 2 ? el("button", { class: "btn danger", style: "float:right;padding:1px 6px;font-size:10px",
+          onclick: () => { acts.splice(i,1); markDirty(); render(); } }, "remove") : null),
+    ));
+  });
+  if (acts.length < 4) left.appendChild(el("button", { class: "btn", style: "margin-top:4px",
+    onclick: () => { const id = `${STATE.loc}_act${acts.length+1}`; acts.push({ id, location: STATE.loc, name: "New activity", blurb: "" }); markDirty(); render(); } }, "+ activity"));
+
+  left.appendChild(el("h2", { style: "margin-top:14px" }, "Events"));
+  const list = el("div", { class: "evlist" },
+    ...locEvents(STATE.loc).map(ev => el("div", {
+      class: "evrow" + (STATE.sel === ev.id ? " sel" : ""),
+      onclick: () => { STATE.sel = ev.id; render(); }
+    }, ev.id, el("span", { class: "tag " + shapeOf(ev) }, shapeOf(ev)))));
+  left.appendChild(list);
+  left.appendChild(el("button", { class: "btn", style: "margin-top:8px", onclick: addEvent }, "+ event"));
+
+  // center: the selected event form
+  const center = el("div", { class: "panel" });
+  const ev = locEvents(STATE.loc).find(e => e.id === STATE.sel);
+  if (!ev) center.appendChild(el("p", { class: "muted" }, "Select an event on the left, or add one."));
+  else center.appendChild(eventForm(ev));
+
+  // right: connections for the selected event + validation
+  const right = el("div", {});
+  right.appendChild(connectionsPanel(ev));
+  right.appendChild(validationPanel());
+
+  view.appendChild(el("div", { class: "edit-grid" }, left, center, right));
+}
+
+function eventForm(ev) {
+  const f = el("div", {});
+  f.appendChild(el("div", { class: "row" },
+    el("div", {}, el("label", {}, "Event id"), el("input", { type: "text", value: ev.id, oninput: e => { ev.id = e.target.value.trim(); markDirty(); } })),
+    el("div", { style: "flex:0 0 90px" }, el("label", {}, "Weight"), el("input", { type: "number", value: ev.weight ?? 1, oninput: e => { const v = parseInt(e.target.value,10); if (v && v!==1) ev.weight = v; else delete ev.weight; markDirty(); } })),
+  ));
+  f.appendChild(el("label", { style: "display:flex;align-items:center;gap:6px;margin-top:8px" },
+    el("input", { type: "checkbox", checked: ev.repeatable ? true : false, style: "width:auto", onchange: e => { if (e.target.checked) ev.repeatable = true; else delete ev.repeatable; markDirty(); } }), "Repeatable (can fire more than once)"));
+
+  f.appendChild(el("label", {}, "Triggered by activities"));
+  f.appendChild(el("div", { class: "flagbox" },
+    ...locActs(STATE.loc).map(a => el("label", {},
+      el("input", { type: "checkbox", checked: (ev.activities||[]).includes(a.id) ? true : false, onchange: e => {
+        const set = new Set(ev.activities||[]);
+        if (e.target.checked) set.add(a.id); else set.delete(a.id);
+        ev.activities = [...set]; markDirty();
+      }}), `${a.name}  (${a.id})`)),
+    el("div", { class: "muted", style: "font-size:11px;margin-top:4px" }, "none ticked = any activity here"),
+  ));
+
+  f.appendChild(el("label", {}, "Setup prose (shown before the outcome)"));
+  f.appendChild(el("textarea", { oninput: e => { ev.text = e.target.value; markDirty(); } }, ev.text || ""));
+
+  // requires / forbids — THE connections
+  f.appendChild(el("label", {}, "Requires (only fires if the player has ALL these flags)"));
+  f.appendChild(flagPicker(ev.requires || [], list => { ev.requires = list.length ? list : undefined; markDirty(); render(); }));
+  f.appendChild(el("label", {}, "Forbids (won't fire if the player has ANY of these)"));
+  f.appendChild(flagPicker(ev.forbids || [], list => { ev.forbids = list.length ? list : undefined; markDirty(); render(); }));
+
+  // shape
+  const shape = shapeOf(ev);
+  f.appendChild(el("label", {}, "Resolution"));
+  f.appendChild(el("div", { class: "row" },
+    ...["effect","check","choices"].map(s => el("button", {
+      class: "btn" + (shape === s ? " primary" : ""),
+      onclick: () => { setShape(ev, s); markDirty(); render(); }
+    }, s === "effect" ? "Flat outcome" : s === "check" ? "Hidden stat check" : "Player choice"))));
+
+  if (shape === "effect") {
+    f.appendChild(effectEditor(ev.effect, null, null));
+  } else if (shape === "check") {
+    f.appendChild(el("div", { class: "row", style: "margin-top:8px" },
+      el("div", {}, el("label", {}, "Stat checked (hidden)"),
+        el("select", { onchange: e => { ev.check.stat = e.target.value; markDirty(); } },
+          ...STATE.data.stats.map(s => el("option", { value: s, selected: ev.check.stat === s ? true : false }, s)))),
+      el("div", { style: "flex:0 0 90px" }, el("label", {}, "Difficulty"),
+        el("input", { type: "number", value: ev.check.dc, oninput: e => { ev.check.dc = parseInt(e.target.value,10)||1; markDirty(); } }))));
+    f.appendChild(effectEditor(ev.pass, null, "If they pass"));
+    f.appendChild(effectEditor(ev.fail, null, "If they fail"));
+  } else {
+    ev.choices.forEach((c, i) => {
+      const wrap = el("div", { class: "branch" },
+        el("h3", {}, `Choice ${i+1}`, ev.choices.length > 2 ? el("button", { class: "btn danger", style: "float:right;padding:1px 6px;font-size:10px", onclick: () => { ev.choices.splice(i,1); markDirty(); render(); } }, "remove") : null),
+        el("label", {}, "Button label (a plain action — never reveal stats)"),
+        el("input", { type: "text", value: c.label, oninput: e => { c.label = e.target.value; markDirty(); } }),
+        effectEditor(c.effect, null, null));
+      f.appendChild(wrap);
+    });
+    if (ev.choices.length < 3) f.appendChild(el("button", { class: "btn", style: "margin-top:6px", onclick: () => { ev.choices.push({ label: "New choice", effect: { text: "", outcome: "" } }); markDirty(); render(); } }, "+ choice"));
+  }
+
+  f.appendChild(el("div", { style: "margin-top:16px" },
+    el("button", { class: "btn danger", onclick: () => deleteEvent(ev) }, "Delete event")));
+  return f;
+}
+
+function setShape(ev, shape) {
+  delete ev.effect; delete ev.check; delete ev.pass; delete ev.fail; delete ev.choices;
+  if (shape === "effect") ev.effect = { text: "", outcome: "" };
+  else if (shape === "check") { ev.check = { stat: "will", dc: 4 }; ev.pass = { text: "", outcome: "" }; ev.fail = { text: "", outcome: "" }; }
+  else ev.choices = [{ label: "Option one", effect: { text: "", outcome: "" } }, { label: "Option two", effect: { text: "", outcome: "" } }];
+}
+
+function connectionsPanel(ev) {
+  const p = el("div", { class: "panel conn" }, el("h2", {}, "Connections"));
+  if (!ev) { p.appendChild(el("p", { class: "muted" }, "—")); return p; }
+  const sets = setterFlags(ev);
+  // what this unlocks
+  if (sets.length) {
+    sets.forEach(flag => {
+      const needers = allEvents().filter(e => (e.requires||[]).includes(flag) && e.id !== ev.id);
+      const blockers = allEvents().filter(e => (e.forbids||[]).includes(flag) && e.id !== ev.id);
+      p.appendChild(el("div", {}, "sets ", el("span", { class: "flag" }, flag)));
+      p.appendChild(el("ul", {},
+        ...needers.map(n => el("li", {}, "→ unlocks ", n.id)),
+        ...blockers.map(b => el("li", {}, "⊘ blocks ", b.id)),
+        (!needers.length && !blockers.length) ? el("li", { class: "muted" }, "nothing needs this yet") : null,
+      ));
+    });
+  }
+  // what unlocks this
+  (ev.requires||[]).forEach(flag => {
+    const setters = allEvents().filter(e => setterFlags(e).includes(flag));
+    p.appendChild(el("div", {}, "needs ", el("span", { class: "flag" }, flag)));
+    p.appendChild(el("ul", {}, ...(setters.length ? setters.map(s => el("li", {}, "← from ", s.id)) : [el("li", { class: "err" }, "nothing sets this!")])));
+  });
+  if (!sets.length && !(ev.requires||[]).length) p.appendChild(el("p", { class: "muted" }, "No connections. Set a flag (in an outcome) or add a requirement to wire this into the week."));
+  return p;
+}
+
+function validationPanel() {
+  const errs = validate();
+  const p = el("div", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Validation"));
+  if (!errs.length) p.appendChild(el("p", { class: "ok" }, "✓ All checks pass"));
+  else p.appendChild(el("ul", { class: "errlist" }, ...errs.slice(0, 30).map(e => el("li", {}, e))));
+  return p;
+}
+
+function addEvent() {
+  const loc = STATE.loc;
+  let n = locEvents(loc).length + 1;
+  let id = `${loc}_event${n}`;
+  while (allEvents().some(e => e.id === id)) { n++; id = `${loc}_event${n}`; }
+  const ev = { id, location: loc, activities: [], text: "Something happens.", effect: { text: "It resolves.", outcome: "did a thing." } };
+  locEvents(loc).push(ev);
+  STATE.sel = id; markDirty(); render();
+}
+function deleteEvent(ev) {
+  const arr = locEvents(STATE.loc);
+  const i = arr.findIndex(e => e.id === ev.id);
+  if (i >= 0) arr.splice(i, 1);
+  STATE.sel = null; markDirty(); render();
+}
+
+// ---- shell ----
+function render() {
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.view === STATE.view));
+  if (STATE.view === "map") renderMap(); else renderEdit();
+  refreshStatus();
+}
+
+async function save() {
+  const res = await fetch("/api/content", { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ locations: STATE.data.locations }) });
+  const body = await res.json();
+  const s = document.getElementById("status");
+  if (res.ok) { STATE.dirty = false; s.className = "ok"; s.textContent = "saved ✓"; document.getElementById("save").disabled = true; }
+  else { s.className = "err"; s.textContent = (body.errors ? body.errors[0] : body.error) || "save failed"; }
+}
+
+async function load() {
+  const res = await fetch("/api/content");
+  STATE.data = await res.json();
+  document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => { STATE.view = t.dataset.view; render(); }));
+  document.getElementById("save").addEventListener("click", save);
+  render();
+}
+load();
+</script>
+</body>
+</html>
