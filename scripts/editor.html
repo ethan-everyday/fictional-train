@@ -96,6 +96,7 @@
   <div class="tabs">
     <button class="tab active" data-view="map">Map</button>
     <button class="tab" data-view="edit">Edit</button>
+    <button class="tab" data-view="origins">Origins</button>
   </div>
   <div class="spacer"></div>
   <span id="status"></span>
@@ -138,7 +139,9 @@ function branchesOf(ev) {
 }
 function setterFlags(ev) { return branchesOf(ev).flatMap(b => b.flags || []); }
 function producibleFlags() {
-  const s = new Set(STATE.data.originFlags || []);
+  const s = new Set();
+  const o = STATE.data.origins || {};
+  for (const orig of [...(o.roles||[]), ...(o.backgrounds||[])]) if (orig.startFlag) s.add(orig.startFlag);
   for (const ev of allEvents()) setterFlags(ev).forEach(f => s.add(f));
   return s;
 }
@@ -480,16 +483,58 @@ function deleteEvent(ev) {
   STATE.sel = null; markDirty(); render();
 }
 
+// ---- ORIGINS view ----
+function originCard(o, isRole) {
+  o.bonus = o.bonus || {};
+  return el("div", { class: "branch" },
+    el("div", { class: "row" },
+      el("div", {}, el("label", {}, isRole ? "Role" : "Background"),
+        el("input", { type: "text", value: o.name, oninput: e => { o.name = e.target.value; markDirty(); } })),
+      el("div", { style: "flex:0 0 150px" }, el("label", {}, "Starting flag (optional)"),
+        el("input", { type: "text", value: o.startFlag || "", placeholder: "none",
+          oninput: e => { const v = e.target.value.trim().toLowerCase().replace(/\s+/g,"_"); if (v) o.startFlag = v; else delete o.startFlag; markDirty(); } })),
+    ),
+    el("label", {}, "Description"),
+    el("input", { type: "text", value: o.blurb, oninput: e => { o.blurb = e.target.value; markDirty(); } }),
+    el("label", {}, "Stat bonuses"),
+    el("div", { class: "stats-grid" },
+      ...STATE.data.stats.map(stat => el("div", {},
+        el("label", {}, stat.slice(0,4)),
+        el("input", { type: "number", value: o.bonus[stat] ?? 0, oninput: e => {
+          const v = parseInt(e.target.value, 10) || 0;
+          if (v === 0) delete o.bonus[stat]; else o.bonus[stat] = v;
+          markDirty();
+        }})))),
+  );
+}
+
+function renderOrigins() {
+  const view = document.getElementById("view");
+  view.innerHTML = "";
+  const o = STATE.data.origins;
+  const roles = el("div", { class: "panel" }, el("h2", {}, "Roles (the calling — bigger stat shaper)"),
+    ...o.roles.map(r => originCard(r, true)));
+  const bgs = el("div", { class: "panel" }, el("h2", {}, "Backgrounds (where they came from)"),
+    ...o.backgrounds.map(b => originCard(b, false)));
+  view.appendChild(el("div", {},
+    el("p", { class: "muted", style: "margin:0 0 10px" },
+      "Players pick one role × one background; base stats = floor of 1 + these bonuses. A starting flag is carried into the week (and can gate events)."),
+    el("div", { style: "display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start" }, roles, bgs),
+  ));
+}
+
 // ---- shell ----
 function render() {
   document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.view === STATE.view));
-  if (STATE.view === "map") renderMap(); else renderEdit();
+  if (STATE.view === "map") renderMap();
+  else if (STATE.view === "origins") renderOrigins();
+  else renderEdit();
   refreshStatus();
 }
 
 async function save() {
   const res = await fetch("/api/content", { method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ locations: STATE.data.locations }) });
+    body: JSON.stringify({ locations: STATE.data.locations, origins: STATE.data.origins }) });
   const body = await res.json();
   const s = document.getElementById("status");
   if (res.ok) { STATE.dirty = false; s.className = "ok"; s.textContent = "saved ✓"; document.getElementById("save").disabled = true; }

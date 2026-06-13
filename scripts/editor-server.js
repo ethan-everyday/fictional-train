@@ -13,6 +13,7 @@ const path = require("path");
 const PORT = Number(process.env.EDITOR_PORT) || 4100;
 const ROOT = path.join(__dirname, "..");
 const DATA_DIR = path.join(ROOT, "lib", "game", "content", "data");
+const ORIGINS_FILE = path.join(DATA_DIR, "origins.json");
 const EDITOR_HTML = path.join(__dirname, "editor.html");
 
 const LOCATIONS = [
@@ -36,7 +37,7 @@ const STAT_CAP = 10;
 
 // --- content contract (mirror of tests/content.test.ts) -------------
 
-function producibleFlags(locations) {
+function producibleFlags(locations, origins) {
   const flags = new Set();
   const addEffect = (e) => e && e.flags && e.flags.forEach((f) => flags.add(f));
   for (const loc of Object.values(locations)) {
@@ -47,8 +48,10 @@ function producibleFlags(locations) {
       (ev.choices ?? []).forEach((c) => addEffect(c.effect));
     }
   }
-  // Origin start-flags the engine can also set.
-  ["noble_born", "outsider"].forEach((f) => flags.add(f));
+  // Origin start-flags the character can begin the week carrying.
+  for (const o of [...(origins?.roles ?? []), ...(origins?.backgrounds ?? [])]) {
+    if (o.startFlag) flags.add(o.startFlag);
+  }
   return flags;
 }
 
@@ -58,7 +61,7 @@ function branches(ev) {
   return ev.effect ? [ev.effect] : [];
 }
 
-function validate(locations) {
+function validate(locations, origins) {
   const errors = [];
   const allEvents = [];
   const allActivities = [];
@@ -78,7 +81,19 @@ function validate(locations) {
     errors.push("duplicate activity ids exist");
   }
 
-  const producible = producibleFlags(locations);
+  // Origins: the game assumes exactly 6 roles and 6 backgrounds.
+  if (origins) {
+    if ((origins.roles ?? []).length !== 6) errors.push(`must have exactly 6 roles (has ${(origins.roles ?? []).length})`);
+    if ((origins.backgrounds ?? []).length !== 6) errors.push(`must have exactly 6 backgrounds (has ${(origins.backgrounds ?? []).length})`);
+    for (const o of [...(origins.roles ?? []), ...(origins.backgrounds ?? [])]) {
+      if (!o.name || !o.name.trim()) errors.push(`an origin (${o.id || "?"}) has no name`);
+      for (const stat of Object.keys(o.bonus ?? {})) {
+        if (!STAT_IDS.includes(stat)) errors.push(`origin ${o.id}: unknown stat "${stat}"`);
+      }
+    }
+  }
+
+  const producible = producibleFlags(locations, origins);
 
   for (const ev of allEvents) {
     if (ev.location !== ev.loc) {
@@ -138,11 +153,18 @@ function readContent() {
   return out;
 }
 
-function writeContent(locations) {
+function readOrigins() {
+  return JSON.parse(fs.readFileSync(ORIGINS_FILE, "utf8"));
+}
+
+function writeContent(locations, origins) {
   for (const loc of LOCATIONS) {
     if (!locations[loc]) continue;
     const file = path.join(DATA_DIR, `${loc}.json`);
     fs.writeFileSync(file, JSON.stringify(locations[loc], null, 2) + "\n");
+  }
+  if (origins) {
+    fs.writeFileSync(ORIGINS_FILE, JSON.stringify(origins, null, 2) + "\n");
   }
 }
 
@@ -160,7 +182,8 @@ const server = http.createServer((req, res) => {
   if (req.method === "GET" && req.url === "/api/content") {
     try {
       const locations = readContent();
-      return send(res, 200, { locations, stats: STAT_IDS, statCap: STAT_CAP, originFlags: ["noble_born", "outsider"] });
+      const origins = readOrigins();
+      return send(res, 200, { locations, origins, stats: STAT_IDS, statCap: STAT_CAP });
     } catch (err) {
       return send(res, 500, { error: String(err.message ?? err) });
     }
@@ -169,16 +192,18 @@ const server = http.createServer((req, res) => {
     let raw = "";
     req.on("data", (c) => (raw += c));
     req.on("end", () => {
-      let locations;
+      let locations, origins;
       try {
-        locations = JSON.parse(raw).locations;
+        const parsed = JSON.parse(raw);
+        locations = parsed.locations;
+        origins = parsed.origins;
       } catch {
         return send(res, 400, { error: "bad JSON" });
       }
-      const errors = validate(locations);
+      const errors = validate(locations, origins);
       if (errors.length) return send(res, 400, { errors });
       try {
-        writeContent(locations);
+        writeContent(locations, origins);
         return send(res, 200, { ok: true });
       } catch (err) {
         return send(res, 500, { error: String(err.message ?? err) });

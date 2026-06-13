@@ -95,6 +95,8 @@ Ground rules: multiplayer goes through `/lib/game`, all content is data in
 
 ## Editing the story (visual editor)
 
+Double-click **`edit-story.bat`**, or:
+
 ```bash
 npm run editor      # → http://localhost:4100
 ```
@@ -109,9 +111,12 @@ A dev-only tool (never shipped) for laying out the story:
   changes, and the flags it sets. Wire connections by ticking **Requires**
   / **Forbids** flags; the **Connections** panel shows, for the selected
   event, exactly what it unlocks and what unlocks it.
+- **Origins** — edit the 6 roles and 6 backgrounds: name, description, stat
+  bonuses, and the starting flag each carries (which can gate events).
 - **Live validation** mirrors the build contract (no orphan prerequisites,
-  valid shapes, dc within cap…). **Save** writes the content JSON the game
-  imports — and refuses to save anything that would fail the build.
+  valid shapes, dc within cap, 6 roles / 6 backgrounds…). **Save** writes the
+  content + origins JSON the game imports — and refuses to save anything
+  that would fail the build.
 
 ## Writing content (by hand)
 

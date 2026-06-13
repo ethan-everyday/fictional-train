@@ -6,6 +6,9 @@ import type {
   StatId,
 } from "./types";
 import { STAT_CAP } from "./constants";
+// Roles + backgrounds are data, editable in the story editor (the Origins
+// tab) alongside the events. The game imports them here.
+import origins from "./content/data/origins.json";
 
 /**
  * Character creation: every player picks a ROLE (their calling — the bigger
@@ -18,85 +21,8 @@ import { STAT_CAP } from "./constants";
 /** Every stat starts here before role and background bonuses. */
 const STAT_FLOOR = 1;
 
-export const ROLES: RoleDef[] = [
-  {
-    id: "knight",
-    name: "Knight",
-    blurb: "Sworn to the sword. Doors open to steel and a hard stare.",
-    bonus: { strength: 3, will: 2 },
-  },
-  {
-    id: "scholar",
-    name: "Scholar",
-    blurb: "Letters, ledgers, and the patience to read a room.",
-    bonus: { intelligence: 3, craft: 2 },
-  },
-  {
-    id: "merchant",
-    name: "Merchant",
-    blurb: "Coin is a language, and you are fluent.",
-    bonus: { wealth: 3, intelligence: 2 },
-  },
-  {
-    id: "outlaw",
-    name: "Outlaw",
-    blurb: "Quick hands, quicker exits, no master but the night.",
-    bonus: { agility: 3, will: 2 },
-  },
-  {
-    id: "cleric",
-    name: "Cleric",
-    blurb: "The church's word carries where coin and steel cannot.",
-    bonus: { will: 3, intelligence: 2 },
-  },
-  {
-    id: "smith",
-    name: "Smith",
-    blurb: "Honest craft and an arm like a trip-hammer.",
-    bonus: { craft: 3, strength: 2 },
-  },
-];
-
-export const BACKGROUNDS: BackgroundDef[] = [
-  {
-    id: "noble",
-    name: "Noble-born",
-    blurb: "A name that turns heads, and a purse to match.",
-    bonus: { wealth: 2, will: 1 },
-    startFlag: "noble_born",
-  },
-  {
-    id: "peasant",
-    name: "Peasant",
-    blurb: "Raised on the land. Strong back, longer memory.",
-    bonus: { strength: 2, craft: 1 },
-  },
-  {
-    id: "foreigner",
-    name: "Foreigner",
-    blurb: "New to Hollowbrook, and you see what locals miss.",
-    bonus: { intelligence: 1, agility: 1, wealth: 1 },
-    startFlag: "outsider",
-  },
-  {
-    id: "orphan",
-    name: "Orphan",
-    blurb: "Brought yourself up. Light-footed and hard to rattle.",
-    bonus: { agility: 2, will: 1 },
-  },
-  {
-    id: "guild",
-    name: "Guild-raised",
-    blurb: "Apprenticed young; a trade and the gossip that comes with it.",
-    bonus: { craft: 2, intelligence: 1 },
-  },
-  {
-    id: "soldier",
-    name: "Soldier's child",
-    blurb: "Camp-raised: handy, watchful, and used to marching orders.",
-    bonus: { strength: 1, will: 1, agility: 1 },
-  },
-];
+export const ROLES = origins.roles as RoleDef[];
+export const BACKGROUNDS = origins.backgrounds as BackgroundDef[];
 
 const STAT_IDS: StatId[] = [
   "intelligence",
