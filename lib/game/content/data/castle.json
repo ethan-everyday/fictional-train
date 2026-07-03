@@ -1,105 +1,168 @@
 {
+  "meta": {
+    "name": "The Castle",
+    "blurb": "The lord behind his walls, if they'll let you in."
+  },
   "activities": [
     {
-      "id": "castle_gate",
+      "id": "castle_tilt",
       "location": "castle",
-      "name": "Petition at the gate",
-      "blurb": "Stand before the portcullis and beg the lord an audience while there is still time to be heard."
+      "name": "Tilt in the yard",
+      "blurb": "The garrison drills at dusk and takes the measure of any hand that joins them. The yard remembers who stood in it."
     },
     {
-      "id": "castle_yard",
+      "id": "castle_banquet",
       "location": "castle",
-      "name": "Work the muster yard",
-      "blurb": "The garrison drills and the walls want mending. Idle hands are watched here, and remembered."
+      "name": "Join the banquet",
+      "blurb": "The lord feasts nightly to prove there is nothing to fear. Sit low, eat carefully, and watch what the great pretend not to see."
     },
     {
-      "id": "castle_vault",
+      "id": "castle_gossip",
       "location": "castle",
-      "name": "Slip into the lower halls",
-      "blurb": "Beneath the keep lie the lord's records, and the things he keeps from the light."
+      "name": "Gossip with the staff",
+      "blurb": "The steward and the servants know every stone of the keep — and which doors the lord pretends are not there."
     }
   ],
   "events": [
     {
-      "id": "castle_turned_away",
+      "id": "castle_tilt_bouts",
       "location": "castle",
       "activities": [
-        "castle_gate"
+        "castle_tilt"
       ],
-      "forbids": [
-        "castle_lord_audience",
-        "met_steward"
-      ],
-      "maxWeek": 3,
-      "weight": 3,
-      "text": "You give your name at the gate and the guards weigh your foreign cloth and your foreign face and find nothing in either worth raising the bar for. The town at your back sleeps. The smoke on the horizon is a rumour the castle has not yet chosen to believe.",
-      "effect": {
-        "text": "You pass the evening on the cold side of the portcullis, learning only that the castle is very practised at saying no, and means to keep saying it until the screaming starts.",
-        "outcome": "was turned away at the castle gate, none the wiser.",
-        "stats": {
-          "will": 1
+      "repeatable": true,
+      "weight": 2,
+      "text": "Each evening the captain runs bouts in the muster yard — quintain, staves, wrestling in the churned mud — to keep his garrison from thinking about the horizon. Strangers may try their arm. The men watch the way soldiers watch, keeping score of everything.",
+      "choices": [
+        {
+          "label": "Ride at the quintain",
+          "check": {
+            "stat": "agility",
+            "dc": 4
+          },
+          "pass": {
+            "text": "You take the crossbar's swing on the turn and put the point true, three passes running. The yard gives you the low whistle it saves for its own, and the captain asks your name — and, more to the point, remembers it.",
+            "outcome": "rode the quintain clean and won a name in the muster yard.",
+            "stats": {
+              "agility": 1,
+              "will": 1
+            },
+            "flags": [
+              "castle_yard_name"
+            ]
+          },
+          "fail": {
+            "text": "The sandbag takes you across the shoulders on the first pass and puts you in the mud on the second. The garrison laughs, but not unkindly — every man of them has eaten that same mud. You get up, and getting up counts for something here.",
+            "outcome": "was dumped in the mud by the quintain, and got up again.",
+            "stats": {
+              "agility": 1
+            }
+          }
+        },
+        {
+          "label": "Wrestle the garrison's champion",
+          "check": {
+            "stat": "strength",
+            "dc": 5
+          },
+          "pass": {
+            "text": "He is a slab of a man with a neck like a gatepost, and you put him on his back in front of God and the whole yard. The silence lasts a heartbeat; then the garrison roars, and the champion himself hauls you up by the wrist and names you to his mates.",
+            "outcome": "threw the garrison's champion in the muster yard.",
+            "stats": {
+              "strength": 1,
+              "will": 1
+            },
+            "flags": [
+              "castle_yard_name"
+            ]
+          },
+          "fail": {
+            "text": "He folds you in half and sets you down almost gently, the way a man puts away a chair. You breathe mud awhile. But you took three falls without quitting, and the yard marks that too, in its way.",
+            "outcome": "took three falls from the garrison's champion and stayed for a fourth.",
+            "stats": {
+              "strength": 1
+            }
+          }
+        },
+        {
+          "label": "Wager on the bouts instead",
+          "random": [
+            {
+              "weight": 2,
+              "effect": {
+                "text": "You read the form like scripture — the old soldier's economy against the young one's temper — and your coin comes home doubled. The losers pay up sourly. Soldiers always pay; it is the one law they keep.",
+                "outcome": "read the bouts truly and doubled a wager in the yard.",
+                "stats": {
+                  "wealth": 1
+                }
+              }
+            },
+            {
+              "weight": 1,
+              "effect": {
+                "text": "Your man is winning right up until he steps in a wheel-rut, and the bout ends with his face in the mud and your coin in a pikeman's fist. The garrison agrees, cheerfully, that this is the funniest thing the week has yet produced.",
+                "outcome": "lost a wager on the bouts to a wheel-rut and a laughing pikeman.",
+                "stats": {
+                  "wealth": -1
+                }
+              }
+            }
+          ]
         }
-      }
+      ]
     },
     {
-      "id": "castle_lord_audience",
+      "id": "castle_mend_walls",
       "location": "castle",
       "activities": [
-        "castle_gate"
-      ],
-      "requires": [
-        "met_steward"
+        "castle_tilt"
       ],
       "forbids": [
-        "castle_lord_audience"
+        "walls_repaired"
       ],
       "minWeek": 2,
-      "maxWeek": 5,
-      "weight": 5,
-      "text": "You give the steward's name and the gate grinds open at last. The hall is warm and the lord is unafraid; he has heard the whispers of distant ruin and judged them a beggar's lie told for a seat at his table. You have one breath to make him believe what is coming.",
+      "weight": 2,
+      "text": "The bouts end early tonight: the captain has found the old curtain wall sound in the songs and rotten in fact — a breach above the postern stopped with brush and prayer, the mortar gone to sand. The mason is three weeks dead of the flux and his apprentices are children. What gets mended now, you mend.",
       "check": {
-        "stat": "will",
+        "stat": "craft",
         "dc": 5
       },
       "pass": {
-        "text": "You speak of the smoke, the silent roads, the dying you stepped over on the crossing, and you do not flinch from his contempt. Something in your certainty reaches him under the scorn. He does not thank you, but he names you to the steward as one to be heard again.",
-        "outcome": "won the lord's ear and a standing welcome past the gate.",
+        "text": "You scaffold the breach and lay stone honestly, course on course, until the wall above the postern would turn a battering-ram. The captain walks the parapet, leans his whole weight against your work, and says nothing — which, from him, is a hymn of praise. The yard knows your name by morning.",
+        "outcome": "closed the breach in the curtain wall with honest stone.",
         "stats": {
-          "will": 1,
-          "intelligence": 1
+          "craft": 1,
+          "strength": 1
         },
         "flags": [
-          "castle_lord_audience"
+          "walls_repaired",
+          "castle_yard_name"
         ]
       },
       "fail": {
-        "text": "The lord laughs you down before you are half done. Foreigners always arrive with an end of the world tucked under one arm, he says, the better to be fed. The steward walks you out, and does not look away when you speak of the dead.",
-        "outcome": "was laughed out of the lord's hall but left a doubt behind.",
+        "text": "You patch what you can reach before the light fails, and the bad mortar beats the rest. The breach is narrower than it was, but a determined man could still worm through it by dark — and determined men are precisely what is grinding toward the gate.",
+        "outcome": "narrowed the breach but could not close it before dark.",
         "stats": {
-          "intelligence": 1
-        },
-        "flags": [
-          "castle_lord_audience"
-        ]
+          "craft": 1
+        }
       }
     },
     {
       "id": "castle_rally_garrison",
       "location": "castle",
       "activities": [
-        "castle_gate",
-        "castle_yard"
+        "castle_tilt"
       ],
       "requires": [
-        "castle_lord_audience"
+        "castle_yard_name"
       ],
       "forbids": [
         "garrison_rallied"
       ],
       "minWeek": 3,
       "maxWeek": 6,
-      "weight": 4,
-      "text": "The lord will not stir, but the captain of the guard has seen what idle men become when fear arrives unled. Low, away from his master's hearing, he asks whether you will help him put backbone into a garrison that has not drawn steel in earnest in twenty years.",
+      "weight": 2,
+      "text": "The captain has watched you in the yard, and now he draws you aside, low, away from his master's hearing. Fear is coming up the road faster than any warband, he says, and he holds a garrison that has not drawn steel in earnest in twenty years. He asks whether you will help him put backbone into it before it is asked to die well.",
       "check": {
         "stat": "strength",
         "dc": 5
@@ -113,7 +176,10 @@
         },
         "flags": [
           "garrison_rallied"
-        ]
+        ],
+        "threats": {
+          "war": -1
+        }
       },
       "fail": {
         "text": "Half the muster melts away the moment the captain turns his back, and you cannot be everywhere at once. You harden the few who stayed, but the captain looks at the thinning yard and you both reckon, silently, what that emptiness will cost when the warband comes.",
@@ -124,58 +190,20 @@
       }
     },
     {
-      "id": "castle_mend_walls",
-      "location": "castle",
-      "activities": [
-        "castle_yard"
-      ],
-      "forbids": [
-        "walls_repaired"
-      ],
-      "minWeek": 2,
-      "maxWeek": 6,
-      "weight": 3,
-      "text": "The old curtain wall is sound in the songs and rotten in fact: a breach above the postern stopped with brush and prayer, the mortar gone to sand. The mason is three weeks dead of the flux and his apprentices are children. What gets mended now, you mend.",
-      "check": {
-        "stat": "craft",
-        "dc": 5
-      },
-      "pass": {
-        "text": "You scaffold the breach and lay stone honestly, course on course, until the wall above the postern would turn a battering-ram. The captain walks the parapet, leans his whole weight against your work, and says nothing — which, from him, is a hymn of praise.",
-        "outcome": "closed the breach in the curtain wall with honest stone.",
-        "stats": {
-          "craft": 1,
-          "strength": 1
-        },
-        "flags": [
-          "walls_repaired"
-        ]
-      },
-      "fail": {
-        "text": "You patch what you can reach before the light fails, and the bad mortar beats the rest. The breach is narrower than it was, but a determined man could still worm through it by dark — and determined men are precisely what is grinding toward the gate.",
-        "outcome": "narrowed the breach but could not close it before dark.",
-        "stats": {
-          "craft": 1
-        }
-      }
-    },
-    {
       "id": "castle_bar_the_gate",
       "location": "castle",
       "activities": [
-        "castle_yard",
-        "castle_gate"
+        "castle_tilt"
       ],
       "requires": [
-        "garrison_rallied"
+        "walls_repaired"
       ],
       "forbids": [
         "gate_secured"
       ],
       "minWeek": 5,
-      "maxWeek": 7,
-      "weight": 4,
-      "text": "With the garrison standing to, the captain turns to the great gate itself. The portcullis chain is fouled, the drawbar split, and refugees crowd the approach so thick the iron could never drop clean in a rush. It must be made to shut, and shut fast, before the horsemen reach it.",
+      "weight": 3,
+      "text": "With the breach made stone again, the captain turns to the great gate itself. The portcullis chain is fouled, the drawbar split, and refugees crowd the approach so thick the iron could never drop clean in a rush. It must be made to shut, and shut fast, before the horsemen reach it.",
       "check": {
         "stat": "craft",
         "dc": 6
@@ -200,10 +228,243 @@
       }
     },
     {
+      "id": "castle_last_stand",
+      "location": "castle",
+      "activities": [
+        "castle_tilt"
+      ],
+      "requires": [
+        "garrison_rallied",
+        "gate_secured"
+      ],
+      "minWeek": 7,
+      "weight": 4,
+      "text": "The warband breaks against the wall: a tide of dying men with nothing left to lose and a fury in their ruined faces that frightens even the captain. But the gate is barred fast, the breach is stone, and the garrison stands where it was taught to stand. This is the night everything you mended is asked the one question that has ever mattered.",
+      "check": {
+        "stat": "strength",
+        "dc": 7
+      },
+      "pass": {
+        "text": "They dash themselves on St Sebastian like the sea on a cliff. The fast gate drops on the first rush; the mended wall turns the second; the rallied garrison holds the third until there is no fourth left to throw. By dawn the warband is carrion in the ditch and the town at your back still breathes. You did this.",
+        "outcome": "held the wall through the warband's last assault and saved the town.",
+        "stats": {
+          "strength": 1,
+          "will": 2
+        },
+        "flags": [
+          "town_held"
+        ],
+        "threats": {
+          "war": -2
+        }
+      },
+      "fail": {
+        "text": "You hold — but it takes everything. The gate jams half-down, men you drilled die in the gap, and you fight in the breach by torchlight until your arms hang like lead and the stone runs slick beneath your boots. The warband is thrown back at the last, but the grey dawn shows you faces among the dead you knew by name.",
+        "outcome": "threw back the warband at the wall, but the cost was carved into the dawn.",
+        "stats": {
+          "will": 2
+        }
+      }
+    },
+    {
+      "id": "castle_low_table",
+      "location": "castle",
+      "activities": [
+        "castle_banquet",
+        "castle_gossip"
+      ],
+      "repeatable": true,
+      "weight": 3,
+      "text": "The lord feasts his household nightly now, to prove to the town that nothing is wrong — and a presentable stranger can always find a place at the low end of the table, between the chaplain's empty seat and the servants' door. Below stairs the kitchens sweat; above, the plate goes round and round while the market stalls stand bare.",
+      "choices": [
+        {
+          "label": "Gorge yourself and pocket what you can",
+          "random": [
+            {
+              "weight": 2,
+              "effect": {
+                "text": "You eat like a soldier before a march and go out with a goose leg in one sleeve and honeyed figs in the other, and no one marks you — the whole table is doing the same, only better dressed about it. Outside the gate, the queue for the almoner's scraps watches you pass. The keep eats; the town does not.",
+                "outcome": "gorged at the lord's table and carried delicacies out past a starving town.",
+                "stats": {
+                  "wealth": 1
+                },
+                "threats": {
+                  "starvation": 1
+                }
+              }
+            },
+            {
+              "weight": 1,
+              "effect": {
+                "text": "The seneschal's hand closes on your wrist with a fig still in it. He does not call the guard — the lord dislikes scenes — but you are walked to the door between two servants like a naughty child, and the low table will be watching your hands from now on. The food you ate sits in you like shame. Outside, the queue for scraps has not moved.",
+                "outcome": "was caught pocketing the lord's sweetmeats and marched out by the seneschal.",
+                "stats": {
+                  "will": -1
+                },
+                "threats": {
+                  "starvation": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "label": "Eat sparingly and carry scraps to the gate",
+          "effect": {
+            "text": "You eat enough to pass and slide the rest into a cloth — bread, the heel of a cheese, half a fowl the lord's cousin waved away — and hand it through the postern to whoever is quickest. It is nothing, set against the town's hunger. It is also more than anyone else at that table did tonight.",
+            "outcome": "ate sparingly at the banquet and carried the scraps out to the hungry.",
+            "stats": {
+              "will": 1
+            }
+          }
+        },
+        {
+          "label": "Keep your cup full and your ears open",
+          "effect": {
+            "text": "You drink slowly and listen hard, below the music: which knight has quietly sent his family inland, which granary door has a new lock, what the lord says when he thinks the hall too loud to be heard in. The keep talks over food the way the tavern talks over ale — it just lies better.",
+            "outcome": "worked the lord's table and came away with the keep's quiet fears.",
+            "stats": {
+              "intelligence": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "castle_lord_audience",
+      "location": "castle",
+      "activities": [
+        "castle_banquet"
+      ],
+      "requires": [
+        "met_steward"
+      ],
+      "forbids": [
+        "castle_lord_audience"
+      ],
+      "minWeek": 2,
+      "maxWeek": 5,
+      "weight": 3,
+      "text": "You give the steward's name at the door and are seated, to your own surprise, within the lord's hearing. He is warm, loud, entirely unafraid; he has heard the whispers of distant ruin and judged them a beggar's lie told for a seat at his table. Between the fish and the fowl, you have one breath to make him believe what is coming.",
+      "check": {
+        "stat": "will",
+        "dc": 5
+      },
+      "pass": {
+        "text": "You speak of the smoke, the silent roads, the dying you stepped over on the crossing, and you do not flinch from his contempt. Something in your certainty reaches him under the scorn. He does not thank you, but he names you to the steward as one to be heard again.",
+        "outcome": "won the lord's ear at his own table and a standing welcome in the hall.",
+        "stats": {
+          "will": 1,
+          "intelligence": 1
+        },
+        "flags": [
+          "castle_lord_audience"
+        ]
+      },
+      "fail": {
+        "text": "The lord laughs you down before you are half done. Foreigners always arrive with an end of the world tucked under one arm, he says, the better to be fed. The steward walks you out, and does not look away when you speak of the dead.",
+        "outcome": "was laughed down the lord's table but left a doubt behind.",
+        "stats": {
+          "intelligence": 1
+        },
+        "flags": [
+          "castle_lord_audience"
+        ]
+      }
+    },
+    {
+      "id": "castle_banquet_stores",
+      "location": "castle",
+      "activities": [
+        "castle_banquet"
+      ],
+      "requires": [
+        "castle_lord_audience"
+      ],
+      "forbids": [
+        "castle_stores_opened"
+      ],
+      "minWeek": 3,
+      "weight": 3,
+      "text": "The lord's granaries are full — everyone at the table knows it, and no one says it, while bread is fought over down the hill and mothers boil nettles. Tonight he is in an expansive mood, boasting of his stores the way a dragon counts. If ever there is a moment to shame him into opening them, it is now, in front of every knight and cousin whose good opinion he feeds on.",
+      "check": {
+        "stat": "will",
+        "dc": 6
+      },
+      "pass": {
+        "text": "You rise with your cup and thank him — loudly, gracefully — for what you then describe: the lord's own grain, given to his town in its hour of need, a legend in the making. You lay your own coin on the cloth to start the subscription. He cannot unmake the story with the whole hall watching, and by morning the granary doors stand open under guard, and the queue outside is fed.",
+        "outcome": "shamed the lord into opening his granaries before the whole hall.",
+        "stats": {
+          "will": 1,
+          "wealth": -1
+        },
+        "flags": [
+          "castle_stores_opened"
+        ],
+        "threats": {
+          "starvation": -1
+        }
+      },
+      "fail": {
+        "text": "You misjudge the room by a hair. The lord takes your meaning before you are done dressing it, and his smile goes to glass. The table talks brightly over the silence where your toast died, and the steward will not meet your eye. The granaries stay locked, and the nettle-pots stay on the fires down the hill.",
+        "outcome": "misplayed a toast and the lord's granaries stayed locked.",
+        "stats": {
+          "intelligence": 1
+        }
+      }
+    },
+    {
+      "id": "castle_lord_descends",
+      "location": "castle",
+      "activities": [
+        "castle_banquet"
+      ],
+      "requires": [
+        "castle_lord_audience"
+      ],
+      "minWeek": 6,
+      "weight": 4,
+      "text": "The lord has gone mad behind his walls. With the warband on the horizon and the dead piling in the streets, he has thrown his cellars open to a chosen few and barred them to the rest — and what turns on the spit in the great hall is not the venison the steward names it. He sends for you by name: sit at my table, foreigner, and you'll not be served upon it.",
+      "choices": [
+        {
+          "label": "Take your place at the lord's table",
+          "effect": {
+            "text": "You sit, and you eat, and you do not ask. The lord laughs and calls you kin, and pledges you a place on the boat his men keep at the quay against the end of all things. Somewhere behind your eyes the red gaze warms with approval, and somewhere beneath the town, something turns over in its sleep. You have chosen the side that means to outlast the light.",
+            "outcome": "sat at the lord's cannibal table and bought a place on his boat.",
+            "stats": {
+              "wealth": 1,
+              "will": -1
+            },
+            "flags": [
+              "turned_to_darkness",
+              "passage_secured"
+            ],
+            "threats": {
+              "devils": 1
+            }
+          }
+        },
+        {
+          "label": "Turn the captain against the lord",
+          "effect": {
+            "text": "You carry what you saw to the captain and the steward both, and between the three of you the mad lord is put under guard in his own befouled hall before he can do worse. It costs you blood and two of the captain's men, and the keep is yours to defend now — leaderless, lit by a burning hall, but human still.",
+            "outcome": "broke the lord's mad feast and took the leaderless keep for the living.",
+            "stats": {
+              "will": 2,
+              "strength": 1
+            },
+            "flags": [
+              "garrison_rallied"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "castle_vault_glimpse",
       "location": "castle",
       "activities": [
-        "castle_vault"
+        "castle_gossip"
       ],
       "requires": [
         "met_steward"
@@ -214,7 +475,7 @@
       "minWeek": 2,
       "maxWeek": 6,
       "weight": 3,
-      "text": "The steward, harried and grey before his time, needs a quiet pair of hands in the lower halls and takes the Church's word on yours. He gives you a lamp and a key to the muniment room, where the lord keeps the deeds and reckonings of three hundred years — and one cabinet he tells you, flatly, never to open.",
+      "text": "The servants talk, and what they say reaches the steward: a stranger who listens more than they drink. Harried and grey before his time, he needs a quiet pair of hands in the lower halls and takes the household's word on yours. He gives you a lamp and a key to the muniment room, where the lord keeps the deeds and reckonings of three hundred years — and one cabinet he tells you, flatly, never to open.",
       "effect": {
         "text": "You sort the lord's papers by lamplight and let your eye drift, as the red-eyed thing on the crossing surely meant you to. The locked cabinet pulls at you. You note its iron, its hinges, the hour the steward climbs the stair to bed. You will come back when no one is counting heads.",
         "outcome": "won the run of the lord's muniment room and marked the cabinet none may open.",
@@ -231,7 +492,7 @@
       "id": "castle_vault_records",
       "location": "castle",
       "activities": [
-        "castle_vault"
+        "castle_gossip"
       ],
       "requires": [
         "castle_vault_access"
@@ -269,8 +530,7 @@
       "id": "castle_steward_doubts",
       "location": "castle",
       "activities": [
-        "castle_vault",
-        "castle_gate"
+        "castle_gossip"
       ],
       "requires": [
         "relic_clue"
@@ -287,8 +547,8 @@
         "dc": 6
       },
       "pass": {
-        "text": "You set the founders' rite beside what the eyes told you on the crossing, and the two halves close like a broken seal made whole. The steward goes white, then resolute, and pledges you the run of the keep and his silence with it. Somewhere far off, you feel the patron's regard settle on you like a cold hand at the nape.",
-        "outcome": "matched the founders' rite to the Herald's vision and won the steward's secret aid.",
+        "text": "You set the founders' rite beside what the eyes told you on the crossing, and the two halves close like a broken seal made whole. The steward goes white, then resolute, and that same night the two of you say the old words over the seal in the under-croft, the way the founders said them. Something far beneath the town pulls back its hand — and somewhere behind your eyes, the red gaze narrows. You hold what St Sebastian truly guards, and it holds a little longer because of you.",
+        "outcome": "matched the founders' rite to the Herald's vision and sealed the dark a while longer.",
         "stats": {
           "intelligence": 1,
           "will": 1
@@ -296,95 +556,16 @@
         "flags": [
           "herald_favour",
           "secret_found"
-        ]
+        ],
+        "threats": {
+          "devils": -1
+        }
       },
       "fail": {
         "text": "You cannot force the pieces to meet, not yet, and the steward's hope curdles to caution before your eyes. He folds the vellum back into his sleeve and bids you breathe no word of it to anyone, least of all the lord — who has lately begun to laugh at things that are not funny.",
         "outcome": "could not yet read the founders' rite and was sworn to silence.",
         "stats": {
           "intelligence": 1
-        }
-      }
-    },
-    {
-      "id": "castle_lord_descends",
-      "location": "castle",
-      "activities": [
-        "castle_gate",
-        "castle_vault"
-      ],
-      "requires": [
-        "castle_lord_audience"
-      ],
-      "minWeek": 6,
-      "weight": 4,
-      "text": "The lord has gone mad behind his walls. With the warband on the horizon and the dead piling in the streets, he has thrown his cellars open to a chosen few and barred them to the rest — and what turns on the spit in the great hall is not the venison the steward names it. He sends for you by name: sit at my table, foreigner, and you'll not be served upon it.",
-      "choices": [
-        {
-          "label": "Take your place at the lord's table",
-          "effect": {
-            "text": "You sit, and you eat, and you do not ask. The lord laughs and calls you kin, and pledges you a place on the boat his men keep at the quay against the end of all things. Whatever crawls up from beneath the town tonight, you have chosen the side that means to outlast it.",
-            "outcome": "sat at the lord's cannibal table and bought a place on his boat.",
-            "stats": {
-              "wealth": 1,
-              "will": -1
-            },
-            "flags": [
-              "turned_to_darkness",
-              "passage_secured"
-            ]
-          }
-        },
-        {
-          "label": "Turn the captain against the lord",
-          "effect": {
-            "text": "You carry what you saw to the captain and the steward both, and between the three of you the mad lord is put under guard in his own befouled hall before he can do worse. It costs you blood and two of the captain's men, and the keep is yours to defend now — leaderless, lit by a burning hall, but human still.",
-            "outcome": "broke the lord's mad feast and took the leaderless keep for the living.",
-            "stats": {
-              "will": 2,
-              "strength": 1
-            },
-            "flags": [
-              "garrison_rallied"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "castle_last_stand",
-      "location": "castle",
-      "activities": [
-        "castle_yard",
-        "castle_gate"
-      ],
-      "requires": [
-        "garrison_rallied",
-        "gate_secured"
-      ],
-      "minWeek": 7,
-      "weight": 4,
-      "text": "The warband breaks against the wall: a tide of dying men with nothing left to lose and a fury in their ruined faces that frightens even the captain. But the gate is barred fast, the breach is stone, and the garrison stands where you taught them to stand. This is the night everything you mended is asked the one question that has ever mattered.",
-      "check": {
-        "stat": "strength",
-        "dc": 7
-      },
-      "pass": {
-        "text": "They dash themselves on St Sebastian like the sea on a cliff. The fast gate drops on the first rush; the mended wall turns the second; the rallied garrison holds the third until there is no fourth left to throw. By dawn the warband is carrion in the ditch and the town at your back still breathes. You did this.",
-        "outcome": "held the wall through the warband's last assault and saved the town.",
-        "stats": {
-          "strength": 1,
-          "will": 2
-        },
-        "flags": [
-          "town_held"
-        ]
-      },
-      "fail": {
-        "text": "You hold — but it takes everything. The gate jams half-down, men you trained die in the gap, and you fight in the breach by torchlight until your arms hang like lead and the stone runs slick beneath your boots. The warband is thrown back at the last, but the grey dawn shows you faces among the dead you knew by name.",
-        "outcome": "threw back the warband at the wall, but the cost was carved into the dawn.",
-        "stats": {
-          "will": 2
         }
       }
     }

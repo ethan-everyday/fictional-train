@@ -1,4 +1,8 @@
 {
+  "meta": {
+    "name": "The Tavern",
+    "blurb": "Panic, rumour, and deserters who can still hold a blade."
+  },
   "activities": [
     {
       "id": "tavern_drink",
@@ -7,15 +11,15 @@
       "blurb": "Nurse a cup where every fear in the parish is said aloud, and twice over."
     },
     {
-      "id": "tavern_mercenaries",
+      "id": "tavern_gamble",
       "location": "tavern",
-      "name": "Sit with the hard men",
-      "blurb": "Deserters and sellswords brood in the dark corner; coin buys their swords, if you dare go near."
+      "name": "Gamble",
+      "blurb": "Dice and cards with deserters and dockhands, at a table where coin buys less every week and the pots grow reckless."
     },
     {
       "id": "tavern_taps",
       "location": "tavern",
-      "name": "Work the taps",
+      "name": "Work behind the bar",
       "blurb": "Pour, mop, and hear every traveller's news before the lord on his hill ever does."
     }
   ],
@@ -75,14 +79,112 @@
       }
     },
     {
+      "id": "tavern_dice_night",
+      "location": "tavern",
+      "activities": [
+        "tavern_gamble"
+      ],
+      "repeatable": true,
+      "weight": 3,
+      "text": "The long table by the hearth belongs to the dice — deserters, dockhands, a fishwife who wins too often, a boy who should be home. Coin buys less every week the smoke stands on the horizon, and the pots have grown strange and reckless: a knife, a ring, a promise of passage. There is always a seat for a stranger.",
+      "choices": [
+        {
+          "label": "Stake a coin and play the table",
+          "random": [
+            {
+              "weight": 1,
+              "effect": {
+                "text": "The bones run kind. You play small and patient, let the drunk men chase their losses, and rise with a modest weight of copper while the fishwife gives you a professional's nod.",
+                "outcome": "played the dice table small and came away ahead.",
+                "stats": {
+                  "wealth": 1
+                }
+              }
+            },
+            {
+              "weight": 1,
+              "effect": {
+                "text": "The bones run cold. Your stake crosses the table one throw at a time into a dockhand's fist, and he grins at you around three teeth. You tell yourself it bought a seat and the room's talk, and half believe it.",
+                "outcome": "dropped a coin to the dockhands' dice and called it a lesson.",
+                "stats": {
+                  "wealth": -1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "label": "Push the whole purse into the middle",
+          "random": [
+            {
+              "weight": 2,
+              "effect": {
+                "text": "You throw like a soul with nothing left to fear, and the table breaks against you. Deserters mutter, the fishwife folds, and you drag home a pot heavy enough to hurt your pocket. Coin means little now; the look on their faces is worth more.",
+                "outcome": "broke the dice table on one reckless night.",
+                "stats": {
+                  "wealth": 2
+                }
+              }
+            },
+            {
+              "weight": 3,
+              "effect": {
+                "text": "The pot swells, the room leans in, and the last throw betrays you. You watch a week's bread slide across the boards into other hands, and walk home lighter in every sense but one.",
+                "outcome": "was stripped to the seams at the dice table.",
+                "stats": {
+                  "wealth": -2,
+                  "will": 1
+                }
+              }
+            },
+            {
+              "weight": 1,
+              "effect": {
+                "text": "You cannot lose. Seven passes running the bones fall your way, then an eighth, then the table stops laughing. An old soldier crosses himself, leaves his stake where it lies and will not meet your eye. Your shadow sits wrong on the wall tonight, and something behind your own eyes feels warm, and watchful, and pleased.",
+                "outcome": "won seven passes running and left the table a marked soul.",
+                "stats": {
+                  "wealth": 2
+                },
+                "threats": {
+                  "devils": 1
+                },
+                "flags": [
+                  "tavern_devils_luck"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "label": "Keep your purse shut and read the players",
+          "check": {
+            "stat": "intelligence",
+            "dc": 4
+          },
+          "pass": {
+            "text": "You nurse one cup and watch hands instead of faces. By midnight you know who palms the low die, who is desperate enough to be dangerous, and which quiet man was once a soldier and still sits facing the door. A room read right is worth more than its pot.",
+            "outcome": "watched the dice all night and learned who cheats in St Sebastian.",
+            "stats": {
+              "intelligence": 1
+            }
+          },
+          "fail": {
+            "text": "You watch till your eyes swim and learn nothing but the smell of spilled ale and the boy losing his mother's coin. Whatever game is truly being played at that table, it is played too deep for you tonight.",
+            "outcome": "watched the dice all night and came away none the wiser."
+          }
+        }
+      ]
+    },
+    {
       "id": "tavern_deserter_sergeant",
       "location": "tavern",
       "activities": [
-        "tavern_mercenaries"
+        "tavern_drink",
+        "tavern_gamble"
       ],
-      "minWeek": 3,
-      "weight": 3,
-      "text": "A broad man with a soldier's bearing and no soldier's badge drinks alone in the dark corner. The innkeep murmurs he was a sergeant of some lord's garrison until he walked off a losing field. Such a man knows how walls are held, and how they are lost.",
+      "minWeek": 2,
+      "weight": 2,
+      "text": "A broad man with a soldier's bearing and no soldier's badge drinks alone in the dark corner, rolling a single die against the wood and ignoring the game at the long table. The innkeep murmurs he was a sergeant of some lord's garrison until he walked off a losing field. Such a man knows how walls are held, and how they are lost.",
       "check": {
         "stat": "will",
         "dc": 5
@@ -110,13 +212,13 @@
       "id": "tavern_rally_garrison",
       "location": "tavern",
       "activities": [
-        "tavern_mercenaries"
+        "tavern_drink"
       ],
       "requires": [
         "met_sergeant"
       ],
       "minWeek": 4,
-      "weight": 3,
+      "weight": 2,
       "text": "The sergeant is back, and soberer, and he has found three more like him: old soldiers gone to drink in St Sebastian's worst week. He says the word, and they will stand the wall again. He waits to see if you will say it first.",
       "effect": {
         "text": "You say it. The sergeant rises, and the drunks at his table rise with him, and for one moment they are a garrison again and not just men waiting to die. They will hold the fortress, or break upon it trying, and that is more than the town had this morning.",
@@ -126,25 +228,28 @@
         },
         "flags": [
           "garrison_rallied"
-        ]
+        ],
+        "threats": {
+          "war": -1
+        }
       }
     },
     {
       "id": "tavern_court_sellswords",
       "location": "tavern",
       "activities": [
-        "tavern_mercenaries"
+        "tavern_gamble"
       ],
       "minWeek": 3,
       "weight": 2,
-      "text": "A knot of sellswords, foreign and scarred and drifting ahead of the ruin as you once did, take the measure of the room for what it is worth. They will fight for whoever pays, and they are weighing whether this dying town is worth the trouble of dying in.",
+      "text": "A knot of sellswords, foreign and scarred and drifting ahead of the ruin as you once did, hold the far end of the dice table and win more than they lose. They will fight for whoever pays, and between throws they are weighing whether this dying town is worth the trouble of dying in.",
       "check": {
         "stat": "intelligence",
         "dc": 5
       },
       "pass": {
-        "text": "You do not promise them glory; you promise them coin and a wall to set their backs against, which is what such men truly want. Their scarred captain spits in her palm and tells you to come back when you have something worth arming them with.",
-        "outcome": "talked a band of sellswords into hearing an offer.",
+        "text": "You buy into their game and lose gracefully enough to be listened to. You do not promise them glory; you promise them coin and a wall to set their backs against, which is what such men truly want. Their scarred captain spits in her palm and tells you to come back when you have something worth arming them with.",
+        "outcome": "diced with a band of sellswords and talked them into hearing an offer.",
         "stats": {
           "intelligence": 1,
           "will": 1
@@ -165,15 +270,15 @@
       "id": "tavern_arm_the_militia",
       "location": "tavern",
       "activities": [
-        "tavern_mercenaries",
-        "tavern_taps"
+        "tavern_drink",
+        "tavern_gamble"
       ],
       "requires": [
         "sellswords_courted"
       ],
       "minWeek": 4,
-      "weight": 3,
-      "text": "The scarred captain holds you to your word. Steel, she says: get steel into willing hands and she will train the town's frightened men to use it before the worst week comes. The tavern is full of those willing hands; what they lack is anything to hold.",
+      "weight": 2,
+      "text": "The scarred captain finds you at the tavern and holds you to your word. Steel, she says: get steel into willing hands and she will train the town's frightened men to use it before the worst week comes. The room is full of those willing hands; what they lack is anything to hold.",
       "check": {
         "stat": "craft",
         "dc": 5
@@ -187,7 +292,10 @@
         },
         "flags": [
           "militia_armed"
-        ]
+        ],
+        "threats": {
+          "war": -2
+        }
       },
       "fail": {
         "text": "What you gather is rust and splinters, and the captain turns over a cracked blade with contempt. You can drill men all you like, she says, but you cannot arm them with prayers. The willing hands stay empty.",
@@ -198,34 +306,85 @@
       }
     },
     {
-      "id": "tavern_drink_to_forget",
+      "id": "tavern_lords_steward",
       "location": "tavern",
       "activities": [
         "tavern_drink"
       ],
-      "minWeek": 4,
+      "maxWeek": 5,
       "weight": 2,
-      "text": "The sickness is in the poor quarter now and everyone knows it. The room drinks the way people drink when they have decided there is no morning worth keeping themselves whole for. A cup is pressed into your hand. It would be so easy to set the whole weight down for one night.",
+      "text": "A narrow man in the lord's livery is slumming among the deserters, buying drinks and weighing faces — the steward himself, sent down to find blades for a garrison that is quietly bleeding men to the roads. His eye settles on you.",
+      "check": {
+        "stat": "will",
+        "dc": 4
+      },
+      "pass": {
+        "text": "You hold his gaze and talk like someone worth a wage. He does not smile, but he writes something small in a small book, and tells you the gate-guards will know your face. The castle, it seems, is no longer entirely shut to you.",
+        "outcome": "caught the lord's steward's eye and won a hearing at the castle gate.",
+        "stats": {
+          "will": 1,
+          "intelligence": 1
+        },
+        "flags": [
+          "met_steward"
+        ]
+      },
+      "fail": {
+        "text": "You say a word too many and he loses interest mid-sentence, turning to a scarred sergeant instead. Whatever door he might have opened stays shut, and you are left nursing a cooling cup.",
+        "outcome": "fumbled the lord's steward and lost a way into the castle.",
+        "stats": {
+          "will": 1
+        }
+      }
+    },
+    {
+      "id": "tavern_innkeep_stores",
+      "location": "tavern",
+      "activities": [
+        "tavern_taps"
+      ],
+      "minWeek": 3,
+      "weight": 2,
+      "text": "Hauling casks up from the cellar, your lamp finds the false wall the innkeep thinks is her secret: salt fish in barrels, barley from two good years back, enough to feed a lane of hungry families for a month. She comes down the stair behind you, and her face goes very still.",
       "choices": [
         {
-          "label": "Drink until the red eyes go quiet",
-          "effect": {
-            "text": "You drink with them and for a few blessed hours the vision lets go of you: no glowing stare, no city falling, no weight at all. You wake on the floor at first light with a skull full of broken glass and a day already lost. But you needed it.",
-            "outcome": "drank the night black to silence the Herald's vision.",
+          "label": "Press her to open the cellar to the parish",
+          "check": {
+            "stat": "will",
+            "dc": 5
+          },
+          "pass": {
+            "text": "You speak of the bare market and the thin children in the lane, and you do not look away until she does. She is not a cruel woman, only a frightened one. By the week's end there is barley on the church steps with no name attached, and the innkeep stands a little straighter for having set the weight down.",
+            "outcome": "talked the innkeep into opening her hidden stores to the hungry.",
             "stats": {
-              "will": 1,
-              "wealth": -1
+              "will": 1
+            },
+            "flags": [
+              "tavern_stores_opened"
+            ],
+            "threats": {
+              "starvation": -1
+            }
+          },
+          "fail": {
+            "text": "She hears you out, then names every neighbour who would have let her starve had the years run the other way, and she is not wrong about all of them. The false wall is mended within the week, and she counts the casks after your every shift.",
+            "outcome": "failed to talk the innkeep out of her hoard.",
+            "stats": {
+              "will": 1
             }
           }
         },
         {
-          "label": "Stay sober and keep watching",
+          "label": "Hold your tongue and take her coin",
           "effect": {
-            "text": "You wet your lips and no more. While they drown, you listen: who is sick, who is hoarding, who has already packed a cart to run. A clear head is a lonely thing in this room, but it sees what the drunk ones let slip.",
-            "outcome": "stayed sober among the drinkers and gathered what they let slip.",
+            "text": "Neither of you says a word. At closing she presses a coin into your palm, and her eyes tell you plainly what it buys. You pocket it. A hungry town is full of secrets, and now you are keeping one of the heavier ones.",
+            "outcome": "kept the innkeep's hidden hoard secret for a coin.",
             "stats": {
-              "intelligence": 1
-            }
+              "wealth": 1
+            },
+            "flags": [
+              "innkeep_owes"
+            ]
           }
         }
       ]
@@ -233,10 +392,7 @@
     {
       "id": "tavern_panic_brawl",
       "location": "tavern",
-      "activities": [
-        "tavern_drink",
-        "tavern_taps"
-      ],
+      "activities": [],
       "minWeek": 5,
       "weight": 2,
       "text": "Word comes that the castle has shut its gates against the sick, and the room boils over. A farmhand swings at the innkeep for watering the ale, fists fly, and the whole panicked crowd is half a breath from a riot.",
@@ -267,11 +423,12 @@
       "id": "tavern_join_the_looters",
       "location": "tavern",
       "activities": [
-        "tavern_mercenaries"
+        "tavern_drink",
+        "tavern_gamble"
       ],
       "minWeek": 6,
-      "weight": 4,
-      "text": "The sellswords who would not stay to fight have found a better trade. With the warband on the horizon and order gone, they mean to strip St Sebastian bare in its last days and ride out fat, and they want hands that know the town. The captain lays it out plainly: the place is dead already; only fools die in it.",
+      "weight": 3,
+      "text": "The sellswords who would not stay to fight have found a better trade. With the warband on the horizon and order gone, they mean to strip St Sebastian bare in its last days and ride out fat, and they want hands that know the town. The captain lays it out plainly over the dice: the place is dead already; only fools die in it.",
       "choices": [
         {
           "label": "Take a cut and help them strip the town",
@@ -284,7 +441,10 @@
             },
             "flags": [
               "turned_to_darkness"
-            ]
+            ],
+            "threats": {
+              "war": 1
+            }
           }
         },
         {
@@ -295,6 +455,9 @@
             "stats": {
               "will": 2,
               "wealth": -1
+            },
+            "threats": {
+              "war": -1
             }
           }
         }
@@ -303,48 +466,13 @@
     {
       "id": "tavern_last_orders",
       "location": "tavern",
-      "activities": [
-        "tavern_drink",
-        "tavern_taps"
-      ],
+      "activities": [],
       "minWeek": 7,
       "weight": 3,
       "text": "The warband is at the gates and the dead are in the streets, and the innkeep keeps pouring because what else is there now to do. A handful of souls who chose to stay sit drinking the cellar dry, and they look to you, the foreigner who never ran, to say a word for the end of it all.",
       "effect": {
         "text": "You raise the last cup and say something true and small, about how the world ends the same for kings and beggars and strangers off a ship. They drink to it. Outside, the gate groans on its hinges; inside, for one held breath, nobody is alone. Then the noise begins.",
         "outcome": "stood the last round in St Sebastian as the warband reached the gates.",
-        "stats": {
-          "will": 1
-        }
-      }
-    },
-    {
-      "id": "tavern_lords_steward",
-      "location": "tavern",
-      "activities": [
-        "tavern_mercenaries"
-      ],
-      "maxWeek": 5,
-      "weight": 2,
-      "text": "A narrow man in the lord's livery is slumming among the deserters, buying drinks and weighing faces — the steward himself, sent down to find blades for a garrison that is quietly bleeding men to the roads. His eye settles on you.",
-      "check": {
-        "stat": "will",
-        "dc": 4
-      },
-      "pass": {
-        "text": "You hold his gaze and talk like someone worth a wage. He does not smile, but he writes something small in a small book, and tells you the gate-guards will know your face. The castle, it seems, is no longer entirely shut to you.",
-        "outcome": "caught the lord's steward's eye and won a hearing at the castle gate.",
-        "stats": {
-          "will": 1,
-          "intelligence": 1
-        },
-        "flags": [
-          "met_steward"
-        ]
-      },
-      "fail": {
-        "text": "You say a word too many and he loses interest mid-sentence, turning to a scarred sergeant instead. Whatever door he might have opened stays shut, and you are left nursing a cooling cup.",
-        "outcome": "fumbled the lord's steward and lost a way into the castle.",
         "stats": {
           "will": 1
         }

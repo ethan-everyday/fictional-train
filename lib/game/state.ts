@@ -25,8 +25,10 @@ import {
   DRAMA_EVENTS,
   LOCATIONS,
   NIGHT_COUNT,
+  ZERO_THREATS,
   type DramaEvent,
 } from "./constants";
+import { applyThreatDeltas, tickThreats } from "./threats";
 import type {
   GamePhase,
   LocationId,
@@ -34,6 +36,8 @@ import type {
   NightRecord,
   PlayerStats,
   StoryletResult,
+  ThreatDeltas,
+  ThreatScores,
 } from "./types";
 
 // Shared-state keys owned by the host.
@@ -43,6 +47,7 @@ const KEY_DEADLINE = "deadline";
 const KEY_ASSIGNMENTS = "assignments";
 const KEY_ENDING = "ending";
 const KEY_EVENT = "event";
+const KEY_THREATS = "threats";
 
 /** The drama event the host rolled for a night (or null = ordinary night). */
 export interface ActiveEvent {
@@ -73,6 +78,16 @@ export function useAssignments() {
 /** Finale paragraphs, written once by the host so they survive refreshes. */
 export function useEnding() {
   return useShared<string[] | null>(KEY_ENDING, null);
+}
+
+/** The town's four threat tracks — host writes, everyone may read. */
+export function useThreats() {
+  return useShared<ThreatScores>(KEY_THREATS, ZERO_THREATS);
+}
+
+/** Snapshot read of the threat tracks (host transition code). */
+export function getThreats(): ThreatScores {
+  return getShared<ThreatScores>(KEY_THREATS) ?? ZERO_THREATS;
 }
 
 /**
@@ -145,6 +160,9 @@ function setupWeek(night: number, players: PlayerState[]): void {
       ? DRAMA_EVENTS.find((e) => night >= e.minNight && e.trigger(avg)) ?? null
       : null;
   setShared(KEY_EVENT, event ? { id: event.id, night } : null);
+  // The arriving week raises every threat track (week 1's tick is zero,
+  // so the game opens calm and worsens from there).
+  setShared(KEY_THREATS, tickThreats(getThreats(), night));
   setShared(KEY_NIGHT, night);
 }
 
@@ -152,6 +170,9 @@ function setupWeek(night: number, players: PlayerState[]): void {
  * prologue (arriving at St Sebastian). The SETTING prologue — the 1348 doom
  * and the Herald's vision — plays earlier, on the lobby, during selection. */
 export function startGame(players: PlayerState[]): void {
+  // Fresh dooms for a fresh game: zero every track before week 1's (zero)
+  // tick, in case a stale room left old scores behind.
+  setShared(KEY_THREATS, ZERO_THREATS);
   setupWeek(1, players);
   setShared(KEY_PHASE, "prologue");
 }
@@ -199,6 +220,13 @@ export function beginResolve(): void {
 }
 
 export function endNight(night: number, players: PlayerState[]): void {
+  // FIRST bank the week's relief and harm: every player's outcome may carry
+  // threat deltas. Applied before the next week's tick (or the finale reads
+  // the tracks), so the party's work always counts.
+  const deltas = players
+    .map((p) => playerResult(p, night)?.threats)
+    .filter((d): d is ThreatDeltas => d !== undefined && d !== null);
+  setShared(KEY_THREATS, applyThreatDeltas(getThreats(), deltas));
   if (night >= NIGHT_COUNT) {
     setShared(KEY_PHASE, "finale");
   } else {
@@ -224,5 +252,6 @@ export async function backToLobby(): Promise<void> {
   setShared(KEY_ENDING, null);
   setShared(KEY_ASSIGNMENTS, null);
   setShared(KEY_EVENT, null);
+  setShared(KEY_THREATS, ZERO_THREATS);
   setShared(KEY_PHASE, "lobby");
 }

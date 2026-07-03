@@ -1,22 +1,26 @@
 {
+  "meta": {
+    "name": "The Slums",
+    "blurb": "Where the sickness strikes first and the desperate gather."
+  },
   "activities": [
     {
-      "id": "slums_tend",
+      "id": "slums_alms",
       "location": "slums",
-      "name": "Tend the wall-side families",
-      "blurb": "Bring water, splint a limb, sit with the sick the rest of the town won't touch."
+      "name": "Give alms to the poor",
+      "blurb": "Bread, coin, and clean water for the wall-side families the rest of the town has written off."
     },
     {
-      "id": "slums_lanes",
+      "id": "slums_fightcrime",
       "location": "slums",
-      "name": "Walk the lanes",
-      "blurb": "The crowded ways hear of every death and every grudge before the bailiff does."
+      "name": "Fight crime",
+      "blurb": "Stand with the bailiff's failing watch against a quarter that is coming apart."
     },
     {
-      "id": "slums_watch",
+      "id": "slums_gamble",
       "location": "slums",
-      "name": "Stand with the bailiff's watch",
-      "blurb": "One failing man and a few cudgels against a quarter that is coming apart."
+      "name": "Gamble in the streets",
+      "blurb": "Dice in doorways with the desperate, where the coin runs short and the whispers run long."
     }
   ],
   "events": [
@@ -24,12 +28,11 @@
       "id": "slums_first_night",
       "location": "slums",
       "activities": [
-        "slums_tend",
-        "slums_lanes"
+        "slums_alms"
       ],
       "maxWeek": 2,
       "weight": 3,
-      "text": "The wall-side families take you for what you are at a glance: another mouth blown in off the sea with nothing. Still, a woman with a swollen ankle lets you near enough to bind it, and her neighbours stop pretending not to watch.",
+      "text": "The wall-side families take you for what you are at a glance: another mouth blown in off the sea with nothing. Still, when you come offering rather than asking, a woman with a swollen ankle lets you near enough to bind it, and her neighbours stop pretending not to watch.",
       "effect": {
         "text": "You splint the ankle with a barrel-stave and a strip of your own shirt. It is poor work and it holds. By dark you have a corner out of the wind and the wary half-trust of people who own nothing worth the stealing.",
         "outcome": "won a foothold among the wall-side poor by binding a stranger's ankle.",
@@ -43,11 +46,50 @@
       }
     },
     {
+      "id": "slums_feed_families",
+      "location": "slums",
+      "activities": [
+        "slums_alms"
+      ],
+      "minWeek": 3,
+      "weight": 3,
+      "text": "The market carts stop coming to the wall-side first. The families here are boiling nettles and grinding bark into the last of the flour, and the children have stopped crying about it, which is worse. Your purse sits against your ribs like a stone.",
+      "choices": [
+        {
+          "label": "Empty your purse into bread and salt fish",
+          "effect": {
+            "text": "You spend it all — the baker's last loaves, a cask of herring off a foreign deck, a sack of dried peas the huckster swore he did not have until he saw your coin. You go door to door until your hands are empty. It will not feed them to the end. It will feed them this week, and this week is what there is.",
+            "outcome": "emptied their purse to put bread in the wall-side lanes.",
+            "stats": {
+              "wealth": -2,
+              "will": 1
+            },
+            "flags": [
+              "slums_bread_given"
+            ],
+            "threats": {
+              "starvation": -1
+            }
+          }
+        },
+        {
+          "label": "Spare a coin and keep the rest",
+          "effect": {
+            "text": "You press a coin into the thinnest hand you can find and walk on with the rest still heavy against your ribs. It buys one family one supper, and buys you a quiet that does not last past the next doorway of hungry eyes. You tell yourself hard sense is a kind of mercy. The lane does not agree.",
+            "outcome": "gave a single coin to the wall-side and kept the rest.",
+            "stats": {
+              "wealth": -1,
+              "intelligence": 1
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "slums_bailiff_failing",
       "location": "slums",
       "activities": [
-        "slums_watch",
-        "slums_lanes"
+        "slums_fightcrime"
       ],
       "maxWeek": 4,
       "weight": 3,
@@ -79,34 +121,156 @@
       }
     },
     {
-      "id": "slums_red_eyes_alley",
+      "id": "slums_dice_in_doorways",
       "location": "slums",
       "activities": [
-        "slums_lanes"
+        "slums_gamble"
       ],
-      "maxWeek": 3,
-      "weight": 2,
-      "text": "Down a lane too narrow for two abreast, a beggar with a clouded eye grips your sleeve and will not let go. He says he has seen them too, the red eyes, watching the wall-side from the dark and waiting to see what you will do with these people. He asks if you are the one come to save them, or to sell them.",
-      "effect": {
-        "text": "You give him no answer, for you have none. He laughs, a wet rattling thing, and tells you the patron's hidden things lie where the sickness will dig them up, and that you will know the place by its stink. Then he is only a beggar again, holding out his hand for bread.",
-        "outcome": "was named by a beggar who has also seen the red eyes in the dark.",
-        "stats": {
-          "intelligence": 1,
-          "will": 1
+      "repeatable": true,
+      "weight": 3,
+      "text": "In the mouth of a boarded-up doorway three men throw bones by rushlight for coppers and the last of somebody's shoes. They make room for you without being asked — fresh coin is fresh coin. Between throws they talk, low and constant, the way frightened men do, and the talk keeps circling back to the thing with red eyes that watches the wall-side from the dark.",
+      "choices": [
+        {
+          "label": "Stake deep and let the bones decide",
+          "random": [
+            {
+              "weight": 2,
+              "effect": {
+                "text": "The bones run hot for you and will not cool. You sweep the blanket twice, three times, until the dice-men mutter and one spits between his fingers against luck like yours. You walk away heavier than you came, and try not to think about what kind of night smiles on a stranger.",
+                "outcome": "ran the bones hot and gambled the dice-men out of their coppers.",
+                "stats": {
+                  "wealth": 2
+                }
+              }
+            },
+            {
+              "weight": 3,
+              "effect": {
+                "text": "The bones turn on you the way this town turns on everything. Throw by throw your coin crosses the blanket and does not come back, and the dice-men grow kinder as you grow lighter, which is its own lesson.",
+                "outcome": "lost their coin to the dice-men in the wall-side doorways.",
+                "stats": {
+                  "wealth": -1,
+                  "will": 1
+                }
+              }
+            }
+          ]
         },
-        "flags": [
-          "slums_omen_heard"
-        ]
-      }
+        {
+          "label": "Palm the bones and work the blanket",
+          "check": {
+            "stat": "agility",
+            "dc": 5
+          },
+          "pass": {
+            "text": "Your fingers are quicker than their rushlight. You turn the throws you need and lose just often enough to keep the blanket friendly, and you rise with their coppers and your good name both intact.",
+            "outcome": "cheated the wall-side dice game clean and walked away richer.",
+            "stats": {
+              "wealth": 2,
+              "agility": 1
+            }
+          },
+          "fail": {
+            "text": "A dice-man's hand closes on your wrist mid-throw and the doorway goes very quiet. They take your stake as the price of keeping your fingers and put you out into the lane with a split lip for the lesson.",
+            "outcome": "was caught palming the bones and beaten out of the doorway.",
+            "stats": {
+              "wealth": -1,
+              "will": 1
+            }
+          }
+        },
+        {
+          "label": "Play light and listen to the whispers",
+          "effect": {
+            "text": "You lose small, on purpose, and let the talk come to you. The dice-men speak of the red eyes the way men speak of weather — a thing simply there now, watching from the dark past the rushlight. One of them says it hungers for what this town keeps buried, and that the sickness is how the ground gives its secrets up.",
+            "outcome": "played for coppers and heard what the dice-men whisper of the red eyes.",
+            "stats": {
+              "intelligence": 1
+            },
+            "flags": [
+              "slums_omen_heard"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "slums_red_eyes_wager",
+      "location": "slums",
+      "activities": [
+        "slums_gamble"
+      ],
+      "requires": [
+        "devil_rumour"
+      ],
+      "minWeek": 4,
+      "weight": 2,
+      "text": "There is a new player in the doorway game tonight, a lean man in good boots that nobody heard arrive, and the dice-men have gone quiet around him the way birds go quiet before weather. He plays with dice of old yellowed bone and he has not lost a throw all night. When he lifts the cup toward you, the rushlight catches his eyes wrong — red, just for a blink, the way the dockside talk had it. The stake he names is more than coin.",
+      "choices": [
+        {
+          "label": "Throw against him for the stake he names",
+          "effect": {
+            "text": "You throw, and you win — you were always going to win, you understand too late, because winning is how it takes you. His purse is heavy and real. But something of yours went across that blanket with the stake, and when he folds into the dark at the lane's end you feel the red eyes keep a piece of you for earnest.",
+            "outcome": "won the red-eyed stranger's wager and paid a stake no purse can hold.",
+            "stats": {
+              "wealth": 2,
+              "will": -1
+            },
+            "flags": [
+              "slums_dark_wager"
+            ],
+            "threats": {
+              "devils": 1
+            }
+          }
+        },
+        {
+          "label": "Turn the cup, salt the stones, and name it what it is",
+          "check": {
+            "stat": "will",
+            "dc": 6
+          },
+          "pass": {
+            "text": "You tip the cup out unthrown, cast salt across the blanket, and say aloud — to it, to the dice-men, to the listening dark — exactly what has been sitting in that doorway all night. The rushlight leaps. When it steadies, the good boots are gone and the bone dice with them, and the dice-men breathe like men pulled out of deep water. You scratch a ward into the doorpost the way the old wives teach, and you mean it.",
+            "outcome": "salted the blanket, named the red-eyed thing, and drove it from the doorway.",
+            "stats": {
+              "will": 1
+            },
+            "flags": [
+              "slums_ward_laid"
+            ],
+            "threats": {
+              "devils": -1
+            }
+          },
+          "fail": {
+            "text": "You reach for the cup to turn it and your hand will not close on it. The red eyes hold you — a long, patient, weighing look, the look a man gives a fruit not yet ripe — and then he simply gathers his bones and goes, and the doorway is only a doorway, and you cannot stop your hands shaking.",
+            "outcome": "tried to face the red-eyed player down and was weighed instead.",
+            "stats": {
+              "intelligence": 1
+            }
+          }
+        },
+        {
+          "label": "Gather your coin and walk away",
+          "effect": {
+            "text": "You have heard enough dockside talk to know a game that cannot be won. You pick your coppers off the blanket slowly, so it does not look like flight, and you keep your eyes off his until you are out of the lane. Behind you, the bone dice rattle on for somebody else.",
+            "outcome": "walked away from the red-eyed player's game with purse and soul still their own.",
+            "stats": {
+              "will": 1
+            }
+          }
+        }
+      ]
     },
     {
       "id": "slums_first_blood",
       "location": "slums",
       "activities": [
-        "slums_tend"
+        "slums_alms"
       ],
-      "minWeek": 5,
-      "weight": 4,
+      "minWeek": 4,
+      "weight": 3,
       "text": "A carter's boy lies on a pallet of rags, and his nose has bled since noon and will not stop. There is blood at the corners of his eyes now too, a thin red weeping, and his mother prays to a saint who has plainly stopped his ears. No one in the lane has seen the like. You have heard what it means.",
       "check": {
         "stat": "will",
@@ -137,15 +301,14 @@
       "id": "slums_trace_the_fever",
       "location": "slums",
       "activities": [
-        "slums_lanes",
-        "slums_tend"
+        "slums_alms"
       ],
       "requires": [
         "slums_plague_seen"
       ],
-      "minWeek": 5,
-      "weight": 3,
-      "text": "Every house that has buried someone backs onto the same fouled ditch at the foot of the wall, where the lane's filth and a black, sweet-rotten standing water meet. The beggar said you would know the place by its stink. You know it now.",
+      "minWeek": 4,
+      "weight": 2,
+      "text": "Every house that has buried someone backs onto the same fouled ditch at the foot of the wall, where the lane's filth and a black, sweet-rotten standing water meet. You have carried bread past it all week with your sleeve across your mouth. Now you stand at its lip and make yourself look.",
       "check": {
         "stat": "intelligence",
         "dc": 5
@@ -173,14 +336,14 @@
       "id": "slums_seal_the_lane",
       "location": "slums",
       "activities": [
-        "slums_tend",
-        "slums_watch"
+        "slums_alms",
+        "slums_fightcrime"
       ],
       "requires": [
         "slums_fever_traced"
       ],
-      "minWeek": 6,
-      "weight": 4,
+      "minWeek": 5,
+      "weight": 2,
       "text": "You have the source now: the ditch, and a thing rotting in it that has no business there. The sickness creeps from the wall-side outward, lane by lane. You can dam the ditch, drag the stricken houses behind a rope, and seal this quarter off from the rest of St Sebastian. But the families behind the rope will know they have been shut in to die together.",
       "choices": [
         {
@@ -196,7 +359,10 @@
               "quarantine_set",
               "plague_source_found",
               "relic_clue"
-            ]
+            ],
+            "threats": {
+              "plague": -2
+            }
           }
         },
         {
@@ -218,13 +384,13 @@
       "id": "slums_bailiff_recruits",
       "location": "slums",
       "activities": [
-        "slums_watch"
+        "slums_fightcrime"
       ],
       "requires": [
         "slums_bailiff_broken"
       ],
       "minWeek": 5,
-      "weight": 3,
+      "weight": 2,
       "text": "The bailiff cannot hold the quarter with cudgels and prayer. He has coin from somewhere and a notion that the wall-side men, hard and desperate and with nothing left to lose, would arm well if one they trusted asked it of them. He looks at you. They will follow you, he says, where they will never follow me.",
       "check": {
         "stat": "will",
@@ -253,12 +419,11 @@
       "id": "slums_the_mob",
       "location": "slums",
       "activities": [
-        "slums_lanes",
-        "slums_watch"
+        "slums_fightcrime"
       ],
       "minWeek": 6,
-      "weight": 4,
-      "text": "Hunger and fever have finished what fear began. A mob has gathered in the wall-side dark, torches and cleavers, and they mean to break the few houses still holding food and take it, and to drag out the sick and put the quarter to the torch the clean way, the way you burn a plague ship at anchor. They have seen you stand with the bailiff. They want to know whose side you are on, and there is no third answer they will take.",
+      "weight": 3,
+      "text": "Hunger and fever have finished what fear began. A mob has gathered in the wall-side dark, torches and cleavers, and they mean to break the few houses still holding food and take it, and to drag out the sick and put the quarter to the torch the clean way, the way you burn a plague ship at anchor. They have seen you stand between them and worse before now. They want to know whose side you are on, and there is no third answer they will take.",
       "choices": [
         {
           "label": "Lead them, take the food, burn the sick out",
@@ -273,20 +438,26 @@
             "flags": [
               "turned_to_darkness",
               "hoarders_broken"
-            ]
+            ],
+            "threats": {
+              "devils": 1
+            }
           }
         },
         {
           "label": "Stand in the lane's mouth and turn them back",
           "effect": {
-            "text": "You plant yourself in the lane's mouth with the bailiff at your shoulder and will not be moved. You take a cleaver's edge across the arm and a thrown cobble to the brow, but you talk and you bleed and you shame them until the torches gutter and the worst of them slink home. The sick keep another night. So, barely, do you.",
+            "text": "You plant yourself in the lane's mouth with the bailiff at your shoulder and will not be moved. You take a cleaver's edge across the arm and a thrown cobble to the brow, but you talk and you bleed and you shame them until the torches gutter and the worst of them slink home. The sick keep another night. So, barely, does the town's last thread of order.",
             "outcome": "stood alone against the mob and turned them back from the fever-houses, bleeding.",
             "stats": {
               "will": 2
             },
             "flags": [
               "slums_held_the_line"
-            ]
+            ],
+            "threats": {
+              "war": -1
+            }
           }
         }
       ]
@@ -295,14 +466,14 @@
       "id": "slums_burn_the_dead",
       "location": "slums",
       "activities": [
-        "slums_tend",
-        "slums_watch"
+        "slums_alms",
+        "slums_fightcrime"
       ],
       "requires": [
         "quarantine_set"
       ],
       "minWeek": 6,
-      "weight": 3,
+      "weight": 2,
       "text": "Behind the rope the dead are past the counting, and the ground at the wall's foot is too hard and too shallow to take so many. The pit you dug yesterday is already full and brimming. The bailiff says the thing no one will say first: they must be burned, all of them, tonight, or the living behind the rope are next into the pit.",
       "effect": {
         "text": "You build the fire with your own hands and you tend it through the long night, naming each one you can as the flames take them, because someone should. The smoke hangs over the wall-side until dawn, and the whole town wakes to the smell of it and knows. It is the worst thing your hands have ever done, and it saves the few lanes that are left.",
@@ -320,14 +491,14 @@
       "id": "slums_last_offer",
       "location": "slums",
       "activities": [
-        "slums_lanes",
-        "slums_tend"
+        "slums_alms",
+        "slums_fightcrime"
       ],
       "requires": [
         "slums_held_the_line"
       ],
       "minWeek": 6,
-      "weight": 3,
+      "weight": 2,
       "text": "The wall-side families know now what you stood in front of for their sake. An old woman who has buried all her own beckons you into the dark of a fever-house and presses a bundle into your hands: a child, sleeping, fever-cool at last, hers no longer to keep. Take the little one to the docks, she says. There is one place left on the last ship, and the poor will never be let aboard. You might.",
       "choices": [
         {

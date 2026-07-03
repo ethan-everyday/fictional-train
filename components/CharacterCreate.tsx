@@ -73,7 +73,7 @@ export default function CharacterCreate({ initial, onConfirm }: Props) {
           onClick={() => ready && onConfirm({ role, background })}
           className="font-display w-full rounded-xl bg-amber-500 px-6 py-4 text-xl text-night disabled:opacity-40"
         >
-          {ready ? "Enter Hollowbrook" : "Choose a calling and a past"}
+          {ready ? "Enter St Sebastian" : "Choose a calling and a past"}
         </button>
       </div>
     </main>

@@ -17,7 +17,7 @@ echo Checking for old servers...
 powershell -NoProfile -Command "Get-NetTCPConnection -State Listen -LocalPort 3100,3199 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Write-Host ('  stopping old server (pid ' + $_ + ')'); Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }"
 
 set LANIP=localhost
-for /f %%i in ('powershell -NoProfile -Command "(Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike '169.254*' -and $_.IPAddress -ne '127.0.0.1' } | Select-Object -First 1).IPAddress"') do set LANIP=%%i
+for /f %%i in ('powershell -NoProfile -Command "(Get-NetIPAddress -AddressFamily IPv4 -AddressState Preferred | Where-Object { $_.IPAddress -notlike '169.254*' -and $_.IPAddress -ne '127.0.0.1' -and (Get-NetAdapter -InterfaceIndex $_.InterfaceIndex -ErrorAction SilentlyContinue).Status -eq 'Up' } | Select-Object -First 1).IPAddress"') do set LANIP=%%i
 
 echo.
 echo   Dev server:   http://%LANIP%:3100/host

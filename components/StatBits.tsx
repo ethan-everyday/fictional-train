@@ -6,7 +6,8 @@ import type { PlayerStats, StatId } from "@/lib/game/types";
 /** The +1 / -1 stat-change chips shown after an event resolves. */
 export function DeltaChips({ deltas }: { deltas: PlayerStats }) {
   const chips = (Object.keys(STAT_LABELS) as StatId[])
-    .filter((s) => deltas[s] !== 0)
+    // Partial deltas happen (stale saves); only real non-zero numbers chip.
+    .filter((s) => typeof deltas[s] === "number" && deltas[s] !== 0)
     .map((s) => `${deltas[s] > 0 ? "+" : ""}${deltas[s]} ${STAT_LABELS[s]}`);
   if (chips.length === 0) return null;
   return (

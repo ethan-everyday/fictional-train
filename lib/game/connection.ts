@@ -126,9 +126,14 @@ export function useJoinBase(): string {
  * Open a room as the host screen (the TV/laptop). The host is a screen,
  * not a player: it never appears in the players list.
  * Pass a room code to rejoin an existing room after a host refresh.
+ * `freshGame` = the title screen's NEW GAME: the server closes every other
+ * room, so no phone can linger in (or auto-rejoin) an old game.
  */
-export async function startHost(rejoinCode?: string): Promise<string> {
-  return connectAsHost(rejoinCode?.trim().toUpperCase() || undefined);
+export async function startHost(
+  rejoinCode?: string,
+  freshGame = false,
+): Promise<string> {
+  return connectAsHost(rejoinCode?.trim().toUpperCase() || undefined, freshGame);
 }
 
 /** This phone's stable-for-the-session identity (survives refresh). */

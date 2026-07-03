@@ -106,6 +106,22 @@ export function selectionSeed(
 }
 
 /**
+ * Stable 0..1 roll for a choice's `random` pool. Seeded off the same
+ * identity as event selection plus WHICH option was taken, so a phone
+ * refresh mid-outcome re-rolls the exact same fate.
+ */
+export function choiceRoll(
+  playerId: string,
+  night: number,
+  activityId: string,
+  chosenIndex: number,
+): number {
+  return mulberry32(
+    hashString(`${playerId}|${night}|${activityId}|choice${chosenIndex}`),
+  )();
+}
+
+/**
  * Pick the event that fires. Weighted-random among eligible events using the
  * stable seed; falls back to the location's "quiet night" if nothing is
  * eligible. Never returns null.
@@ -143,15 +159,37 @@ export function checkPasses(event: GameEvent, stats: PlayerStats): boolean {
  * The effect that applies, given the event, the player's stats, and (for
  * choice events) which option they took. Returns null only if the event
  * needs a choice that hasn't been made yet.
+ *
+ * A choice itself resolves one of three ways: a flat `effect`, a hidden
+ * `check` (branching on stats exactly like an event-level check), or a
+ * weighted `random` pool decided by `rand01` — a 0..1 roll the caller
+ * supplies (use choiceRoll so it survives a refresh).
  */
 export function resolveEffect(
   event: GameEvent,
   stats: PlayerStats,
   chosenIndex?: number,
+  rand01?: number,
 ): EventEffect | null {
   if (event.choices && event.choices.length > 0) {
     if (chosenIndex === undefined) return null;
-    return event.choices[chosenIndex]?.effect ?? null;
+    const choice = event.choices[chosenIndex];
+    if (!choice) return null;
+    if (choice.check) {
+      const passes = (stats[choice.check.stat] ?? 0) >= choice.check.dc;
+      return passes ? (choice.pass ?? null) : (choice.fail ?? null);
+    }
+    if (choice.random && choice.random.length > 0) {
+      const total = choice.random.reduce((sum, o) => sum + (o.weight ?? 1), 0);
+      const roll = (rand01 ?? 0) * total;
+      let acc = 0;
+      for (const o of choice.random) {
+        acc += o.weight ?? 1;
+        if (roll < acc) return o.effect;
+      }
+      return choice.random[choice.random.length - 1].effect;
+    }
+    return choice.effect ?? null;
   }
   if (event.check) {
     return checkPasses(event, stats) ? (event.pass ?? null) : (event.fail ?? null);

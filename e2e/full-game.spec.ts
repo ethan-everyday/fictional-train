@@ -32,14 +32,16 @@ async function joinAsPhone(
   await expect(phone.getByText("Who are you?")).toBeVisible({ timeout: 30_000 });
   await phone.getByRole("button", { name: /Knight/ }).click();
   await phone.getByRole("button", { name: /Villein/ }).click();
-  await phone.getByRole("button", { name: "Enter Hollowbrook" }).click();
+  await phone.getByRole("button", { name: "Enter St Sebastian" }).click();
   await expect(phone.getByText(/You're in/)).toBeVisible();
   return phone;
 }
 
-/** BEGIN THE WEEK, then read the Herald's prologue and make landfall. */
+/** BEGIN THE WEEK, then ride the two prologue beats (the Herald's vision, then
+ * arrival) and make landfall. */
 async function beginGame(host: Page): Promise<void> {
   await host.getByRole("button", { name: "BEGIN THE WEEK" }).click();
+  await host.getByRole("button", { name: "Go on →" }).click();
   await host.getByRole("button", { name: "Make landfall →" }).click();
 }
 
@@ -186,6 +188,35 @@ test("two phones play a full seven-week game, then start a second", async ({
   await hostContext.close();
   await phoneAContext.close();
   await phoneBContext.close();
+});
+
+test("NEW GAME closes the old room; lingering phones return to the join screen", async ({
+  browser,
+}) => {
+  const hostContext = await browser.newContext();
+  const phoneContext = await browser.newContext();
+
+  const host = await hostContext.newPage();
+  await host.goto("/host");
+  const code = await readRoomCode(host);
+  const phone = await joinAsPhone(phoneContext, code, "Straggler");
+
+  // Host goes back to the title (refresh keeps the save) and starts a NEW game.
+  await host.reload();
+  await host.getByRole("button", { name: "New Game", exact: true }).click();
+  const codeEl = host.locator("p.font-mono.text-7xl");
+  await expect(codeEl).toBeVisible({ timeout: 20_000 });
+  const newCode = (await codeEl.textContent())?.trim() ?? "";
+  expect(newCode).not.toBe(code);
+
+  // The old room is dead: the phone's reconnect gets NO_ROOM and lands on
+  // the join form with an explanation — not a white screen, not a stale game.
+  await expect(
+    phone.getByText("That game has ended or the room expired."),
+  ).toBeVisible({ timeout: 15_000 });
+
+  await hostContext.close();
+  await phoneContext.close();
 });
 
 test("a phone refresh mid-storylet auto-rejoins and resumes the story", async ({

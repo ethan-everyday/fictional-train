@@ -1,4 +1,10 @@
-import type { LocationId, PlayerStats, StatId } from "./types";
+import type {
+  LocationId,
+  PlayerStats,
+  StatId,
+  ThreatId,
+  ThreatScores,
+} from "./types";
 
 export const NIGHT_COUNT = 7;
 
@@ -50,12 +56,57 @@ export const STAT_SHORT: Record<StatId, string> = {
   wealth: "Gold",
 };
 
+// ----------------------------------------------------------- threats
+
+/** Threat tracks clamp to 0..THREAT_CAP. A track at the cap when the finale
+ * comes means that doom lands on the town in full. */
+export const THREAT_CAP = 10;
+
+/**
+ * How much every threat rises when a week ARRIVES (index = week - 1).
+ * Untouched, a track runs 0,1,2,4,6,9,13→10 — a slow first fortnight, then
+ * the world ends in a hurry. A threat needs net -3 of relief across the
+ * game to stay under the cap.
+ */
+export const THREAT_TICKS = [0, 1, 1, 2, 2, 3, 4];
+
+export const THREAT_LABELS: Record<ThreatId, string> = {
+  plague: "Plague",
+  starvation: "Starvation",
+  war: "War",
+  devils: "Devils",
+};
+
+/** One grim line per track for the host screen. */
+export const THREAT_BLURBS: Record<ThreatId, string> = {
+  plague: "The sick go untended, and the carts grow heavier by the week.",
+  starvation: "No one has sorted the food, and the town's bellies know it.",
+  war: "The warband draws closer, and the town is not ready to meet it.",
+  devils: "Something with red eyes is taking root in the dark of St Sebastian.",
+};
+
+export const ZERO_THREATS: ThreatScores = {
+  plague: 0,
+  starvation: 0,
+  war: 0,
+  devils: 0,
+};
+
 export interface LocationDef {
   id: LocationId;
   name: string;
   blurb: string;
 }
 
+/**
+ * A location's NAME and BLURB are content: each location JSON may carry a
+ * `meta: { name, blurb }` block, which content/index.ts registers here at
+ * import time (overwriting the fallbacks below in place, so every consumer
+ * — LOCATIONS.map, locationDef — sees the content's words). The LIST of
+ * locations, though, is game code: adding or removing one means the
+ * LocationId union, this array, content/index.ts, the host UI, and the
+ * editor server's whitelist. See README "Adding a location".
+ */
 export const LOCATIONS: LocationDef[] = [
   { id: "church", name: "The Church", blurb: "The priest preaches God's wrath; the dead need burying." },
   { id: "tavern", name: "The Tavern", blurb: "Panic, rumour, and deserters who can still hold a blade." },
@@ -66,10 +117,21 @@ export const LOCATIONS: LocationDef[] = [
   { id: "docks", name: "The Docks", blurb: "Refugees, the sick off the boats, and the last ship out." },
 ];
 
+export function registerLocationMeta(
+  id: LocationId,
+  meta: { name?: string; blurb?: string },
+): void {
+  const def = LOCATIONS.find((l) => l.id === id);
+  if (!def) return;
+  if (meta.name && meta.name.trim()) def.name = meta.name;
+  if (meta.blurb !== undefined) def.blurb = meta.blurb;
+}
+
 export function locationDef(id: LocationId): LocationDef {
   const def = LOCATIONS.find((l) => l.id === id);
-  if (!def) throw new Error(`Unknown location: ${id}`);
-  return def;
+  // Degrade, never throw: a location id from a stale save (an older build's
+  // room) must not crash a phone mid-party. The prose shows the raw id.
+  return def ?? { id, name: String(id).replace(/_/g, " "), blurb: "" };
 }
 
 /**

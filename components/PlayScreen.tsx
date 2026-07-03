@@ -249,6 +249,7 @@ function PhoneGame({ room }: { room: string }) {
           outcome: r.outcome,
           deltas: r.deltas,
           flagsSet: r.flagsSet,
+          threats: r.threats,
         },
       ]);
     }
@@ -331,6 +332,16 @@ function PhoneGame({ room }: { room: string }) {
     case "epilogue":
       return (
         <PhoneEpilogue stats={effectiveStats} flags={flags} history={history} />
+      );
+    default:
+      // A phase this build doesn't know (a stale room written by another
+      // build). Never render nothing — hold calmly until the host resets.
+      return (
+        <Waiting
+          title="Seven Nights"
+          line="Watch the big screen…"
+          stats={effectiveStats}
+        />
       );
     }
   }

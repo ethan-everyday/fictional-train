@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { DeltaChips } from "@/components/StatBits";
+import { ThreatMeters, ThreatMetersCompact } from "@/components/ThreatMeters";
 import TitleScreen from "@/components/TitleScreen";
 import { CampfireScene, SeaScene } from "@/components/Scenes";
 import {
@@ -28,6 +29,7 @@ import {
   nightIntro,
   RESOLVE_BEAT_MS,
   STAT_LABELS,
+  THREAT_TICKS,
 } from "@/lib/game/constants";
 import {
   backToLobby,
@@ -38,6 +40,7 @@ import {
   beginStorylets,
   endNight,
   getPublishedEnding,
+  getThreats,
   playerFlags,
   playerHistory,
   playerPick,
@@ -52,6 +55,7 @@ import {
   useEnding,
   useNight,
   usePhase,
+  useThreats,
 } from "@/lib/game/state";
 import { playerEnding, townEnding } from "@/lib/game/finale";
 import {
@@ -63,7 +67,7 @@ import {
   stopAmbient,
   unlockAudio,
 } from "@/lib/audio/sound";
-import type { PlayerStats, StatId } from "@/lib/game/types";
+import type { PlayerStats, StatId, ThreatScores } from "@/lib/game/types";
 
 // How long a ping keeps a player's row lit on the lobby screen.
 const PING_FLASH_MS = 1500;
@@ -84,7 +88,9 @@ export default function HostScreen() {
     }
     setStarted(true);
     let settled = false;
-    startHost(freshRoom ? undefined : (readSavedRoom() ?? undefined)).then(
+    // freshRoom also tells the server to close every OLD room, so phones
+    // can't stay stuck in (or auto-rejoin) a previous game.
+    startHost(freshRoom ? undefined : (readSavedRoom() ?? undefined), freshRoom).then(
       (code) => {
         settled = true;
         localStorage.setItem(
@@ -214,6 +220,7 @@ function HostGame({ roomCode }: { roomCode: string }) {
   const players = usePlayers();
   const [deadline] = useDeadline();
   const [assignments] = useAssignments();
+  const [threats] = useThreats();
   const activeEvent = useActiveEvent(night);
 
   // One-shot guard so transition effects can't double-fire while the local
@@ -367,6 +374,15 @@ function HostGame({ roomCode }: { roomCode: string }) {
                 {nightIntro(night)}
               </p>
             )}
+            {/* The four dooms, with this week's rise dramatized. The tick for
+                the arriving week is applied by setupWeek before this screen
+                shows, so a rise line appears whenever this week ticked. */}
+            <div className="mt-10 flex justify-center">
+              <ThreatMeters
+                threats={threats}
+                tick={THREAT_TICKS[night - 1] ?? 0}
+              />
+            </div>
           </div>
         </Centered>
       );
@@ -378,6 +394,7 @@ function HostGame({ roomCode }: { roomCode: string }) {
           deadline={deadline}
           now={now}
           closed={activeEvent?.closedLocation ?? null}
+          threats={threats}
         />
       );
     case "storylets":
@@ -385,11 +402,21 @@ function HostGame({ roomCode }: { roomCode: string }) {
         <StoryletsScreen night={night} players={players} assignments={assignments} />
       );
     case "resolve":
-      return <ResolveScreen key={night} night={night} players={players} />;
+      return (
+        <ResolveScreen
+          key={night}
+          night={night}
+          players={players}
+          threats={threats}
+        />
+      );
     case "finale":
-      return <FinaleScreen players={players} />;
+      return <FinaleScreen players={players} threats={threats} />;
     case "epilogue":
-      return <EpilogueScreen players={players} />;
+      return <EpilogueScreen players={players} threats={threats} />;
+    default:
+      // Unknown phase (stale room from another build): never render nothing.
+      return <LobbyScreen roomCode={roomCode} players={players} />;
     }
   }
 }
@@ -444,7 +471,8 @@ function useClock(intervalMs: number): number {
 // --------------------------------------------------------------- PROLOGUE
 
 /** The SETTING prologue — the 1348 doom and the Herald's vision. Big white
- * text over the sea scene; shown on the lobby while players build characters. */
+ * text over the sea scene; the first beat of the opening cinematic, read to
+ * the room after BEGIN (the lobby itself is just join + character select). */
 function SettingProse() {
   return (
     <div className="fade-up mx-auto max-w-3xl space-y-5 text-center text-xl leading-relaxed text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.95)]">
@@ -467,14 +495,39 @@ function SettingProse() {
         MUST IN THE END.”
       </p>
       <p className="text-white/90">
-        Seven weeks before the world's end. Choose who you are.
+        Seven weeks before the world's end.
       </p>
     </div>
   );
 }
 
-/** The TOWN prologue — arrival at St Sebastian, after the party is assembled. */
+/**
+ * The opening cinematic, played once the party is built and the host hits
+ * BEGIN: two beats read aloud to the room — the Herald's charge (the 1348
+ * vision), then arrival at St Sebastian — before week 1. Phones show
+ * "watch the big screen" through the whole prologue phase.
+ */
 function PrologueScreen({ onBegin }: { onBegin: () => void }) {
+  const [beat, setBeat] = useState(0);
+
+  // Beat 1: the Herald's vision (the setting prose that used to crowd the lobby).
+  if (beat === 0) {
+    return (
+      <SeaScene>
+        <main className="flex min-h-screen flex-col items-center justify-center gap-8 px-8 py-12">
+          <SettingProse />
+          <button
+            onClick={() => setBeat(1)}
+            className="font-display rounded-xl border border-amber-500/60 px-10 py-3 text-xl text-amber-300 hover:border-amber-400 hover:text-amber-200"
+          >
+            Go on →
+          </button>
+        </main>
+      </SeaScene>
+    );
+  }
+
+  // Beat 2: arrival at St Sebastian.
   return (
     <SeaScene>
       <main className="flex min-h-screen flex-col items-center justify-center gap-7 px-8 py-12">
@@ -530,46 +583,64 @@ function LobbyScreen({
   const allReady =
     players.length > 0 && connected.every(hasCharacter);
 
+  // The lobby is the join + character-select screen: room code and QR up top,
+  // the party roster (who's in, what they've chosen) front and centre. The
+  // Herald's vision is no longer dumped here — it plays as the opening
+  // cinematic once everyone's built a character and the host hits BEGIN.
   return (
     <SeaScene>
-      <main className="flex min-h-screen flex-col items-center gap-7 px-6 py-10">
-      <SettingProse />
+      <main className="flex min-h-screen flex-col items-center gap-7 px-6 py-9">
       <header className="text-center">
-        <p className="text-xl text-white/80 [text-shadow:0_2px_10px_rgba(0,0,0,0.9)]">
-          Join on your phone
+        <p className="text-sm font-bold uppercase tracking-[0.4em] text-amber-300 [text-shadow:0_2px_10px_rgba(0,0,0,0.9)]">
+          St Sebastian · 1348
         </p>
-        <p className="my-1 font-mono text-7xl font-black tracking-[0.2em] text-amber-400 [text-shadow:0_2px_16px_rgba(0,0,0,0.9)]">
-          {roomCode}
+        <h1 className="mt-1 text-5xl font-black text-parch-100 [text-shadow:0_2px_16px_rgba(0,0,0,0.9)]">
+          Gather your party
+        </h1>
+        <p className="mt-2 text-lg text-white/75 [text-shadow:0_2px_10px_rgba(0,0,0,0.9)]">
+          Join on a phone, choose who you are, then begin the seven weeks.
         </p>
-        <p className="text-base text-white/50">{joinUrl}</p>
-        <button
-          onClick={() => {
-            // Full wipe, not just our saved room: a stale/kicked identity in
-            // this browser would make the next connection hang.
-            localStorage.clear();
-            sessionStorage.clear();
-            window.location.reload();
-          }}
-          className="mt-3 text-sm text-white/40 underline hover:text-white/70"
-        >
-          Start a fresh room
-        </button>
       </header>
 
-      <div className="-rotate-1 rounded-sm border-4 border-double border-bark bg-parch-100 p-4 shadow-[0_10px_34px_rgba(0,0,0,0.6)]">
-        <p className="font-display mb-2 text-center text-sm uppercase tracking-[0.25em] text-[#3a2a14]">
-          By order of the lord
-        </p>
-        <QRCodeSVG
-          value={joinUrl}
-          size={180}
-          bgColor="#f2e8ce"
-          fgColor="#1d1408"
-        />
-        <p className="font-display mt-2 text-center text-sm text-[#3a2a14]">
-          scan &amp; join the week
-        </p>
-      </div>
+      {/* Join: code then QR, stacked straight down the centre. */}
+      <section className="flex flex-col items-center gap-5">
+        <div className="text-center">
+          <p className="text-xl text-white/80 [text-shadow:0_2px_10px_rgba(0,0,0,0.9)]">
+            Join on your phone
+          </p>
+          <p className="my-1 font-mono text-7xl font-black tracking-[0.2em] text-amber-400 [text-shadow:0_2px_16px_rgba(0,0,0,0.9)]">
+            {roomCode}
+          </p>
+          <p className="text-base text-white/50">{joinUrl}</p>
+          <button
+            onClick={() => {
+              // Full wipe, not just our saved room: a stale/kicked identity in
+              // this browser would make the next connection hang.
+              localStorage.clear();
+              sessionStorage.clear();
+              window.location.reload();
+            }}
+            className="mt-3 text-sm text-white/40 underline hover:text-white/70"
+          >
+            Start a fresh room
+          </button>
+        </div>
+
+        <div className="-rotate-1 rounded-sm border-4 border-double border-bark bg-parch-100 p-4 shadow-[0_10px_34px_rgba(0,0,0,0.6)]">
+          <p className="font-display mb-2 text-center text-sm uppercase tracking-[0.25em] text-[#3a2a14]">
+            By order of the lord
+          </p>
+          <QRCodeSVG
+            value={joinUrl}
+            size={180}
+            bgColor="#f2e8ce"
+            fgColor="#1d1408"
+          />
+          <p className="font-display mt-2 text-center text-sm text-[#3a2a14]">
+            scan &amp; join the week
+          </p>
+        </div>
+      </section>
 
       <section className="w-full max-w-2xl rounded-2xl bg-night/55 p-5 backdrop-blur-sm">
         <h2 className="mb-4 text-center text-xl font-bold text-white/85">
@@ -660,12 +731,14 @@ function ChooseScreen({
   deadline,
   now,
   closed,
+  threats,
 }: {
   night: number;
   players: PlayerState[];
   deadline: number;
   now: number;
   closed: string | null;
+  threats: ThreatScores;
 }) {
   const secondsLeft = Math.max(0, Math.ceil((deadline - now) / 1000));
   return (
@@ -713,10 +786,13 @@ function ChooseScreen({
           );
         })}
       </div>
-      <p className="text-center text-xl text-parch-400">
-        {players.filter((p) => playerPick(p, night)).length} of {players.length}{" "}
-        decided · stragglers get sent somewhere random
-      </p>
+      <div className="flex flex-col items-center gap-3">
+        <ThreatMetersCompact threats={threats} />
+        <p className="text-center text-xl text-parch-400">
+          {players.filter((p) => playerPick(p, night)).length} of{" "}
+          {players.length} decided · stragglers get sent somewhere random
+        </p>
+      </div>
     </main>
   );
 }
@@ -798,9 +874,11 @@ function StoryletsScreen({
 function ResolveScreen({
   night,
   players,
+  threats,
 }: {
   night: number;
   players: PlayerState[];
+  threats: ThreatScores;
 }) {
   const results = useMemo(
     () =>
@@ -839,6 +917,9 @@ function ResolveScreen({
           <p className="text-center text-white/55">
             You take stock of the day, and tell each other what you saw.
           </p>
+          {/* Where the four dooms stood as the week played out; tonight's
+              relief or recklessness lands when the week ends. */}
+          <ThreatMetersCompact threats={threats} />
         </div>
         <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center gap-4">
           {results.slice(0, shown).map(({ player, result }) => (
@@ -880,18 +961,24 @@ function ResolveScreen({
 
 // ----------------------------------------------------------------- FINALE
 
-function FinaleScreen({ players }: { players: PlayerState[] }) {
+function FinaleScreen({
+  players,
+  threats,
+}: {
+  players: PlayerState[];
+  threats: ThreatScores;
+}) {
   const [ending] = useEnding();
 
-  // Compute the ending once, on the party's average stats, and publish it
-  // to shared state so it survives a host refresh.
+  // Compute the ending once — party flags plus how many dooms hit the cap —
+  // and publish it to shared state so it survives a host refresh.
   useEffect(() => {
     if (players.length === 0 || getPublishedEnding()) return;
     const party = players.map((p) => ({
       stats: playerStats(p),
       flags: playerFlags(p),
     }));
-    publishEnding(townEnding(party));
+    publishEnding(townEnding(party, getThreats()));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [players.length]);
 
@@ -924,6 +1011,11 @@ function FinaleScreen({ players }: { players: PlayerState[] }) {
             St Sebastian waits to learn its fate…
           </p>
         )}
+      </div>
+
+      {/* Where the four dooms ended; a maxed meter burns red with its blurb. */}
+      <div className="flex justify-center">
+        <ThreatMeters threats={threats} />
       </div>
 
       <section className="mt-4 w-full max-w-2xl">
@@ -960,7 +1052,13 @@ function FinaleScreen({ players }: { players: PlayerState[] }) {
 
 // --------------------------------------------------------------- EPILOGUE
 
-function EpilogueScreen({ players }: { players: PlayerState[] }) {
+function EpilogueScreen({
+  players,
+  threats,
+}: {
+  players: PlayerState[];
+  threats: ThreatScores;
+}) {
   const votes = new Map<string, number>();
   for (const p of players) {
     const v = playerVote(p);
@@ -975,6 +1073,7 @@ function EpilogueScreen({ players }: { players: PlayerState[] }) {
   return (
     <main className="flex min-h-screen flex-col items-center gap-10 p-10">
       <h1 className="text-5xl font-black">SEVEN WEEKS, ENDED</h1>
+      <ThreatMetersCompact threats={threats} />
       {wildest && (
         <p className="text-2xl text-parch-300">
           The village agrees:{" "}

@@ -100,7 +100,7 @@ export const store = new GameStore();
 // -------------------------------------------------------------- transport
 
 type Role =
-  | { kind: "host"; rejoinCode?: string }
+  | { kind: "host"; rejoinCode?: string; fresh?: boolean }
   | { kind: "player"; room: string; clientId: string; name: string };
 
 let socket: WebSocket | null = null;
@@ -153,7 +153,13 @@ function clearQueuedWrites(): void {
 function hello(): void {
   if (!desiredRole) return;
   if (desiredRole.kind === "host") {
-    sendRaw({ t: "create", roomCode: desiredRole.rejoinCode });
+    sendRaw({
+      t: "create",
+      roomCode: desiredRole.rejoinCode,
+      // NEW GAME purges all old rooms server-side — but only on the FIRST
+      // create. Once a code is assigned, every re-hello is a rejoin.
+      fresh: desiredRole.fresh && !desiredRole.rejoinCode ? true : undefined,
+    });
   } else {
     sendRaw({
       t: "join",
@@ -218,6 +224,7 @@ function handleMessage(msg: any): void {
       // no code, the server mints a fresh room, and the game splits.
       if (desiredRole?.kind === "host") {
         desiredRole.rejoinCode = String(msg.code);
+        desiredRole.fresh = false; // the purge (if any) already happened
       }
       store.lanIp = typeof msg.lanIp === "string" ? msg.lanIp : null;
       store.bump();
@@ -334,8 +341,11 @@ function establish(role: Role): Promise<string> {
   });
 }
 
-export function connectAsHost(rejoinCode?: string): Promise<string> {
-  return establish({ kind: "host", rejoinCode });
+export function connectAsHost(
+  rejoinCode?: string,
+  fresh = false,
+): Promise<string> {
+  return establish({ kind: "host", rejoinCode, fresh });
 }
 
 export function connectAsPlayer(

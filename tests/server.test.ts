@@ -12,13 +12,23 @@ process.env.SEVEN_NIGHTS_DEBOUNCE_MS = "120";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { start } = require("../server.js");
 
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+// NOT `join` — this file already has a join() protocol helper.
+import { join as pathJoin } from "node:path";
 import type { Server } from "node:http";
 
 let port = 0;
 let handle: { server: Server };
 
 beforeAll(async () => {
-  handle = start({ port: 0, dev: true });
+  // Isolated state dir: without it the tests share the LIVE server's
+  // .seven-nights folder — truncating its log and clobbering rooms.json.
+  handle = start({
+    port: 0,
+    dev: true,
+    stateDir: mkdtempSync(pathJoin(tmpdir(), "7n-test-")),
+  });
   await new Promise<void>((resolve) => {
     handle.server.on("listening", () => resolve());
     // already listening? address() returns object once bound
@@ -299,6 +309,76 @@ describe("host controls", () => {
       h.inbox.find((m) => m.t === "presence" && m.id === "ghost-1"),
     ).toBe(undefined);
     h.close();
+  });
+
+  it("a fresh create (NEW GAME) closes every other room and its sockets", async () => {
+    const a = await host();
+    const straggler = await join(a.code, "old-1", "Oldtimer");
+    const stragglerClosed = new Promise<void>((resolve) =>
+      straggler.ws.once("close", () => resolve()),
+    );
+
+    // The title screen's NEW GAME: create with fresh — old rooms die.
+    const b = new Client();
+    await b.open();
+    b.send({ t: "create", fresh: true });
+    const room = await b.next((m) => m.t === "room");
+    expect(room.code).not.toBe(a.code);
+
+    // The old phone's socket was closed by the server…
+    await stragglerClosed;
+
+    // …and the old room is gone: rejoining it fails like any dead room.
+    const back = new Client();
+    await back.open();
+    back.send({ t: "join", room: a.code, clientId: "old-1", name: "Oldtimer" });
+    const err = await back.next((m) => m.t === "error");
+    expect(err.code).toBe("NO_ROOM");
+
+    a.c.close();
+    b.close();
+    back.close();
+  });
+
+  it("a lingering host tab cannot resurrect a purged room", async () => {
+    const old = await host();
+    // NEW GAME kills old's room…
+    const fresh = new Client();
+    await fresh.open();
+    fresh.send({ t: "create", fresh: true });
+    await fresh.next((m) => m.t === "room");
+
+    // …so the old tab's auto-reconnect create is refused, not recreated.
+    const lingering = new Client();
+    await lingering.open();
+    lingering.send({ t: "create", roomCode: old.code });
+    const err = await lingering.next((m) => m.t === "error");
+    expect(err.code).toBe("ROOM_CLOSED");
+
+    // And phones can't join the zombie either.
+    const p = new Client();
+    await p.open();
+    p.send({ t: "join", room: old.code, clientId: "z-1", name: "Zed" });
+    const joinErr = await p.next((m) => m.t === "error");
+    expect(joinErr.code).toBe("NO_ROOM");
+
+    old.c.close();
+    fresh.close();
+    lingering.close();
+    p.close();
+  });
+
+  it("a host rejoin (CONTINUE) does not purge other rooms", async () => {
+    const a = await host();
+    const b = await host();
+    a.c.close();
+    const again = await host(a.code); // continue = create with a room code
+    expect(again.code).toBe(a.code);
+    // b's room survived: a player can still join it.
+    const p = await join(b.code, "still-1", "Still");
+    again.c.close();
+    b.c.close();
+    p.close();
   });
 
   it("a 7th player is rejected with FULL", async () => {

@@ -1,18 +1,16 @@
-import type { PlayerStats } from "./types";
+import type { PlayerStats, ThreatId, ThreatScores } from "./types";
+import { maxedThreats } from "./threats";
 
 /**
- * The fate of St Sebastian, decided by what the WHOLE party achieved over the
- * seven weeks. Each player carries flags (set by events); the town's fate is
- * scored across three axes — Defence, Plague, Food — plus whether anyone gave
- * themselves to the dark, and whether the Herald's secret was found.
+ * The fate of St Sebastian, decided by the four threat tracks the party
+ * spent seven weeks holding back. Any track still at the cap when the end
+ * comes lands its doom in full; the tier of the ending is simply HOW MANY
+ * dooms landed — none is a triumph, all four is annihilation.
  *
- * The flags below are the "spine": events across the locations set them, and
- * this is the one place that reads them. Tune the thresholds freely.
+ * Player flags still colour the edges: the Herald's secret can turn a clean
+ * sweep into a beacon, and a soul given to the dark makes the devils' work
+ * the more personal.
  */
-
-const DEFENCE = ["walls_repaired", "garrison_rallied", "militia_armed", "gate_secured"];
-const PLAGUE = ["quarantine_set", "dead_burned", "healers_organized", "plague_source_found"];
-const FOOD = ["granary_filled", "hoarders_broken", "forage_secured"];
 
 export interface PartyMember {
   stats: PlayerStats;
@@ -20,22 +18,25 @@ export interface PartyMember {
 }
 
 /** The town's ending paragraphs (last line is the loud one). */
-export function townEnding(party: PartyMember[]): string[] {
+export function townEnding(
+  party: PartyMember[],
+  threats: ThreatScores,
+): string[] {
   const f = new Set(party.flatMap((p) => p.flags));
-  const count = (keys: string[]) => keys.filter((k) => f.has(k)).length;
-  const def = count(DEFENCE);
-  const plg = count(PLAGUE);
-  const food = count(FOOD);
+  const maxed = maxedThreats(threats);
   const dark = f.has("turned_to_darkness");
   const secret = f.has("secret_found") || f.has("herald_favour");
 
-  if (dark && def + plg === 0) return ANARCHY;
-  if (def === 0) return BURNT;
-  if (plg === 0) return PLAGUE_SHELL;
-  if (def >= 2 && plg >= 2 && food >= 2 && secret) return BEACON;
-  if (def >= 2 && plg >= 2 && food >= 1) return HOLDS;
-  if (def >= 1 && plg >= 1 && food === 0) return STARVATION;
-  return REPEL_BUT_PLAGUE;
+  // A clean sweep with the Herald's secret in hand is the best of all ends.
+  if (maxed.length === 0) return secret ? BEACON : FULL_SUCCESS;
+
+  const tier = TIERS[Math.min(maxed.length, 4)];
+  const paragraphs: string[] = [tier.opener];
+  for (const id of maxed) {
+    paragraphs.push(id === "devils" && dark ? DEVILS_DARKENED : VIGNETTES[id]);
+  }
+  paragraphs.push(tier.lastLine);
+  return paragraphs;
 }
 
 /** A closing line for one player, from the choices they alone made. */
@@ -52,44 +53,70 @@ export function playerEnding(flags: string[]): string {
   return "You stayed to the end, and faced it on your feet. In a year like this one, that was its own kind of victory.";
 }
 
-const BURNT = [
-  "The walls were never made ready, and the warband did not knock. They came over the undefended stretch at dusk and the town was theirs by full dark.",
-  "St Sebastian burns. The screaming does not last as long as you would think.",
-  "THE TOWN IS PUT TO THE TORCH.",
+// --- Tier openers and last lines (index = number of dooms that landed) ---
+
+const TIERS: { opener: string; lastLine: string }[] = [
+  {
+    // 0 maxed — full success (the flagless version; see BEACON above).
+    opener:
+      "Seven weeks the dark pressed on St Sebastian, and seven weeks it found the town ready. The sick were tended, the granaries watched, the walls manned, the shadows swept. When the end came for the whole of the world, it could find no purchase here.",
+    lastLine: "ST SEBASTIAN STANDS. NOT ONE DOOM CAME HOME.",
+  },
+  {
+    // 1 maxed — minor success.
+    opener:
+      "The town holds — bruised, thinner, quieter than it was, but holding. Seven weeks of work turned aside almost every doom that came for it. Almost.",
+    lastLine: "ST SEBASTIAN SURVIVES — AND CARRIES ONE SCAR FOREVER.",
+  },
+  {
+    // 2 maxed — minor failure.
+    opener:
+      "You fought for the town, and the town knows it. But two of the dooms were never truly answered, and in the last weeks they came home together, each feeding the other in the streets.",
+    lastLine: "ST SEBASTIAN ENDURES, BUT IT WILL NOT BE CALLED LUCKY.",
+  },
+  {
+    // 3 maxed — major failure.
+    opener:
+      "What was done was not enough — not near enough. Three of the four dooms landed with their full weight, and no town in the world stands under three at once. What is left of St Sebastian is a name, a wall, and the people who could not leave.",
+    lastLine: "ST SEBASTIAN FALLS IN ALL BUT NAME.",
+  },
+  {
+    // 4 maxed — utter failure.
+    opener:
+      "Nothing was held. Nothing was healed, fed, defended, or driven out. The four dooms came down on St Sebastian together, and they did not quarrel over the spoils — there was ruin enough for all of them.",
+    lastLine: "ST SEBASTIAN IS WIPED FROM THE MAP. UTTER RUIN.",
+  },
 ];
 
-const PLAGUE_SHELL = [
-  "The gates held. The blades were ready. None of it mattered: the sickness was already inside, and no one had thought to stop it.",
-  "By the time the warband turns away — finding nothing left worth taking — St Sebastian is a town of shuttered houses and unburied dead. A shell, breathing faintly.",
-  "THE PLAGUE HOLLOWS THE TOWN TO A SHELL.",
-];
+// --- One vignette per doom that landed ---
 
-const ANARCHY = [
-  "Nothing was held. Nothing was healed. In the dark the town ate itself — neighbour against neighbour in the streets, and behind his barred doors the lord set a long table and learned a new and terrible appetite.",
-  "When the red eyes look again upon St Sebastian, they are well pleased.",
-  "ANARCHY REIGNS. THE DARK HAS WON.",
-];
+const VIGNETTES: Record<ThreatId, string> = {
+  plague:
+    "The sick were never dealt with. The pest moved from the docks to the slums to every parish, faster than the carts could carry, and the pits beyond the wall grew wider week on week until no one troubled to count the dead.",
+  starvation:
+    "The food was never sorted. The granaries stood empty, the hoarders kept their locks, and hunger did its patient work — the kind of dying that makes no sound and spares no one small.",
+  war:
+    "The walls were never made ready for the warband. It came over the weak stretch at dusk, desperate and dying and vicious for it, and took in one night what the town had spent a hundred years building.",
+  devils:
+    "The dark took root. It had asked so little — a bargain here, a blind eye there — and by the last week it walked the streets openly, red-eyed and patient, and the town had nothing left to bar against it.",
+};
 
-const REPEL_BUT_PLAGUE = [
-  "The walls held and the warband broke against them, dragging its dying back into the dark. A victory — paid for in a coin no one counted until after.",
-  "For the plague was loose within, and it took its tithe street by street through the long winter. The town survives. So much of the town does not.",
-  "THE RAIDERS ARE THROWN BACK; THE SICKNESS IS NOT.",
-];
+/** The devils vignette when one of the party gave themselves to it. */
+const DEVILS_DARKENED =
+  "The dark took root — and it did not force the door, for one of your own company held it open. It knew the town's weak places because it had been told them, kindly, by a familiar voice, and by the last week the red eyes looked out of a face the town once trusted.";
 
-const STARVATION = [
-  "The walls held; the sickness was checked; the warband found a town that would not break and slunk away to die elsewhere.",
-  "But no one had filled the granaries, and a defended town is still a hungry one. The dying slows but does not stop, and St Sebastian crawls toward spring on empty bellies.",
-  "THE TOWN IS SAVED, AND STARVES.",
-];
+// --- Full success, with the Herald's secret in hand ---
 
-const HOLDS = [
-  "Walls manned, sick quarantined, mouths fed — barely, on all three. When the warband came, St Sebastian met it whole, and when the sickness rose, the town had hands enough to bury and to heal.",
-  "It was the narrowest of margins. But the gate stayed shut, and behind it the people lived.",
-  "ST SEBASTIAN HOLDS BACK THE DARK. BARELY.",
-];
+const FULL_SUCCESS_LINES = TIERS[0];
 
 const BEACON = [
-  "Walls, healers, granaries, and the thing the Herald sought, all secured before the end. When the dark came down on the whole of the world, it broke upon this one town and went around.",
+  "Seven weeks the dark pressed on St Sebastian, and seven weeks it found the town ready — the sick tended, the granaries full, the walls manned, the shadows swept. And beneath it all, the thing the Herald sought, found and held before the end.",
   "Word spreads of a place that did not fall. Refugees turn their carts toward St Sebastian, and find its gates open and its fires lit — a single light held up against a continent of ash.",
   "ST SEBASTIAN BECOMES A BEACON IN THE LONG NIGHT.",
+];
+
+const FULL_SUCCESS = [
+  FULL_SUCCESS_LINES.opener,
+  "It was the narrowest of margins, bought a night at a time by people who owed the town nothing. When the warband's smoke drifts elsewhere and the carts stop coming, St Sebastian is still standing to see the spring.",
+  FULL_SUCCESS_LINES.lastLine,
 ];

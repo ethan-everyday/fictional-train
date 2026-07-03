@@ -1,55 +1,392 @@
 {
+  "meta": {
+    "name": "The Docks",
+    "blurb": "Refugees, the sick off the boats, and the last ship out."
+  },
   "activities": [
     {
-      "id": "docks_quay",
+      "id": "docks_traders",
       "location": "docks",
-      "name": "Walk the crowded quay",
-      "blurb": "Where the gangplanks groan, the desperate gather, and the last hulls still take coin for a place at the rail."
+      "name": "Talk to the traders",
+      "blurb": "Three foreign hulls still work the quay — Spanish grain, Frisian steel, and a Moorish ship no one from the town has ever boarded."
     },
     {
-      "id": "docks_meet_boats",
+      "id": "docks_haul",
       "location": "docks",
-      "name": "Meet the incoming boats",
-      "blurb": "Every tide lands more refugees, and more of them carried ashore already burning."
-    },
-    {
-      "id": "docks_smuggle",
-      "location": "docks",
-      "name": "Work the torchlit wharf",
-      "blurb": "A nameless hull, an unlisted shift, grain and worse run ashore in the dark."
-    },
-    {
-      "id": "docks_harbourmaster",
-      "location": "docks",
-      "name": "Deal with the harbourmaster",
-      "blurb": "He keeps the tally of every keel, and knows which ones should never have docked."
+      "name": "Haul cargo",
+      "blurb": "Honest coin for a strong back, and half the harbour's secrets talked over your head while you sweat."
     }
   ],
   "events": [
     {
-      "id": "docks_first_footing",
+      "id": "docks_spanish_provisions",
       "location": "docks",
       "activities": [
-        "docks_quay"
+        "docks_traders"
       ],
-      "maxWeek": 2,
+      "repeatable": true,
       "weight": 3,
-      "text": "This is the very stone you stepped onto off the boat — foreign and friendless, the red-eyed thing's words still ringing behind your teeth. The harbour is loud and blind to all of it: gulls, ropes, the ordinary clamour of a town that does not yet know it is already dead.",
+      "text": "The Spanish carrack rides low at her mooring, holds heavy with grain, salt fish and good oil out of the south. Her master is no fool — he knows what a starving town will pay before it starves — but he deals fair, weighs true, and sells to any hand that shows him honest coin. The markets above the harbour are already going to bare boards.",
       "effect": {
-        "text": "You find your land-legs in the press and let no man read your face. Better they take you for one more sea-sick stranger than for the thing the vision named you. You learn the shape of the quay — which gates, which hulls, which way out if it comes to running. It will.",
-        "outcome": "got their footing on St Sebastian's quay and marked every way out.",
+        "text": "You count out your coin and he counts out the sacks, fair as a churchwarden. You see the grain landed and carried up into the lanes where the need is worst, and for one more day the ovens of St Sebastian have something to bake. It is a bucket against a burning house — but every mouthful buys the town another hour on its feet.",
+        "outcome": "bought Spanish grain and put bread within the town's reach.",
         "stats": {
-          "agility": 1,
-          "will": 1
+          "wealth": -1
+        },
+        "threats": {
+          "starvation": -1
         }
       }
+    },
+    {
+      "id": "docks_spanish_stories",
+      "location": "docks",
+      "activities": [
+        "docks_traders"
+      ],
+      "repeatable": true,
+      "weight": 2,
+      "text": "The Spanish crew keep a brazier lit on the quayside, and their hospitality has outlived even this town's luck. They wave you into the circle — wine goes round, then dice, then stories: drowned saints, burning ports, the strange lights their steersman swears follow the ship on moonless nights.",
+      "effect": {
+        "text": "You give them your best half-true tales and take theirs in trade, and somewhere past midnight the talk turns quiet and useful: which hulls are truly leaving, which masters are lying about it, what the fishermen have stopped saying out loud. You walk away warmer, and knowing more of this harbour than most men born to it.",
+        "outcome": "traded stories at the Spanish brazier and came away the wiser.",
+        "stats": {
+          "intelligence": 1,
+          "will": 1
+        },
+        "flags": [
+          "dock_rumours"
+        ]
+      }
+    },
+    {
+      "id": "docks_spanish_protect",
+      "location": "docks",
+      "activities": [
+        "docks_traders"
+      ],
+      "weight": 2,
+      "text": "The Spanish master stops you on the quay, grim under his courtesy. Thieves have marked his grain — he has watched them counting his hatches from the shadow of the warehouses — and tonight, on the black tide, he believes they will come for it. His crew is willing but few. He asks you to stand with them until first light.",
+      "choices": [
+        {
+          "label": "Stand the gangplank with the crew",
+          "check": {
+            "stat": "strength",
+            "dc": 5
+          },
+          "pass": {
+            "text": "They come over the rail at the darkest turn of the tide and find you planted on the boards, boathook in hand. You put the first man into the harbour and the second into the crates behind him, and the rest melt back into the dark that sent them. By dawn the crew are pressing wine on you and calling you brother, and the master's grip on your arm says the word is meant.",
+            "outcome": "held the Spanish gangplank against thieves and was made one of the crew.",
+            "stats": {
+              "strength": 1,
+              "will": 1
+            },
+            "flags": [
+              "spanish_friends"
+            ]
+          },
+          "fail": {
+            "text": "They come in numbers no one guessed and it is all shoulders and boathooks and cursing in the dark. You take a blow that puts you on the boards, but you get up, and you go on getting up until the tide turns and they give it over. The grain is safe. Your ribs will remember the price of it for a week.",
+            "outcome": "took a beating keeping thieves off the Spanish grain.",
+            "stats": {
+              "will": 1
+            }
+          }
+        },
+        {
+          "label": "Hunt the thieves through the stacked cargo",
+          "check": {
+            "stat": "agility",
+            "dc": 5
+          },
+          "pass": {
+            "text": "You go over the crates soft as a cat while the crew make their noise at the gangplank, and find the thieves crouched at their little boat with muffled oars. You cut it adrift before they know you are there, and when they turn to run there is nowhere left to run to. The Spanish haul them up laughing, and the master swears in three tongues that his ship is yours.",
+            "outcome": "caught the grain-thieves at their boat and won the Spanish crew's friendship.",
+            "stats": {
+              "agility": 1,
+              "intelligence": 1
+            },
+            "flags": [
+              "spanish_friends"
+            ]
+          },
+          "fail": {
+            "text": "You lose them in the black lanes between the warehouses — one moment three shadows, the next only rain and your own breathing. The crew keep the deck and lose nothing, but nothing is owed to you for it, and the master's thanks in the grey morning is courteous and cool.",
+            "outcome": "chased the grain-thieves into the dark and lost them.",
+            "stats": {
+              "agility": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "docks_spanish_payoff",
+      "location": "docks",
+      "activities": [
+        "docks_traders"
+      ],
+      "requires": [
+        "spanish_friends"
+      ],
+      "weight": 2,
+      "text": "The Spanish master takes you below to the little cabin where he keeps his good wine, and pours like a man paying a debt. The talk goes where all harbour talk goes now — and lands on the Moorish ship. He has traded with her master for twenty years, he says, from Málaga to Alexandria. Those spears at her rail are not for men who come as friends of his.",
+      "effect": {
+        "text": "He teaches it to you twice over: the master's name, spoken right; the greeting of his house; and the knot of red cord his friends wear at the wrist, which he ties on you with his own hands. Come to her rail with that word and that cord, he says, and no spear in this harbour will be lowered at you. He empties his cup to the health of both ships.",
+        "outcome": "learned from the Spanish crew the word that opens the Moorish ship.",
+        "stats": {
+          "intelligence": 1,
+          "will": 1
+        },
+        "flags": [
+          "moor_way_aboard"
+        ]
+      }
+    },
+    {
+      "id": "docks_frisian_arms",
+      "location": "docks",
+      "activities": [
+        "docks_traders"
+      ],
+      "weight": 2,
+      "text": "The Frisian cog is a chandlery of war — pikes racked like oars, axes in greased bundles, sword-blanks sweating oil in their crates. Her master sells without sentiment and without questions, and he is honest about why his prices are still sane: he means to sail soon, and steel weighs heavy in a hull that wants to run.",
+      "effect": {
+        "text": "You pay the Frisian price and see the crates carried up the hill to men who can use what is in them — watchmen with cudgels who tonight have spears, prentices drilling in a yard with real steel in their fists at last. It will not make soldiers of them. It will make the warband's work slower and dearer, and that may be all the difference there is.",
+        "outcome": "bought Frisian steel and put spears in the hands of the town's defenders.",
+        "stats": {
+          "wealth": -2
+        },
+        "threats": {
+          "war": -1
+        }
+      }
+    },
+    {
+      "id": "docks_frisian_devil",
+      "location": "docks",
+      "activities": [
+        "docks_traders"
+      ],
+      "minWeek": 2,
+      "weight": 2,
+      "text": "You mark it before you understand it: the Frisians will not sleep ashore. Not one of them, not for beds or baths or company, though their master could buy the inn outright. When you ask why, the deck goes quiet, until the old bosun spits over the rail and says it plain: they have seen what walks this town after dark. Man-shaped, up on the rooftops, still as a weathervane — and its eyes, he says, glow like a banked fire.",
+      "effect": {
+        "text": "He tells it flat, the way a man reports weather: three nights running, always at the turn of the watch, always watching the town and never the sea. The crew have hung hex-signs in the rigging and keep a lamp burning at every hatch until dawn. You keep your own counsel — you know of one red-eyed thing already, and the thought that it is not alone in St Sebastian settles into you like cold water.",
+        "outcome": "heard from the Frisian crew what walks the rooftops of St Sebastian at night.",
+        "stats": {
+          "intelligence": 1,
+          "will": 1
+        },
+        "flags": [
+          "devil_rumour"
+        ]
+      }
+    },
+    {
+      "id": "docks_frisian_job",
+      "location": "docks",
+      "activities": [
+        "docks_traders"
+      ],
+      "forbids": [
+        "frisian_job",
+        "frisian_refused"
+      ],
+      "minWeek": 2,
+      "weight": 2,
+      "text": "The Frisian master draws you in under the sterncastle, where no one idles by accident. There is a trader in the market, he says — a rival who bought his buyers out from under him with lies and a fatter purse. In that man's strongbox sits coin the Frisian calls his own. He is not asking you to judge the claim. He is asking whether you can open a strongbox, and what you would charge.",
+      "choices": [
+        {
+          "label": "Take the Frisian's coin",
+          "effect": {
+            "text": "Half now, he says, counting it into your palm without ceremony, half when the box is empty. The rest is simple: the rival keeps his strongbox behind his stall in the market, and the market at night is only shadows and rats. You pocket the silver. Somewhere up the hill, a man you have never met has already been robbed — he just does not know it yet.",
+            "outcome": "took Frisian silver to rob a rival trader in the market.",
+            "stats": {
+              "wealth": 2
+            },
+            "flags": [
+              "frisian_job"
+            ]
+          }
+        },
+        {
+          "label": "Refuse the work",
+          "effect": {
+            "text": "You set his coin back on the barrelhead and tell him to find another pair of hands. He shrugs, unoffended — in his trade a man hears no more often than yes. But walking back down the gangplank you carry something worth more than his silver: the knowledge of exactly what you will not yet do, even in a dying town.",
+            "outcome": "refused Frisian silver and the dirty work that came with it.",
+            "stats": {
+              "will": 1
+            },
+            "flags": [
+              "frisian_refused"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "docks_moorish_boarding",
+      "location": "docks",
+      "activities": [
+        "docks_traders"
+      ],
+      "forbids": [
+        "moor_way_aboard"
+      ],
+      "weight": 2,
+      "text": "The Moorish ship rides apart from all the rest, high-sided and beautiful, lamps burning at bow and stern the whole night through. Spearmen stand her rail in paired watches, and no one from the town has ever set foot on her deck — though everyone can tell you what she carries: physic and medicines, star-charts, silks, wonders. In a town this sick, that hold is worth more than the castle.",
+      "choices": [
+        {
+          "label": "Talk your way up the gangplank",
+          "check": {
+            "stat": "will",
+            "dc": 6
+          },
+          "pass": {
+            "text": "You stand at the foot of the gangplank, open-handed, and speak to the spears as if they were men — plainly, of the sick in the lanes above, and of coin honestly offered. Something in your bearing decides them where words alone would not have. The ship's physician receives you like a colleague, hears the town's symptoms with a darkening face, and sells you a case of his own physic — herbs, syrups, instructions twice repeated. It will not save St Sebastian. It will save some of it.",
+            "outcome": "talked their way aboard the Moorish ship and came away with physic for the sick.",
+            "stats": {
+              "will": 1,
+              "wealth": -1
+            },
+            "threats": {
+              "plague": -1
+            }
+          },
+          "fail": {
+            "text": "The spears come down level before you have finished your second sentence, courteous and absolute as a closed door. No insult is offered and none is needed — you are of the plague-town, and the plague-town stays ashore. You walk back down the quay with their lamps burning at your back.",
+            "outcome": "was turned away from the Moorish ship at spear-point.",
+            "stats": {
+              "will": 1
+            }
+          }
+        },
+        {
+          "label": "Slip aboard unseen",
+          "check": {
+            "stat": "agility",
+            "dc": 6
+          },
+          "pass": {
+            "text": "You go up the anchor-cable in the black hour between watches, over the rail and down into a hold that smells of cedar and camphor and other lives. Chests of silk, bolts of dyed cloth — and a chart-room aft where the sky itself has been written down in silver ink. You read until your eyes ache, pocket a trinket of worked silver for your trouble, and are back over the rail before the watch turns.",
+            "outcome": "slipped aboard the Moorish ship unseen and read her star-charts by lamplight.",
+            "stats": {
+              "intelligence": 1,
+              "wealth": 1
+            }
+          },
+          "fail": {
+            "text": "A hand takes your collar at the rail — you never hear the man behind it — and the harbour comes up cold and black and total. They do not even trouble to beat you. You drag yourself out at the water-stair, coughing bilge, to find the spearmen already looking elsewhere, as if you had never been worth the interruption.",
+            "outcome": "was caught boarding the Moorish ship and thrown in the harbour.",
+            "stats": {
+              "will": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "docks_moorish_welcome",
+      "location": "docks",
+      "activities": [
+        "docks_traders"
+      ],
+      "requires": [
+        "moor_way_aboard"
+      ],
+      "weight": 3,
+      "text": "You come down the quay to the Moorish ship wearing the knot of red cord at your wrist, and speak the master's name to the rail the way the Spanish taught you. The effect is like a word of power out of a story: the spears go up, the gangplank comes down, and a voice from the deck calls welcome in three languages to a friend of an old friend.",
+      "effect": {
+        "text": "Coffee and dates in the sterncastle; talk that runs from Alexandria to the ice; and when the master learns why you keep asking after his physician, all trade stops. The ship's whole chest of physic is brought up — remedies for the fever's every stage, in the physician's own hand — sold at a friend's price and carried ashore before the tide turns. Somewhere in the lanes above, people will live who were already counted among the dead.",
+        "outcome": "was welcomed aboard the Moorish ship and came away with a chest of true physic.",
+        "stats": {
+          "intelligence": 1,
+          "will": 1,
+          "wealth": -1
+        },
+        "threats": {
+          "plague": -2
+        }
+      }
+    },
+    {
+      "id": "docks_haul_shift",
+      "location": "docks",
+      "activities": [
+        "docks_haul"
+      ],
+      "repeatable": true,
+      "weight": 3,
+      "text": "The quay wants backs and does not care whose. Grain inbound, panic-bought furniture outbound, steel and salt fish and worse, and the master stevedore bawling for hands by the crane — with pay in honest coin at the shift's end for any who last it. In a town where every other trade is dying, hauling has never been busier.",
+      "choices": [
+        {
+          "label": "Put your back into it",
+          "check": {
+            "stat": "strength",
+            "dc": 5
+          },
+          "pass": {
+            "text": "You take the heavy end of everything all shift long and set a pace the regulars curse and then, grudgingly, match. The stevedore watches you carry double loads up the swaying boards without a slip, and at the shift's end he pays you double without being asked — and tells you there is work here any night you want it.",
+            "outcome": "out-hauled every man on the quay and was paid double for it.",
+            "stats": {
+              "strength": 1,
+              "wealth": 2
+            }
+          },
+          "fail": {
+            "text": "The sacks are heavier than they look and the boards slicker, and by mid-shift your shoulders are one long ember. But you last it — that is the whole of the bargain — and the stevedore counts your wage into your palm the same as any man's. Nobody starves for want of trying. Not on the quay, at least.",
+            "outcome": "sweated out a full shift on the quay and took an honest wage.",
+            "stats": {
+              "wealth": 1
+            }
+          }
+        },
+        {
+          "label": "Slack off in the shadow of the stacks",
+          "random": [
+            {
+              "weight": 1,
+              "effect": {
+                "text": "You develop, over one long evening, a genuine craft: always a sack on the shoulder, never the same sack twice; always walking, never arriving. The stevedore's eye slides over you a dozen times and snags on nothing. At the shift's end you take your full wage with a straight face and shoulders as fresh as morning.",
+                "outcome": "idled a whole shift unnoticed and was paid all the same.",
+                "stats": {
+                  "agility": 1,
+                  "wealth": 1
+                }
+              }
+            },
+            {
+              "weight": 2,
+              "effect": {
+                "text": "You are on your third slow circuit of the same crate when the stevedore's hand lands on your shoulder like a loading-hook. He does not shout. He simply walks you to the end of the quay, names every man waiting for a place, and lets the whole line watch you leave. There is no wage, and there will be a colder welcome next time.",
+                "outcome": "was caught slacking on the quay and sent off unpaid."
+              }
+            },
+            {
+              "weight": 1,
+              "effect": {
+                "text": "You find the perfect spot — a gap in the stacks where a man with a sack on his shoulder looks busy from every side — and the perfect spot turns out to have ears. Sailors talk over the stacks all evening as if no one were there: which master is bribing the harbourmaster, what the fishermen netted that they threw back and would not name, whose warehouse holds grain that sits on no ledger. You collect your wage at the end like a man collecting winnings.",
+                "outcome": "loafed among the stacks and came away paid, and better informed.",
+                "stats": {
+                  "intelligence": 1,
+                  "wealth": 1
+                },
+                "flags": [
+                  "dock_rumours"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "docks_news_from_sea",
       "location": "docks",
       "activities": [
-        "docks_quay",
-        "docks_meet_boats"
+        "docks_traders",
+        "docks_haul"
       ],
       "minWeek": 3,
       "weight": 3,
@@ -81,122 +418,21 @@
       }
     },
     {
-      "id": "docks_grain_contact",
+      "id": "docks_sealed_hold",
       "location": "docks",
       "activities": [
-        "docks_smuggle",
-        "docks_quay"
+        "docks_haul"
       ],
-      "minWeek": 3,
-      "weight": 2,
-      "text": "A hard woman with a riverman's hands works a corner where no torch reaches. She has grain, she says low — real grain, sacks of it, run past the harbourmaster's tally off a hull that was never here. The town will starve before the month is out, and she sells only to those who can keep a shut mouth.",
-      "check": {
-        "stat": "will",
-        "dc": 4
-      },
-      "pass": {
-        "text": "You meet her eye and give nothing away, and she decides you'll do. She'll find you again, she says, when there is a real run to make. Remember the corner. Forget her face.",
-        "outcome": "won a smuggler's trust and a road to grain the town will soon kill for.",
-        "stats": {
-          "will": 1,
-          "intelligence": 1
-        },
-        "flags": [
-          "grain_contact"
-        ]
-      },
-      "fail": {
-        "text": "You ask one question too many and her hand drifts to something under her coat. She melts back into the black between the warehouses and is simply gone, grain and all. The corner is empty stone when you look again.",
-        "outcome": "spooked a grain smuggler and lost the corner.",
-        "stats": {
-          "agility": 1
-        }
-      }
-    },
-    {
-      "id": "docks_run_the_grain",
-      "location": "docks",
-      "activities": [
-        "docks_smuggle"
-      ],
-      "requires": [
-        "grain_contact"
-      ],
-      "minWeek": 4,
-      "weight": 3,
-      "text": "The smuggler-woman is good to her word. A low hull waits on the black tide, holds heavy with grain the harbourmaster's ledger swears does not exist. She needs strong backs and silent ones to land it before the tide and the watch both turn. In the lanes above, the town is already going to bed hungry.",
-      "check": {
-        "stat": "strength",
-        "dc": 5
-      },
-      "pass": {
-        "text": "You haul sack after sack up the slick boards in the hooded lamplight, lungs afire, saying nothing. By the turn of the tide a winter's worth of grain lies hidden above the high-water line — enough to keep bread in St Sebastian when the markets go to bare boards. No ledger will ever know it landed.",
-        "outcome": "ran a hull of smuggled grain ashore to feed the town in secret.",
-        "stats": {
-          "strength": 1,
-          "wealth": 1
-        },
-        "flags": [
-          "forage_secured"
-        ]
-      },
-      "fail": {
-        "text": "A sack splits on the boards and the rest comes too slow; the tide turns against you and a watch-lantern swings down the quay. You save perhaps half before the hull must slip its line and run for open water. Half is better than starving — but it is only half, and you will count it again come the hungry weeks.",
-        "outcome": "saved half a smuggled grain run before the tide and the watch closed in.",
-        "stats": {
-          "will": 1
-        },
-        "flags": [
-          "forage_secured"
-        ]
-      }
-    },
-    {
-      "id": "docks_harbourmaster_tally",
-      "location": "docks",
-      "activities": [
-        "docks_harbourmaster"
-      ],
-      "weight": 2,
-      "text": "The harbourmaster sits in his draughty counting-house, a ledger of every keel open before him and a settled squint of suspicion for foreigners. He will trade words with you — but he weighs each one, and a stranger off a refugee boat has a deal of weighing to live through.",
+      "minWeek": 2,
+      "weight": 1,
+      "text": "The stevedore sends you out along the far mole to strip a derelict — an old hull that came in years back and never left, kept on the lord's own tally though no man works her. Below decks she is bare as a picked bone, except aft: a hold sealed under wax and lead, the lord's mark pressed deep into both, and the air around it strangely still.",
       "check": {
         "stat": "intelligence",
         "dc": 5
       },
       "pass": {
-        "text": "You answer his questions before he can put them, and show a head for tallies and tides that a counting-man respects in spite of himself. By the end he lets slip which hulls he trusts, which he watches, and which one he has never once been able to explain. A wary sort of friend, kept behind the ledger.",
-        "outcome": "won the harbourmaster's wary trust across his own ledger.",
-        "stats": {
-          "intelligence": 1,
-          "will": 1
-        },
-        "flags": [
-          "harbourmaster_trust"
-        ]
-      },
-      "fail": {
-        "text": "He catches you stumbling over a tide-table no honest sailor would muddle, and the squint hardens to flint. He gives you nothing but the door and a long look that promises he will remember your foreign face the next time something goes missing off his quay.",
-        "outcome": "failed the harbourmaster's scrutiny and earned his suspicion.",
-        "stats": {
-          "will": 1
-        }
-      }
-    },
-    {
-      "id": "docks_unexplained_hull",
-      "location": "docks",
-      "activities": [
-        "docks_harbourmaster",
-        "docks_quay"
-      ],
-      "requires": [
-        "harbourmaster_trust"
-      ],
-      "weight": 2,
-      "text": "The harbourmaster draws you aside, uneasy as a man at a graveside. There is a hull in his ledger he cannot account for — came in years back, never left, manifest sealed under the lord's own mark. The crew that brought her are dead or long scattered. Whatever she carried into St Sebastian, he says, it never came off as cargo. The red eyes of your vision spoke of secret things this town keeps buried. Something in you goes very still.",
-      "effect": {
-        "text": "He lets you read the sealed entry by lamplight. A name, a date, a weight no honest freight would match, and the lord's mark pressed deep enough to scar the page. Whatever your patron wants hidden in this town, its trail begins here — the first true thread of the secret you were sent to pull. You commit it to memory and let him seal the book again.",
-        "outcome": "found the first thread of the town's buried secret in the harbour ledger.",
+        "text": "You do not break the seal — you read it. The date worked into the wax, the shipwright's marks on the timbers, the manifest scratched faint on the hold's lintel and imperfectly burned away: a name, a weight no honest freight would match, and the lord's mark over all of it like a hand pressed on a mouth. Whatever your red-eyed patron wants unburied in this town, its trail begins in this cold hold. You leave everything exactly as you found it and carry the knowing ashore.",
+        "outcome": "found the first thread of the town's buried secret in a sealed hold.",
         "stats": {
           "intelligence": 1,
           "will": 1
@@ -204,13 +440,20 @@
         "flags": [
           "relic_clue"
         ]
+      },
+      "fail": {
+        "text": "The seal keeps its counsel. Wax, lead, the lord's mark, a date too worn to read — you turn it every way you know and it comes to nothing but a prickle down your neck and a strong desire for daylight. You strip the hull of her fittings as you were sent to do, and leave the sealed hold sitting in the dark behind you, patient as a grave.",
+        "outcome": "found a sealed hold under the lord's mark and could make nothing of it.",
+        "stats": {
+          "will": 1
+        }
       }
     },
     {
-      "id": "docks_fever_off_the_boats",
+      "id": "docks_fever_boats",
       "location": "docks",
       "activities": [
-        "docks_meet_boats"
+        "docks_haul"
       ],
       "minWeek": 4,
       "weight": 3,
@@ -226,8 +469,11 @@
               "strength": 1
             },
             "flags": [
-              "carried_the_sick"
-            ]
+              "docks_carried_the_sick"
+            ],
+            "threats": {
+              "plague": 1
+            }
           }
         },
         {
@@ -247,87 +493,10 @@
       ]
     },
     {
-      "id": "docks_refugee_mother",
-      "location": "docks",
-      "activities": [
-        "docks_meet_boats",
-        "docks_quay"
-      ],
-      "requires": [
-        "carried_the_sick"
-      ],
-      "minWeek": 5,
-      "weight": 2,
-      "text": "A woman who watched you carry her fevered husband up off the shingle finds you again on the quay. He died in the night — but he died ashore, in clean air, not on a boatman's deck, and she has not forgotten it. She presses something into your hand: a small sea-worn token, all she owns, and word that the refugees on the strand will do you a kindness if ever you need one.",
-      "effect": {
-        "text": "You try to give the token back and she folds your fingers shut over it. Among the desperate on the strand, your name has quietly become one of the good ones — and in the weeks bearing down on this town, that may yet be worth more than coin or steel.",
-        "outcome": "earned the refugees' trust for a mercy shown at the boats.",
-        "stats": {
-          "will": 1,
-          "intelligence": 1
-        },
-        "flags": [
-          "refugees_trust"
-        ]
-      }
-    },
-    {
-      "id": "docks_grasping_captain",
-      "location": "docks",
-      "activities": [
-        "docks_quay"
-      ],
-      "minWeek": 5,
-      "maxWeek": 6,
-      "weight": 2,
-      "text": "A captain with a sound hull and a rotten soul is filling his hold with paying flesh while the prices are good and the panic still young. He will sell you a berth out now, ahead of the crush, for a year's wage — and he murmurs that for a little more, he could quietly strike a sick family from his list to make room for a healthy one.",
-      "choices": [
-        {
-          "label": "Pay the extra to bump the sick aside",
-          "effect": {
-            "text": "Coin changes hands twice. A coughing family is scratched off his manifest with one stroke of the quill and ushered back down the gangplank into the throng, and your name goes on in their place, healthy and high on the list. You do not watch them go. You have your ship; let the town keep its mercy.",
-            "outcome": "bought a sick family's berth out from under them for a place on the ship.",
-            "stats": {
-              "wealth": -2,
-              "agility": 1
-            },
-            "flags": [
-              "passage_secured",
-              "turned_to_darkness"
-            ]
-          }
-        },
-        {
-          "label": "Buy an honest berth and leave the list be",
-          "effect": {
-            "text": "You pay the year's wage for your own place and nothing more, and tell him to leave the sick family standing where they are. He shrugs — coin is coin, by whatever name. You have your way off St Sebastian when the end comes, and you did not climb over anyone to take it.",
-            "outcome": "bought an honest berth on the ship and left the sick their place.",
-            "stats": {
-              "wealth": -1,
-              "will": 1
-            },
-            "flags": [
-              "passage_secured"
-            ]
-          }
-        },
-        {
-          "label": "Refuse him and walk away",
-          "effect": {
-            "text": "You leave his coin where it lies and his gangplank at your back. Whatever ship carries you out of this — if any ship does — it will not be his, and it will not be bought across the spines of the dying. The quay is loud and cold, and you have made it a shade colder for one grasping man.",
-            "outcome": "turned down a grasping captain's berth and his cruelty both.",
-            "stats": {
-              "will": 1
-            }
-          }
-        }
-      ]
-    },
-    {
       "id": "docks_last_ship",
       "location": "docks",
       "activities": [
-        "docks_quay"
+        "docks_traders"
       ],
       "minWeek": 6,
       "weight": 4,

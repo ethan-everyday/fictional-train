@@ -36,8 +36,10 @@ if errorlevel 1 (
 
 :run
 REM Find this PC's Wi-Fi/LAN IP so the phones know where to point.
+REM Only LIVE addresses count: an unplugged adapter keeps a deprecated DHCP
+REM address that phones can't reach (they'd sit on a white screen).
 set LANIP=localhost
-for /f %%i in ('powershell -NoProfile -Command "(Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike '169.254*' -and $_.IPAddress -ne '127.0.0.1' } | Select-Object -First 1).IPAddress"') do set LANIP=%%i
+for /f %%i in ('powershell -NoProfile -Command "(Get-NetIPAddress -AddressFamily IPv4 -AddressState Preferred | Where-Object { $_.IPAddress -notlike '169.254*' -and $_.IPAddress -ne '127.0.0.1' -and (Get-NetAdapter -InterfaceIndex $_.InterfaceIndex -ErrorAction SilentlyContinue).Status -eq 'Up' } | Select-Object -First 1).IPAddress"') do set LANIP=%%i
 
 echo.
 echo   ===========================================

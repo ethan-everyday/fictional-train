@@ -5,6 +5,7 @@ import { DeltaChips } from "@/components/StatBits";
 import {
   activitiesFor,
   applyEffect,
+  choiceRoll,
   pickEvent,
   resolveEffect,
   selectionSeed,
@@ -17,6 +18,8 @@ import type {
   NightRecord,
   PlayerStats,
   StoryletResult,
+  ThreatDeltas,
+  ThreatId,
 } from "@/lib/game/types";
 
 interface Props {
@@ -80,7 +83,13 @@ export default function EventPlayer({
 
   const resolved: EventEffect | null = useMemo(() => {
     if (!event) return null;
-    return resolveEffect(event, stats, chosenIndex ?? undefined);
+    // The random-choice roll is seeded like event selection, so the same
+    // save blob resolves to the same fate after a refresh.
+    const rand01 =
+      chosenIndex !== null && activityId
+        ? choiceRoll(playerId, night, activityId, chosenIndex)
+        : undefined;
+    return resolveEffect(event, stats, chosenIndex ?? undefined, rand01);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [event, chosenIndex]);
 
@@ -133,6 +142,7 @@ export default function EventPlayer({
       stats: nextStats,
       deltas,
       flagsSet: resolved.flags ?? [],
+      threats: resolved.threats,
     });
   }
 
@@ -206,8 +216,9 @@ export default function EventPlayer({
               {resolved.text}
             </p>
           </div>
-          <div className="mb-6 flex justify-center">
+          <div className="mb-6 flex flex-col items-center gap-3">
             <DeltaChips deltas={fullDelta(stats, resolved)} />
+            <ThreatLines threats={resolved.threats} />
           </div>
           <button
             onClick={finish}
@@ -226,6 +237,48 @@ export default function EventPlayer({
 /** The delta the outcome will produce, for the chips (before it's applied). */
 function fullDelta(stats: PlayerStats, effect: EventEffect): PlayerStats {
   return applyEffect(stats, effect).deltas;
+}
+
+// One quiet line per threat the outcome touched — eased or fed.
+const THREAT_EASED: Record<ThreatId, string> = {
+  plague: "The town's plague-burden eases.",
+  starvation: "The town will eat a little longer.",
+  war: "The town stands a little readier for the warband.",
+  devils: "The dark loses a little of its footing.",
+};
+
+const THREAT_FED: Record<ThreatId, string> = {
+  plague: "The sickness tightens its grip on the town.",
+  starvation: "The town's stores run thinner.",
+  war: "The town is left less ready for what marches on it.",
+  devils: "The dark grows bolder.",
+};
+
+/** Small centred lines under the stat chips: what tonight did to the town. */
+function ThreatLines({ threats }: { threats?: ThreatDeltas }) {
+  if (!threats) return null;
+  const lines = (Object.keys(threats) as ThreatId[])
+    .filter((id) => typeof threats[id] === "number" && threats[id] !== 0)
+    .map((id) => ({
+      id,
+      text: (threats[id]! < 0 ? THREAT_EASED : THREAT_FED)[id],
+      eased: threats[id]! < 0,
+    }));
+  if (lines.length === 0) return null;
+  return (
+    <div className="flex flex-col items-center gap-1">
+      {lines.map((l) => (
+        <p
+          key={l.id}
+          className={`text-center text-sm italic ${
+            l.eased ? "text-emerald-300" : "text-rose-300"
+          }`}
+        >
+          {l.text}
+        </p>
+      ))}
+    </div>
+  );
 }
 
 function readSave(saveKey: string): SaveBlob | null {

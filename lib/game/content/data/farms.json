@@ -1,27 +1,31 @@
 {
+  "meta": {
+    "name": "The Farms",
+    "blurb": "A failing harvest and the roads the warband will come down."
+  },
   "activities": [
     {
       "id": "farms_reaping",
       "location": "farms",
-      "name": "Work the Failing Fields",
+      "name": "Work the failing fields",
       "blurb": "The barley came up blighted and thin. Whatever can still be cut is cut, and a hungry town counts every sheaf."
     },
     {
       "id": "farms_reeve",
       "location": "farms",
-      "name": "Stand at the Reeve's Ledger",
+      "name": "Stand at the reeve's ledger",
       "blurb": "The manor reeve guards the granary with his great book and a tally of who has eaten and who has not."
     },
     {
       "id": "farms_roads",
       "location": "farms",
-      "name": "Watch the Outer Roads",
+      "name": "Watch the outer roads",
       "blurb": "Beyond the last field the lanes run empty toward the burning country. Whatever comes for St Sebastian comes by these roads first."
     },
     {
       "id": "farms_byre",
       "location": "farms",
-      "name": "Sit with the Farmhands",
+      "name": "Sit with the farmhands",
       "blurb": "In the cattle byre the cottars share what little there is and say aloud what the town will not. Hungry men, and angry ones."
     }
   ],
@@ -45,6 +49,9 @@
         "stats": {
           "strength": 1,
           "wealth": 1
+        },
+        "threats": {
+          "starvation": -1
         },
         "flags": [
           "forage_secured"
@@ -118,6 +125,9 @@
           "intelligence": 1,
           "will": 1
         },
+        "threats": {
+          "starvation": -2
+        },
         "flags": [
           "granary_filled"
         ]
@@ -127,6 +137,9 @@
         "outcome": "fumbled the granary count and let good grain spoil.",
         "stats": {
           "craft": 1
+        },
+        "threats": {
+          "starvation": 1
         }
       }
     },
@@ -145,11 +158,14 @@
         "dc": 4
       },
       "pass": {
-        "text": "You read the road the way a tracker reads a wood: ruts gone cold, milestones unswept, a child's shoe left in the ditch with no child anywhere near it. Whatever drove these people off is coming this way, and you mark the pace of it days before the town will let itself believe you.",
+        "text": "You read the road the way a tracker reads a wood: ruts gone cold, milestones unswept, a child's shoe left in the ditch with no child anywhere near it. Whatever drove these people off is coming this way, and you mark the pace of it days before the town will let itself believe you — and days of warning are days to make the walls ready.",
         "outcome": "read the empty roads and guessed the ruin coming toward St Sebastian.",
         "stats": {
           "intelligence": 1,
           "will": 1
+        },
+        "threats": {
+          "war": -1
         },
         "flags": [
           "watching_the_roads"
@@ -181,21 +197,27 @@
         "dc": 6
       },
       "pass": {
-        "text": "You take him out of the saddle in the high barley before he can cry out, a knee on his chest and his own knife at his throat. He is half-starved under his mail, and terrified, and you have him bound and dragged to the byre before the light fails. He will talk.",
+        "text": "You take him out of the saddle in the high barley before he can cry out, a knee on his chest and his own knife at his throat. He is half-starved under his mail, and terrified, and you have him bound and dragged to the byre before the light fails. The warband has lost its eyes on the town. He will talk.",
         "outcome": "ran down the warband's scout and took him alive.",
         "stats": {
           "agility": 1,
           "strength": 1
+        },
+        "threats": {
+          "war": -1
         },
         "flags": [
           "scout_taken"
         ]
       },
       "fail": {
-        "text": "Your boot finds a dry furrow and the crack of it turns his head; he is spurring away before you have cleared the rows, low over the horse's neck and gone into the dusk. He knows the town keeps watch now, and worse, you know for certain the town is being watched.",
-        "outcome": "lost the scout in the dusk and learned the town is being watched.",
+        "text": "Your boot finds a dry furrow and the crack of it turns his head; he is spurring away before you have cleared the rows, low over the horse's neck and gone into the dusk. He carries the count of the walls and gates back to his masters, and worse, you know for certain the town is being watched.",
+        "outcome": "lost the scout and let the count of the walls ride back to the warband.",
         "stats": {
           "agility": 1
+        },
+        "threats": {
+          "war": 1
         }
       }
     },
@@ -298,6 +320,9 @@
           "craft": 1,
           "will": 1
         },
+        "threats": {
+          "war": -1
+        },
         "flags": [
           "militia_armed"
         ]
@@ -341,11 +366,14 @@
         {
           "label": "Open the stores and feed them",
           "effect": {
-            "text": "You break out the bread you laboured to store and the column falls upon it weeping into the dirt. The reeve does not stop you; perhaps he no longer can. You have spent the town's hard margin in one afternoon of mercy, and the lean weeks just grew leaner, but no child died at your locked door today.",
+            "text": "You break out the bread you laboured to store and the column falls upon it weeping into the dirt. The reeve does not stop you; perhaps he no longer can. You have spent the town's hard margin in one afternoon of mercy, but the hunger camped on St Sebastian's roads breaks like a fever, and no child died at your locked door today.",
             "outcome": "opened the stores and fed the starving at the town's own cost.",
             "stats": {
               "will": 2,
               "wealth": -1
+            },
+            "threats": {
+              "starvation": -1
             },
             "flags": [
               "fed_the_refugees"

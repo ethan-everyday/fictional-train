@@ -74,6 +74,22 @@ export interface Character {
   background: BackgroundId;
 }
 
+// ----------------------------------------------------------- threats
+
+/**
+ * The four dooms bearing down on St Sebastian. Each ticks up as the weeks
+ * pass; events relieve (negative deltas) or feed (positive) them. Any that
+ * reaches the cap by the finale claims its toll on the town's ending.
+ */
+export type ThreatId = "plague" | "starvation" | "war" | "devils";
+
+/** The town's current score on every threat track (0..THREAT_CAP). */
+export type ThreatScores = Record<ThreatId, number>;
+
+/** What one event branch does to the tracks. Negative = the party relieves
+ * the threat; positive = recklessness feeds it. */
+export type ThreatDeltas = Partial<Record<ThreatId, number>>;
+
 // ------------------------------------------------------------ events
 
 /** A thing you can choose to do at a location. NEVER shows stat gates. */
@@ -100,12 +116,32 @@ export interface EventEffect {
   stats?: Partial<PlayerStats>;
   /** Flags set true — these unlock later events across the week. */
   flags?: string[];
+  /** Threat deltas this branch applies to the town's tracks. */
+  threats?: ThreatDeltas;
 }
 
-/** A player-facing choice within an event. The label never reveals stats. */
+/** One weighted outcome inside a choice's `random` pool (weight default 1). */
+export interface RandomOutcome {
+  weight?: number;
+  effect: EventEffect;
+}
+
+/**
+ * A player-facing choice within an event. The label never reveals stats.
+ * Exactly ONE of three shapes (contract-enforced, like GameEvent itself):
+ * a flat `effect`, a hidden `check` with `pass`/`fail`, or a weighted
+ * `random` pool the dice settle.
+ */
 export interface EventChoice {
   label: string;
-  effect: EventEffect;
+  /** A flat, deterministic outcome. */
+  effect?: EventEffect;
+  /** Hidden stat check — branches on stats exactly like an event's check. */
+  check?: StatCheck;
+  pass?: EventEffect;
+  fail?: EventEffect;
+  /** Weighted random outcomes (2+); the engine rolls, refresh-stable. */
+  random?: RandomOutcome[];
 }
 
 /**
@@ -168,6 +204,8 @@ export interface StoryletResult {
   deltas: PlayerStats;
   /** Flags this night set. */
   flagsSet: string[];
+  /** Threat deltas this night's outcome applies to the town. */
+  threats?: ThreatDeltas;
 }
 
 /** One finished night, appended to the player's week history. */
@@ -179,4 +217,6 @@ export interface NightRecord {
   outcome: string;
   deltas: PlayerStats;
   flagsSet: string[];
+  /** Threat deltas this night carried (for the host's ledger). */
+  threats?: ThreatDeltas;
 }

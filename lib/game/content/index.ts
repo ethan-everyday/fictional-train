@@ -1,5 +1,5 @@
 import type { Activity, GameEvent, LocationId } from "../types";
-import { locationDef } from "../constants";
+import { locationDef, registerLocationMeta } from "../constants";
 // Content is data: edit it with the visual editor (`npm run editor`), which
 // reads and writes these JSON files. The game imports them directly.
 import tavern from "./data/tavern.json";
@@ -10,24 +10,29 @@ import farms from "./data/farms.json";
 import slums from "./data/slums.json";
 import docks from "./data/docks.json";
 
-/** One location's content: the activities offered and the event pool. */
+/** One location's content: its name and blurb, the activities offered, and
+ * the event pool. `meta` is optional so pre-meta saves still load. */
 export interface LocationContent {
+  meta?: { name: string; blurb: string };
   activities: Activity[];
   events: GameEvent[];
 }
 
-const MODULES: LocationContent[] = [
-  tavern,
-  castle,
-  church,
-  market,
-  farms,
-  slums,
-  docks,
-] as LocationContent[];
+const MODULES: [LocationId, LocationContent][] = ([
+  ["tavern", tavern],
+  ["castle", castle],
+  ["church", church],
+  ["market", market],
+  ["farms", farms],
+  ["slums", slums],
+  ["docks", docks],
+] as [LocationId, LocationContent][]);
 
-export const ACTIVITIES: Activity[] = MODULES.flatMap((m) => m.activities);
-export const EVENTS: GameEvent[] = MODULES.flatMap((m) => m.events);
+// The content owns each location's display name and blurb.
+for (const [id, m] of MODULES) if (m.meta) registerLocationMeta(id, m.meta);
+
+export const ACTIVITIES: Activity[] = MODULES.flatMap(([, m]) => m.activities);
+export const EVENTS: GameEvent[] = MODULES.flatMap(([, m]) => m.events);
 
 /**
  * The catch-all when nothing in the pool is eligible (everything's been

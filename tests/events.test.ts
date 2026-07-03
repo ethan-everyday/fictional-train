@@ -3,6 +3,7 @@ import {
   activitiesFor,
   applyEffect,
   checkPasses,
+  choiceRoll,
   eligibleEvents,
   pickEvent,
   resolveEffect,
@@ -147,6 +148,90 @@ describe("choice events (synthetic)", () => {
     expect(resolveEffect(choiceEvent, ZERO)).toBeNull();
     expect(resolveEffect(choiceEvent, ZERO, 0)).toBe(choiceEvent.choices![0].effect);
     expect(resolveEffect(choiceEvent, ZERO, 1)).toBe(choiceEvent.choices![1].effect);
+  });
+
+  const checkChoiceEvent: GameEvent = {
+    id: "cc",
+    location: "tavern",
+    activities: [],
+    text: "t",
+    choices: [
+      {
+        label: "Risk it",
+        check: { stat: "agility", dc: 5 },
+        pass: { text: "p", outcome: "slipped through." },
+        fail: { text: "f", outcome: "was caught." },
+      },
+      { label: "Play it safe", effect: { text: "s", outcome: "walked away." } },
+    ],
+  };
+
+  it("branches a choice's hidden check on stats, like an event check", () => {
+    expect(resolveEffect(checkChoiceEvent, { ...ZERO, agility: 7 }, 0)).toBe(
+      checkChoiceEvent.choices![0].pass,
+    );
+    expect(resolveEffect(checkChoiceEvent, { ...ZERO, agility: 2 }, 0)).toBe(
+      checkChoiceEvent.choices![0].fail,
+    );
+    // The flat sibling choice ignores stats entirely.
+    expect(resolveEffect(checkChoiceEvent, ZERO, 1)).toBe(
+      checkChoiceEvent.choices![1].effect,
+    );
+  });
+
+  const randomChoiceEvent: GameEvent = {
+    id: "cr",
+    location: "tavern",
+    activities: [],
+    text: "t",
+    choices: [
+      {
+        label: "Chance it",
+        random: [
+          { weight: 1, effect: { text: "r0", outcome: "got away with it." } },
+          { weight: 2, effect: { text: "r1", outcome: "was caught." } },
+          { effect: { text: "r2", outcome: "overheard something." } }, // weight defaults to 1
+        ],
+      },
+      { label: "Refuse", effect: { text: "n", outcome: "kept clear." } },
+    ],
+  };
+
+  it("picks a random choice outcome by weight from the supplied roll", () => {
+    const pool = randomChoiceEvent.choices![0].random!;
+    // Total weight 4: [0,1) → first, [1,3) → second, [3,4) → third.
+    expect(resolveEffect(randomChoiceEvent, ZERO, 0, 0)).toBe(pool[0].effect);
+    expect(resolveEffect(randomChoiceEvent, ZERO, 0, 0.24)).toBe(pool[0].effect);
+    expect(resolveEffect(randomChoiceEvent, ZERO, 0, 0.26)).toBe(pool[1].effect);
+    expect(resolveEffect(randomChoiceEvent, ZERO, 0, 0.74)).toBe(pool[1].effect);
+    expect(resolveEffect(randomChoiceEvent, ZERO, 0, 0.76)).toBe(pool[2].effect);
+    expect(resolveEffect(randomChoiceEvent, ZERO, 0, 0.999)).toBe(pool[2].effect);
+  });
+});
+
+describe("choiceRoll (refresh stability)", () => {
+  it("is deterministic for the same player/night/activity/choice", () => {
+    const a = choiceRoll("player-1", 3, "tavern_gamble", 1);
+    const b = choiceRoll("player-1", 3, "tavern_gamble", 1);
+    expect(a).toBe(b);
+  });
+
+  it("stays within [0, 1)", () => {
+    for (let i = 0; i < 5; i++) {
+      const roll = choiceRoll(`p-${i}`, i + 1, "docks_haul", i % 3);
+      expect(roll).toBeGreaterThanOrEqual(0);
+      expect(roll).toBeLessThan(1);
+    }
+  });
+
+  it("varies across players, nights, and chosen options", () => {
+    const rolls = new Set([
+      choiceRoll("player-1", 1, "docks_haul", 0),
+      choiceRoll("player-2", 1, "docks_haul", 0),
+      choiceRoll("player-1", 2, "docks_haul", 0),
+      choiceRoll("player-1", 1, "docks_haul", 1),
+    ]);
+    expect(rolls.size).toBeGreaterThan(1);
   });
 });
 

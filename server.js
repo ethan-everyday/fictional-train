@@ -15,6 +15,7 @@
 // CommonJS on purpose: runs with plain `node`, and the Electron main
 // process can require() it directly.
 
+const dgram = require("dgram");
 const http = require("http");
 const fs = require("fs");
 const os = require("os");
@@ -47,7 +48,38 @@ const PLAYER_COLORS = [
  * This machine's best LAN IPv4 — what phones must use to reach us. Sent to
  * the host with the room code so the QR always encodes a phone-reachable
  * address no matter how the host page itself was opened (localhost included).
+ *
+ * CRITICAL: os.networkInterfaces() also lists addresses lingering on
+ * DISCONNECTED adapters (Windows keeps a "deprecated" DHCP address on an
+ * unplugged NIC). Advertise one of those and every phone black-holes into a
+ * white screen. So the routing table is asked which source address the OS
+ * would ACTUALLY use (a UDP "connect" sends no packets — it just resolves
+ * the route), and enumeration is only the fallback.
  */
+let routedIp = null;
+
+function refreshRoutedIp() {
+  try {
+    const probe = dgram.createSocket("udp4");
+    probe.on("error", () => {
+      try {
+        probe.close();
+      } catch {}
+    });
+    // TEST-NET-3 address: reserved, never real traffic; connect() only
+    // consults the routing table.
+    probe.connect(53, "203.0.113.1", () => {
+      try {
+        const addr = probe.address().address;
+        if (addr && !addr.startsWith("127.")) routedIp = addr;
+      } catch {}
+      try {
+        probe.close();
+      } catch {}
+    });
+  } catch {}
+}
+
 function lanIp() {
   const nets = os.networkInterfaces();
   const candidates = [];
@@ -58,14 +90,16 @@ function lanIp() {
       candidates.push(net.address);
     }
   }
-  // Prefer home-router ranges over VPN/virtual adapter ranges.
+  // The address the OS actually routes from wins outright.
+  if (routedIp && candidates.includes(routedIp)) return routedIp;
+  // Fallback: prefer home-router ranges over VPN/virtual adapter ranges.
   const score = (ip) =>
     ip.startsWith("192.168.") ? 0
     : ip.startsWith("10.") ? 1
     : /^172\.(1[6-9]|2\d|3[01])\./.test(ip) ? 2
     : 3;
   candidates.sort((a, b) => score(a) - score(b));
-  return candidates[0] ?? null;
+  return candidates[0] ?? routedIp ?? null;
 }
 
 // ---------------------------------------------------------------- rooms
@@ -111,6 +145,59 @@ function getOrCreateRoom(code) {
   }
   room.touchedAt = Date.now();
   return room;
+}
+
+/**
+ * Codes killed by a NEW GAME purge. A lingering host tab auto-reconnecting
+ * with one of these must NOT resurrect the dead room (start-game.bat opens
+ * a fresh tab each run, so stale tabs pile up) — it gets ROOM_CLOSED and
+ * lands back on the title screen instead.
+ */
+const purgedCodes = new Map(); // code -> epoch ms of the purge
+const PURGED_CODE_TTL_MS = 2 * 60 * 60 * 1000;
+
+function isPurgedCode(code) {
+  const at = purgedCodes.get(code);
+  if (at === undefined) return false;
+  if (Date.now() - at > PURGED_CODE_TTL_MS) {
+    purgedCodes.delete(code);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * NEW GAME: the room just created replaces every older one. Old rooms are
+ * deleted and their sockets closed — a phone still holding a dead session
+ * reconnects, gets NO_ROOM, and lands back on the join screen instead of
+ * silently rejoining (or white-screening on) a stale game.
+ */
+function purgeOtherRooms(keepCode) {
+  let purged = 0;
+  for (const [code, room] of [...rooms]) {
+    if (code === keepCode) continue;
+    for (const player of room.players.values()) {
+      if (player.disconnectTimer) {
+        clearTimeout(player.disconnectTimer);
+        player.disconnectTimer = null;
+      }
+    }
+    for (const ws of room.sockets) {
+      try {
+        ws.close();
+      } catch {}
+    }
+    room.players.clear();
+    room.sockets.clear();
+    room.hostSockets.clear();
+    rooms.delete(code);
+    purgedCodes.set(code, Date.now());
+    purged++;
+  }
+  if (purged > 0) {
+    console.log(`new game: closed ${purged} old room(s)`);
+    scheduleSave();
+  }
 }
 
 function roomSnapshot(room) {
@@ -281,6 +368,11 @@ function send(ws, msg) {
   if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(msg));
 }
 
+/** The peer's IPv4, for the server-window log ("is the phone reaching us?"). */
+function wsRemoteIp(ws) {
+  return (ws._socket?.remoteAddress ?? "?").replace(/^::ffff:/, "");
+}
+
 function handleMessage(ws, msg, session, setSession) {
   // --- hello messages establish the session ---
   if (msg.t === "create") {
@@ -288,10 +380,26 @@ function handleMessage(ws, msg, session, setSession) {
       typeof msg.roomCode === "string"
         ? msg.roomCode.trim().toUpperCase()
         : undefined;
+    // A rejoin of a room that a NEW GAME purged: refuse — recreating it
+    // would resurrect a zombie room (a stale host tab showing a dead QR
+    // that phones could still join). The tab bounces to the title screen.
+    if (code && !rooms.has(code) && isPurgedCode(code)) {
+      console.log(`room ${code}: rejoin refused (closed by a new game)`);
+      return send(ws, {
+        t: "error",
+        code: "ROOM_CLOSED",
+        msg: "That game was ended by a newer one.",
+      });
+    }
     const room = getOrCreateRoom(code || undefined);
+    // NEW GAME from the title screen: this room replaces every older one.
+    if (msg.fresh === true) purgeOtherRooms(room.code);
     room.sockets.add(ws);
     room.hostSockets.add(ws);
     setSession({ room, role: "host", clientId: null });
+    console.log(
+      `room ${room.code}: host screen attached${code ? " (rejoin)" : ""}${msg.fresh === true ? " (new game)" : ""}`,
+    );
     send(ws, { t: "room", code: room.code, lanIp: lanIp() });
     send(ws, roomSnapshot(room));
     scheduleSave();
@@ -346,6 +454,9 @@ function handleMessage(ws, msg, session, setSession) {
     room.sockets.add(ws);
     room.touchedAt = Date.now();
     setSession({ room, role: "player", clientId });
+    console.log(
+      `room ${code}: ${player.state.name ?? clientId} joined from ${wsRemoteIp(ws)}`,
+    );
     send(ws, { t: "joined", playerId: player.id });
     send(ws, roomSnapshot(room));
     presence(room, player);
@@ -466,8 +577,24 @@ function resolveFile(urlPath) {
   return null;
 }
 
+/** Cache policy: hashed build assets cache forever; HTML always revalidates,
+ * so a rebuilt game can never be stuck behind a phone's stale cache. */
+function cacheControl(full) {
+  if (full.includes(path.join("_next", "static"))) {
+    return "public, max-age=31536000, immutable";
+  }
+  if (full.endsWith(".html")) return "no-cache";
+  return null;
+}
+
 function serveStatic(req, res) {
   const found = resolveFile(req.url ?? "/");
+  const ip = (req.socket.remoteAddress ?? "?").replace(/^::ffff:/, "");
+  // Log page loads (asset noise filtered) so "is the phone reaching us?"
+  // is answerable by glancing at the server window. 404s always log.
+  if (!found || !(req.url ?? "/").startsWith("/_next/")) {
+    console.log(`${ip} → ${req.method} ${req.url}${found ? "" : " → 404"}`);
+  }
   if (!found) {
     // SPA-ish fallback: unknown paths get the 404 page if present, else 404.
     const notFound = resolveFile("/404");
@@ -482,6 +609,8 @@ function serveStatic(req, res) {
   }
 
   const type = MIME[path.extname(found.full).toLowerCase()] ?? "application/octet-stream";
+  const cc = cacheControl(found.full);
+  const baseHeaders = cc ? { "Cache-Control": cc } : {};
   const range = req.headers.range;
   if (range) {
     // Single-range support, mainly so audio scrubbing/looping behaves.
@@ -492,6 +621,7 @@ function serveStatic(req, res) {
       if (start <= end && start < found.size) {
         end = Math.min(end, found.size - 1);
         res.writeHead(206, {
+          ...baseHeaders,
           "Content-Type": type,
           "Content-Length": end - start + 1,
           "Content-Range": `bytes ${start}-${end}/${found.size}`,
@@ -503,6 +633,7 @@ function serveStatic(req, res) {
     }
   }
   res.writeHead(200, {
+    ...baseHeaders,
     "Content-Type": type,
     "Content-Length": found.size,
     "Accept-Ranges": "bytes",
@@ -512,9 +643,44 @@ function serveStatic(req, res) {
 
 // --------------------------------------------------------------- start
 
+/**
+ * Mirror the console to <stateDir>/server.log (fresh file per run) so "what
+ * did the server see?" survives the game window closing — and can be read
+ * live while a party is running.
+ */
+function setupLogFile() {
+  try {
+    fs.mkdirSync(path.dirname(stateFile), { recursive: true });
+    const stream = fs.createWriteStream(
+      path.join(path.dirname(stateFile), "server.log"),
+      { flags: "w" },
+    );
+    // Logging must never kill a party: a stream error (disk full, EPERM)
+    // would otherwise be an unhandled 'error' event and crash the process.
+    stream.on("error", () => {});
+    for (const level of ["log", "warn", "error"]) {
+      const orig = console[level].bind(console);
+      console[level] = (...args) => {
+        orig(...args);
+        try {
+          stream.write(
+            `${new Date().toLocaleTimeString()} ${args.map(String).join(" ")}\n`,
+          );
+        } catch {}
+      };
+    }
+  } catch {}
+}
+
 function start({ port = PORT, dev = DEV, stateDir } = {}) {
   if (stateDir) stateFile = path.join(stateDir, "rooms.json");
+  setupLogFile();
   loadRooms();
+
+  // Track the live LAN IP: the party's network can flip mid-evening
+  // (Ethernet unplugged, Wi-Fi reconnects) and the QR must follow.
+  refreshRoutedIp();
+  setInterval(refreshRoutedIp, 5_000).unref();
 
   const server = http.createServer((req, res) => {
     if (dev) {
