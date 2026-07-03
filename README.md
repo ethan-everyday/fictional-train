@@ -12,9 +12,12 @@ stats), then spends each week at one of seven locations. Each offers 2–4
 **activities**; doing one fires a random **event** from that location's pool.
 Events chain and escalate week by week — meet the lord's steward and the
 castle opens; the warband arrives only in the last weeks. **Stats are never
-shown as requirements**; they tilt hidden checks behind the prose. What the
-party achieves across the week decides which of seven town-fates befalls
-St Sebastian.
+shown as requirements**; they tilt hidden checks behind the prose. Four **threat
+dials** — plague, starvation, war, devils — climb every week and are the only
+thing shown on the host screen: the party's real job is to read which doom is
+running away and spend its weeks holding it back. Any dial still at the top when
+the seventh week ends lands its doom in full, and the number that do decides the
+town's fate, from a town that stands untouched to utter ruin.
 
 ## Architecture: local-first, Steam-shaped
 
@@ -40,9 +43,22 @@ starts the game on port 3100, and opens the host screen with the QR code
 phones scan. Close the window to stop. After changing code, run
 `start-game.bat --rebuild`.
 
-If phones can't reach the page, allow Node through Windows Firewall
-(inbound TCP 3100), and make sure the phones are on the same Wi-Fi network
-(router "guest/AP isolation" modes block device-to-device traffic).
+If phones can't reach the page (blank screen = their connection never
+arrives; the server window logs every request, so silence means blocked):
+
+1. **Set the Wi-Fi network to "Private"** — Windows Settings → Network &
+   internet → Wi-Fi → your network → Network profile type → Private.
+   Security software silently drops game traffic on "Public" networks,
+   and Windows re-registers the network as a new Public profile more
+   often than you'd think (e.g. after switching Ethernet ↔ Wi-Fi).
+2. **Third-party antivirus firewalls** (AVG, Avast, Norton, McAfee…)
+   replace Windows Firewall — allow the game there: mark the home network
+   as Private/Trusted in the AV's firewall settings, or add an allow rule
+   for `node.exe` / inbound TCP 3100. (If no third-party AV: allow Node
+   through Windows Firewall, inbound TCP 3100.)
+3. Make sure the phones are on the **same Wi-Fi** — not a guest network,
+   not the router's public hotspot (EE/BT hubs broadcast one that phones
+   auto-join), and with mobile data off.
 
 ### Desktop app (the Steam build)
 
@@ -109,18 +125,42 @@ A dev-only tool (never shipped) for laying out the story:
 
 - **Map** — the whole prerequisite graph: every event as a node under its
   location, gold edges where one event's flag *unlocks* another, red dashed
-  edges where a flag *blocks* one. Click any node to edit it.
+  edges where a flag *blocks* one. Click any node to edit it; alt-click to
+  isolate its whole storyline. The **filter bar** cuts the graph by chain
+  (storylines are derived automatically from the flag wiring — nothing to
+  maintain), location, threat (relief or worsen), week, or full-text search;
+  non-matching nodes dim and their edges vanish, and the readout shows what
+  the filtered set contributes to each doom dial.
+- **Quick creation** — **+ Event** births a draft from a shape template
+  (flat / check / choice / moral choice / gamble) already valid and ready
+  for prose; **+ Storyline** takes 2–5 beats (location + premise + week)
+  and creates the whole chain with its flags wired beat-to-beat. Drafts
+  carry `[draft]` in their prose and show as a counter in the header,
+  dashed on the map, until written out.
 - **Edit** — pick a location, edit its activities and events: setup prose,
   the resolution shape (flat / hidden stat check / player choice), stat
-  changes, and the flags it sets. Wire connections by ticking **Requires**
-  / **Forbids** flags; the **Connections** panel shows, for the selected
-  event, exactly what it unlocks and what unlocks it.
+  changes, and the flags it sets. Each branch also takes **threat deltas**
+  (the four doom dials, −2..+2, negative relieves the town) and each player
+  **choice** picks its own shape — flat, hidden check, or a weighted random
+  pool. Wire connections by ticking **Requires** / **Forbids** flags; the
+  **Connections** panel shows, for the selected event, exactly what it unlocks
+  and what unlocks it.
 - **Origins** — edit the 6 roles and 6 backgrounds: name, description, stat
   bonuses, and the starting flag each carries (which can gate events).
+- **Threat budget** — a live panel totting up, per doom dial, how much
+  relief and aggravation the whole story offers (and this location's share),
+  against the −3 net each track needs to survive the week. Event rows and
+  map nodes carry matching threat badges, so the levers are visible at a
+  glance while writing.
 - **Live validation** mirrors the build contract (no orphan prerequisites,
-  valid shapes, dc within cap, 6 roles / 6 backgrounds…). **Save** writes the
-  content + origins JSON the game imports — and refuses to save anything
-  that would fail the build.
+  valid shapes, dc within cap, positive weights, 6 roles / 6 backgrounds…).
+  **Save** (or Ctrl+S) writes the content + origins JSON the game imports —
+  and refuses to save anything that would fail the build.
+- **Backups** — every save first snapshots the files it is about to
+  overwrite (`.seven-nights/editor-backups/`, last 20 kept). The header's
+  Restore dropdown rolls back to any snapshot; the restore itself is
+  snapshotted too, so nothing done in the editor is ever more than one
+  Restore away from undone.
 
 ## Planning the story on paper
 
@@ -134,19 +174,43 @@ the source of truth, `STORY.md` is the human-readable mirror.
 ## Writing content (by hand)
 
 Content is JSON data in `lib/game/content/data/<location>.json` — the same
-files the editor reads and writes. Each location is `{ activities, events }`.
+files the editor reads and writes. Each location is
+`{ meta, activities, events }` — `meta: { name, blurb }` is the location's
+display name and choose-screen card, registered over the `constants.ts`
+fallbacks at import time (so renaming a location is a content edit, in the
+editor or the JSON).
 
 - **Activities** (2–4 per location): the things a player can choose to do.
   Just `{ id, location, name, blurb }` — they never show stat requirements.
-- **Events** (7–10 per location) fire at random when an activity is done.
+- **Events** (9–14 per location) fire at random when an activity is done.
   Each event is ONE of three shapes:
   - flat `effect` — a fixed outcome;
   - hidden `check: { stat, dc }` + `pass`/`fail` — stats decide the branch,
     invisibly (dc is 1–10, never shown);
-  - `choices: [...]` — 2–3 player options, each a plain action label.
-- Every branch (`effect`/`pass`/`fail`/`choices[].effect`) sets `text` (the
-  prose the player reads), `outcome` (one short host line: "<name> <outcome>"),
-  optional `stats` deltas, and optional `flags`.
+  - `choices: [...]` — 2–3 player options. Each choice is itself ONE of three
+    shapes, so luck and hidden stats can live inside a single option:
+    - flat `effect`;
+    - hidden `check: { stat, dc }` + `pass`/`fail` (that option branches on a
+      stat, still invisibly);
+    - weighted `random: [{ weight?, effect }, …]` (2+ outcomes; the dice
+      settle it, seeded so a phone refresh re-rolls the same result). E.g.
+      the tavern's Gamble is one choice whose `random` pool wins or loses coin:
+
+      ```json
+      { "label": "Stake a coin and play the table", "random": [
+        { "weight": 1, "effect": { "text": "The bones run kind…",
+          "outcome": "came away ahead.", "stats": { "wealth": 1 } } },
+        { "weight": 1, "effect": { "text": "The bones run cold…",
+          "outcome": "dropped a coin to the dice.", "stats": { "wealth": -1 } } }
+      ] }
+      ```
+- Every branch (`effect`/`pass`/`fail`/`choices[].effect`/`random[].effect`)
+  sets `text` (the prose the player reads), `outcome` (one short host line:
+  "<name> <outcome>"), optional `stats` deltas, optional `flags`, and optional
+  `threats` deltas — a partial map of `plague`/`starvation`/`war`/`devils` to a
+  small number (**negative relieves** the town, positive feeds the doom; never
+  0). Threats are the town's four doom dials; the host applies each night's
+  deltas before the week ticks up.
 - **Chaining**: an event's `flags` unlock later events via their `requires`
   (and `forbids`) — works across locations and nights (e.g. tavern's
   `met_steward` → castle's `audience_with_lord`). `repeatable` events can
@@ -156,6 +220,21 @@ files the editor reads and writes. Each location is `{ activities, events }`.
 - `npm test` runs the content contract: unique ids, valid shapes, real
   stats/locations/activities, dc ≤ cap, and **no orphan prerequisites** (every
   required flag is producible somewhere). Run it after every writing session.
+
+### Adding a location (a code task, not an editor feature)
+
+Renaming and reflavouring locations is content (`meta` above). ADDING or
+removing one is engine surgery — seven locations is a designed constant, so
+do this rarely and deliberately:
+
+1. `lib/game/types.ts` — extend the `LocationId` union.
+2. `lib/game/constants.ts` — add the fallback entry to `LOCATIONS`.
+3. `lib/game/content/data/<new>.json` — create it (meta, 2–4 activities,
+   events), and import + register it in `lib/game/content/index.ts`.
+4. `scripts/editor-server.js` — add the id to its `LOCATIONS` whitelist;
+   same for `LOCS` in `scripts/editor.html`.
+5. Check `DRAMA_EVENTS` (`closedLocation`) and any host copy that says
+   "seven"; run `npm test` and one full e2e.
 
 ## Sound (optional)
 

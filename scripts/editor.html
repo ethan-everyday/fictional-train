@@ -36,10 +36,32 @@
 
   /* map */
   #map-wrap { overflow: auto; border: 1px solid var(--bark); border-radius: 10px; background: #140d07; }
-  .legend { display: flex; gap: 18px; margin: 8px 2px; font-size: 12px; color: var(--p400); align-items: center; }
-  .legend span { display: inline-flex; align-items: center; gap: 6px; }
-  .swatch { width: 22px; height: 0; border-top: 2px solid var(--gold); }
-  .swatch.forbid { border-top: 2px dashed var(--red); }
+  .filterbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 10px; }
+  .filterbar select { width: auto; padding: 5px 6px; font-size: 12px; }
+  .fsearch { width: 210px !important; font-size: 12px; }
+  .fchip { padding: 4px 9px; border-radius: 7px; border: 1px solid var(--bark2); background: var(--night);
+    color: var(--p400); font-size: 12px; cursor: pointer; }
+  .fchip.on { background: var(--bark); color: var(--p100); border-color: var(--amber); }
+  #fcount { font-size: 11px; }
+  .node.dim { opacity: 0.18; }
+  .node.draft rect { stroke: var(--amber); stroke-dasharray: 4 3; }
+
+  /* modals */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 50;
+    display: flex; align-items: flex-start; justify-content: center; padding-top: 8vh; }
+  .modal { background: var(--oak); border: 1px solid var(--bark2); border-radius: 12px;
+    padding: 16px 18px; width: 540px; max-height: 80vh; overflow: auto; }
+  .modal h2 { margin: 0 0 10px; font-size: 16px; color: var(--gold); font-family: Georgia, serif; }
+  #drafts { font-size: 12px; color: var(--amber); cursor: pointer; }
+  details.gate { border: 1px solid var(--bark2); border-radius: 8px; padding: 8px 10px; margin-top: 12px; }
+  details.gate summary { cursor: pointer; font-size: 12px; list-style-position: inside; }
+  details.gate summary .gsum { color: var(--p300); }
+  #status.err { cursor: pointer; text-decoration: underline dotted; }
+  #problems { position: fixed; top: 46px; right: 16px; z-index: 60; background: var(--oak);
+    border: 1px solid var(--bark2); border-radius: 10px; padding: 8px 12px; max-width: 460px;
+    max-height: 60vh; overflow: auto; }
+  #problems div { font-size: 12px; color: var(--red); padding: 3px 0; cursor: pointer; }
+  #problems div:hover { color: var(--p100); }
   .node { cursor: pointer; }
   .node rect { fill: var(--oak); stroke: var(--bark2); rx: 6; }
   .node:hover rect { stroke: var(--amber); }
@@ -76,6 +98,8 @@
   .stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
   .stats-grid label { margin: 0 0 2px; text-align: center; font-size: 10px; }
   .stats-grid input { padding: 4px; text-align: center; }
+  .threats-grid { grid-template-columns: repeat(4, 1fr); }
+  .threats-grid input::placeholder { color: var(--p600); }
   .flagbox { max-height: 130px; overflow: auto; border: 1px solid var(--bark2); border-radius: 7px; padding: 6px; }
   .flagbox label { display: flex; align-items: center; gap: 6px; margin: 2px 0; color: var(--p300); }
   .flagbox input { width: auto; }
@@ -88,6 +112,17 @@
   .conn ul { margin: 2px 0 10px; padding-left: 16px; color: var(--p400); }
   .muted { color: var(--p600); }
   .errlist { margin: 0; padding-left: 18px; color: var(--red); font-size: 12px; }
+  .tchip { font-size: 9px; padding: 1px 4px; border-radius: 5px; margin-left: 4px; font-family: monospace; }
+  .tchip.neg { background: #10251a; color: var(--green); }
+  .tchip.pos { background: #2b1212; color: var(--red); }
+  .budget { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .budget th, .budget td { padding: 3px 6px; text-align: right; border-bottom: 1px solid var(--bark); }
+  .budget th:first-child, .budget td:first-child { text-align: left; }
+  .budget .neg { color: var(--green); } .budget .pos { color: var(--red); }
+  #backup-wrap { display: none; align-items: center; gap: 6px; }
+  #backup-wrap select { padding: 5px 6px; background: var(--night); color: var(--p300);
+    border: 1px solid var(--bark2); border-radius: 8px; font: inherit; font-size: 12px; max-width: 210px; }
+  .odds { font-size: 11px; color: var(--p500); align-self: center; padding-top: 14px; }
 </style>
 </head>
 <body>
@@ -99,15 +134,31 @@
     <button class="tab" data-view="origins">Origins</button>
   </div>
   <div class="spacer"></div>
+  <span id="drafts" style="display:none"></span>
+  <span id="backup-wrap">
+    <select id="backup-list" title="Snapshots taken automatically before every save"></select>
+    <button class="btn" id="restore">Restore</button>
+  </span>
   <span id="status"></span>
-  <button class="btn primary" id="save" disabled>Save</button>
+  <button class="btn primary" id="save" disabled title="Ctrl+S">Save</button>
 </header>
 <div id="view"></div>
 
 <script>
-const STATE = { data: null, view: "map", loc: "tavern", sel: null, dirty: false };
+const STATE = {
+  data: null, view: "map", loc: "tavern", sel: null, dirty: false,
+  filters: { chain: null, locs: new Set(), threat: null, threatMode: "any", week: null, q: "" },
+  gateOpen: false,
+};
 const LOCS = ["church","tavern","market","farms","castle","slums","docks"];
 const LOC_NAMES = { church:"Church", tavern:"Tavern", market:"Market", farms:"Farms", castle:"Castle", slums:"Slums", docks:"Docks" };
+// Display names come from each location's meta block when present.
+function locName(loc) {
+  const m = STATE.data && STATE.data.locations[loc] && STATE.data.locations[loc].meta;
+  return (m && m.name) || LOC_NAMES[loc];
+}
+const THREATS = ["plague","starvation","war","devils"];
+const THREAT_NAMES = { plague:"Plague", starvation:"Starve", war:"War", devils:"Devils" };
 
 // ---- helpers ----
 function el(tag, props = {}, ...kids) {
@@ -132,8 +183,15 @@ function allEvents() { return LOCS.flatMap(l => STATE.data.locations[l].events.m
 function locEvents(loc) { return STATE.data.locations[loc].events; }
 function locActs(loc) { return STATE.data.locations[loc].activities; }
 function shapeOf(ev) { return ev.choices && ev.choices.length ? "choices" : ev.check ? "check" : "effect"; }
+function choiceShapeOf(c) { return c.random ? "random" : c.check ? "check" : "effect"; }
+/** Every effect a single choice can resolve to, whatever its shape. */
+function choiceBranchesOf(c) {
+  if (c.random) return (Array.isArray(c.random) ? c.random : []).map(r => r.effect).filter(Boolean);
+  if (c.check) return [c.pass, c.fail].filter(Boolean);
+  return c.effect ? [c.effect] : [];
+}
 function branchesOf(ev) {
-  if (ev.choices) return ev.choices.map(c => c.effect).filter(Boolean);
+  if (ev.choices) return ev.choices.flatMap(choiceBranchesOf);
   if (ev.check) return [ev.pass, ev.fail].filter(Boolean);
   return ev.effect ? [ev.effect] : [];
 }
@@ -150,6 +208,180 @@ function allFlags() {
   for (const ev of allEvents()) { (ev.requires||[]).forEach(f=>s.add(f)); (ev.forbids||[]).forEach(f=>s.add(f)); }
   return [...s].sort();
 }
+/** Per threat: the event's single best relief and worst aggravation across branches. */
+function threatMarks(ev) {
+  const marks = {};
+  for (const b of branchesOf(ev)) for (const [t, v] of Object.entries(b.threats || {})) {
+    marks[t] = marks[t] || { neg: 0, pos: 0 };
+    if (v < 0) marks[t].neg = Math.min(marks[t].neg, v);
+    if (v > 0) marks[t].pos = Math.max(marks[t].pos, v);
+  }
+  return marks;
+}
+function threatChips(ev) {
+  return Object.entries(threatMarks(ev)).flatMap(([t, m]) => [
+    m.neg ? el("span", { class: "tchip neg" }, `${THREAT_NAMES[t][0]}${m.neg}`) : null,
+    m.pos ? el("span", { class: "tchip pos" }, `${THREAT_NAMES[t][0]}+${m.pos}`) : null,
+  ]);
+}
+
+/** Drafts: skeletons created by the quick-add flows carry "[draft]" in their
+ * prose. They pass validation (so nothing blocks) but stay visibly unfinished
+ * until the marker is written out. */
+function isDraft(ev) {
+  const hit = s => (s || "").includes("[draft]");
+  return hit(ev.text)
+    || branchesOf(ev).some(b => hit(b.text) || hit(b.outcome))
+    || (ev.choices || []).some(c => hit(c.label));
+}
+function draftEvents() { return allEvents().filter(isDraft); }
+
+// ---- modals + quick creation ----
+
+function closeModal() {
+  const ov = document.getElementById("overlay");
+  if (ov) ov.remove();
+}
+function showModal(content) {
+  closeModal();
+  document.body.appendChild(el("div", {
+    class: "overlay", id: "overlay",
+    onclick: e => { if (e.target.id === "overlay") closeModal(); },
+  }, el("div", { class: "modal" }, content)));
+}
+
+function slugify(s, fallback) {
+  return (s.trim() || fallback).toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || fallback;
+}
+
+const draftEffect = (line) => ({ text: `[draft] ${line}`, outcome: "[draft] did something notable." });
+const TEMPLATES = {
+  flat:   { name: "Flat outcome", make: () => ({ effect: draftEffect("It plays out simply.") }) },
+  check:  { name: "Hidden check", make: () => ({ check: { stat: "will", dc: 4 },
+              pass: draftEffect("They rise to it."), fail: draftEffect("It goes badly.") }) },
+  choice: { name: "Choice", make: () => ({ choices: [
+              { label: "[draft] First path", effect: draftEffect("The first road taken.") },
+              { label: "[draft] Second path", effect: draftEffect("The second road taken.") } ] }) },
+  moral:  { name: "Moral choice", make: id => ({ choices: [
+              { label: "[draft] Do the right thing", effect: { ...draftEffect("Virtue, at a price."), flags: [`${id}_stood`] } },
+              { label: "[draft] Look to yourself", effect: { ...draftEffect("Survival first."), flags: [`${id}_turned`] } } ] }) },
+  gamble: { name: "Gamble", make: () => ({ choices: [
+              { label: "[draft] Stake your coin", random: [
+                { weight: 1, effect: { ...draftEffect("Fortune smiles."), stats: { wealth: 1 } } },
+                { weight: 1, effect: { ...draftEffect("Fortune spits."), stats: { wealth: -1 } } } ] },
+              { label: "[draft] Keep your purse shut", effect: draftEffect("Wisdom, of a kind.") } ] }) },
+};
+
+function newEventModal() {
+  let template = "flat";
+  const locSel = el("select", {}, ...LOCS.map(l =>
+    el("option", { value: l, selected: STATE.loc === l ? true : false }, locName(l))));
+  const title = el("input", { type: "text", placeholder: "a rumour about the steward" });
+  const chipRow = el("div", { class: "row", style: "margin-top:4px" });
+  Object.entries(TEMPLATES).forEach(([k, t]) => chipRow.appendChild(
+    el("button", { class: "btn" + (k === template ? " primary" : ""), onclick: e => {
+      template = k;
+      chipRow.querySelectorAll("button").forEach(b => b.classList.remove("primary"));
+      e.target.classList.add("primary");
+    } }, t.name)));
+  const create = () => {
+    const loc = locSel.value;
+    const slug = slugify(title.value, "new_event");
+    let id = `${loc}_${slug}`, n = 2;
+    while (allEvents().some(e => e.id === id)) id = `${loc}_${slug}_${n++}`;
+    const ev = { id, location: loc, activities: [],
+      text: `[draft] ${title.value.trim() || "Something happens."}`, ...TEMPLATES[template].make(id) };
+    locEvents(loc).push(ev);
+    closeModal();
+    STATE.loc = loc; STATE.sel = id; STATE.view = "edit";
+    markDirty(); render();
+    const ta = document.querySelector(".edit-grid textarea");
+    if (ta) { ta.focus(); ta.select(); }
+  };
+  title.addEventListener("keydown", e => { if (e.key === "Enter") create(); });
+  showModal(el("div", {},
+    el("h2", {}, "New event"),
+    el("div", { class: "row" },
+      el("div", { style: "flex:0 0 130px" }, el("label", {}, "Location"), locSel),
+      el("div", {}, el("label", {}, "Working title (becomes the id)"), title)),
+    el("label", {}, "Shape"),
+    chipRow,
+    el("div", { style: "margin-top:14px;display:flex;justify-content:flex-end;gap:8px" },
+      el("button", { class: "btn", onclick: closeModal }, "Cancel"),
+      el("button", { class: "btn primary", onclick: create }, "Create draft"))));
+  title.focus();
+}
+
+function newStorylineModal() {
+  const blankBeat = () => ({ loc: STATE.loc, premise: "", week: "" });
+  const beats = [blankBeat(), blankBeat()];
+  const name = el("input", { type: "text", placeholder: "smuggler_debt" });
+  const slugOf = () => slugify(name.value, "storyline");
+  const rows = el("div", {});
+  const rebuild = () => {
+    rows.innerHTML = "";
+    beats.forEach((b, i) => {
+      rows.appendChild(el("div", { class: "row", style: "margin-top:6px" },
+        el("div", { style: "flex:0 0 110px" }, el("select", { onchange: e => { b.loc = e.target.value; } },
+          ...LOCS.map(l => el("option", { value: l, selected: b.loc === l ? true : false }, locName(l))))),
+        el("div", {}, el("input", { type: "text", placeholder: `beat ${i + 1} premise…`, value: b.premise,
+          oninput: e => { b.premise = e.target.value; } })),
+        el("div", { style: "flex:0 0 64px" }, el("input", { type: "number", placeholder: "wk", value: b.week,
+          oninput: e => { b.week = e.target.value; } })),
+        beats.length > 2 ? el("div", { style: "flex:0 0 34px" },
+          el("button", { class: "btn danger", style: "padding:4px 8px", onclick: () => { beats.splice(i, 1); rebuild(); } }, "×")) : null));
+      if (i < beats.length - 1) {
+        rows.appendChild(el("p", { class: "muted", style: "font-size:10px;margin:2px 0 0 116px" }, `sets ${slugOf()}_${i + 1} ↓`));
+      }
+    });
+  };
+  name.addEventListener("input", rebuild);
+  rebuild();
+  const create = () => {
+    // Dedupe the SLUG itself, not just the ids: flags are one global set, so
+    // two storylines named alike would otherwise cross-wire (either's beat 1
+    // unlocking both beat 2s).
+    let slug = slugOf();
+    const takenFlags = producibleFlags();
+    for (let n = 2; takenFlags.has(`${slug}_1`); n++) slug = `${slugOf()}${n}`;
+    const made = [];
+    let weekFloor = 0;
+    beats.forEach((b, i) => {
+      let id = `${b.loc}_${slug}_${i + 1}`, n = 2;
+      while (allEvents().some(e => e.id === id) || made.some(m => m.id === id)) id = `${b.loc}_${slug}_${i + 1}_${n++}`;
+      const ev = { id, location: b.loc, activities: [],
+        text: `[draft] ${b.premise.trim() || "Something happens."}`,
+        effect: { text: "[draft] It resolves.", outcome: "[draft] saw it through.",
+          ...(i < beats.length - 1 ? { flags: [`${slug}_${i + 1}`] } : {}) } };
+      if (i > 0) ev.requires = [`${slug}_${i}`];
+      const wk = parseInt(b.week, 10);
+      if (wk >= 1 && wk <= 7) {
+        // A beat can't fire before the beat it requires: weeks never go backward.
+        ev.minWeek = Math.max(wk, weekFloor);
+        weekFloor = ev.minWeek;
+      }
+      made.push(ev);
+    });
+    made.forEach(ev => locEvents(ev.location).push(ev));
+    closeModal();
+    // Isolate the new chain on the map, land in edit on beat 1 for prose.
+    clearFilters();
+    STATE.filters.chain = made.map(m => m.id).sort()[0];
+    STATE.loc = made[0].location; STATE.sel = made[0].id; STATE.view = "edit";
+    markDirty(); render();
+  };
+  showModal(el("div", {},
+    el("h2", {}, "New storyline"),
+    el("div", { class: "row" }, el("div", {}, el("label", {}, "Name (becomes the flag prefix)"), name)),
+    el("label", { style: "margin-top:10px" }, "Beats — each unlocks the next, anywhere in town"),
+    rows,
+    el("div", { style: "margin-top:8px" },
+      el("button", { class: "btn", onclick: () => { if (beats.length < 5) { beats.push(blankBeat()); rebuild(); } } }, "+ beat")),
+    el("div", { style: "margin-top:14px;display:flex;justify-content:flex-end;gap:8px" },
+      el("button", { class: "btn", onclick: closeModal }, "Cancel"),
+      el("button", { class: "btn primary", onclick: create }, "Create storyline"))));
+  name.focus();
+}
 
 // ---- validation (mirror of the build contract) ----
 function validate() {
@@ -157,9 +389,22 @@ function validate() {
   const prod = producibleFlags();
   const allIds = allEvents().map(e => e.id);
   if (new Set(allIds).size !== allIds.length) errs.push("Duplicate event ids");
+  const actIds = LOCS.flatMap(l => locActs(l).map(a => a.id));
+  if (new Set(actIds).size !== actIds.length) errs.push("Duplicate activity ids");
+  const o = STATE.data.origins || {};
+  if ((o.roles||[]).length !== 6) errs.push(`needs exactly 6 roles (has ${(o.roles||[]).length})`);
+  if ((o.backgrounds||[]).length !== 6) errs.push(`needs exactly 6 backgrounds (has ${(o.backgrounds||[]).length})`);
+  for (const orig of [...(o.roles||[]), ...(o.backgrounds||[])]) {
+    if (!orig.name || !orig.name.trim()) errs.push(`an origin (${orig.id || "?"}) has no name`);
+  }
   for (const loc of LOCS) {
     const n = locActs(loc).length;
-    if (n < 2 || n > 4) errs.push(`${LOC_NAMES[loc]}: needs 2–4 activities (has ${n})`);
+    if (n < 2 || n > 4) errs.push(`${locName(loc)}: needs 2–4 activities (has ${n})`);
+    const meta = STATE.data.locations[loc].meta;
+    if (meta !== undefined) {
+      if (typeof meta.name !== "string" || !meta.name.trim()) errs.push(`${loc}: location name must not be empty`);
+      if (meta.blurb !== undefined && typeof meta.blurb !== "string") errs.push(`${loc}: location blurb must be text`);
+    }
     for (const ev of locEvents(loc)) {
       const shapes = [!!ev.effect, !!ev.check, !!(ev.choices&&ev.choices.length)].filter(Boolean).length;
       if (shapes !== 1) errs.push(`${ev.id}: must be exactly one shape`);
@@ -167,9 +412,37 @@ function validate() {
       const acts = locActs(loc).map(a => a.id);
       (ev.activities||[]).forEach(a => { if (!acts.includes(a)) errs.push(`${ev.id}: unknown activity "${a}"`); });
       if (ev.check && !(ev.check.dc >= 1 && ev.check.dc <= STATE.data.statCap)) errs.push(`${ev.id}: dc out of range`);
+      if (ev.weight !== undefined && (!Number.isInteger(ev.weight) || ev.weight < 1)) errs.push(`${ev.id}: weight must be a positive integer`);
+      if (ev.minWeek !== undefined && ev.maxWeek !== undefined && ev.minWeek > ev.maxWeek) errs.push(`${ev.id}: earliest week is after latest`);
+      if (ev.choices && ev.choices.length) {
+        if (ev.choices.length < 2 || ev.choices.length > 3) errs.push(`${ev.id}: needs 2–3 choices (has ${ev.choices.length})`);
+        ev.choices.forEach((c, i) => {
+          const cid = `${ev.id} choice ${i+1}`;
+          if (!c.label || !c.label.trim()) errs.push(`${cid}: empty label`);
+          const cShapes = [!!c.effect, !!c.check, !!c.random].filter(Boolean).length;
+          if (cShapes !== 1) errs.push(`${cid}: must be exactly one of flat / check / random`);
+          if (c.check) {
+            if (!STATE.data.stats.includes(c.check.stat)) errs.push(`${cid}: unknown stat "${c.check.stat}"`);
+            if (!(c.check.dc >= 1 && c.check.dc <= STATE.data.statCap)) errs.push(`${cid}: dc out of range`);
+            if (!c.pass || !c.fail) errs.push(`${cid}: check needs both pass and fail`);
+          }
+          if (c.random) {
+            if (!Array.isArray(c.random) || c.random.length < 2) errs.push(`${cid}: random needs at least 2 outcomes`);
+            (Array.isArray(c.random) ? c.random : []).forEach((r, j) => {
+              if (!r.effect) errs.push(`${cid}: random outcome ${j+1} has no effect`);
+              if (r.weight !== undefined && !(typeof r.weight === "number" && r.weight > 0)) errs.push(`${cid}: random outcome ${j+1} weight must be > 0`);
+            });
+          }
+        });
+      }
       for (const b of branchesOf(ev)) {
         if (!b.text || !b.text.trim()) errs.push(`${ev.id}: a branch has empty text`);
         if (!b.outcome || !b.outcome.trim()) errs.push(`${ev.id}: a branch has empty outcome`);
+        Object.keys(b.stats || {}).forEach(st => { if (!STATE.data.stats.includes(st)) errs.push(`${ev.id}: unknown stat "${st}" in an effect`); });
+        for (const [t, v] of Object.entries(b.threats || {})) {
+          if (!THREATS.includes(t)) errs.push(`${ev.id}: unknown threat "${t}"`);
+          else if (!Number.isInteger(v) || v === 0 || v < -2 || v > 2) errs.push(`${ev.id}: threat "${t}" delta must be a non-zero integer in -2..+2`);
+        }
       }
       (ev.requires||[]).forEach(f => { if (!prod.has(f)) errs.push(`${ev.id}: requires "${f}" — nothing sets it`); });
       (ev.forbids||[]).forEach(f => { if (!prod.has(f)) errs.push(`${ev.id}: forbids "${f}" — never set`); });
@@ -185,10 +458,177 @@ function refreshStatus() {
   const save = document.getElementById("save");
   if (errs.length) { s.className = "err"; s.textContent = `${errs.length} problem${errs.length>1?"s":""}`; save.disabled = true; }
   else { s.className = "ok"; s.textContent = STATE.dirty ? "ready to save" : "all valid"; save.disabled = !STATE.dirty; }
+  const stale = document.getElementById("problems");
+  if (stale) stale.remove();
+  const drafts = draftEvents();
+  const d = document.getElementById("drafts");
+  if (d) {
+    d.style.display = drafts.length ? "" : "none";
+    d.textContent = `✎ ${drafts.length} draft${drafts.length > 1 ? "s" : ""}`;
+    d.title = "Events still carrying [draft] prose — click to open the next one";
+    d.onclick = () => {
+      const ev = drafts[0];
+      STATE.loc = ev.location; STATE.sel = ev.id; STATE.view = "edit"; render();
+    };
+  }
 }
 
 // ---- MAP view ----
+
+/**
+ * Chains derived from the flag graph: connected components over the
+ * requires/forbids wiring, excluding "ubiquitous" colour flags (3+ setters
+ * across 2+ locations — relic_clue, turned_to_darkness…) which would fuse
+ * the whole story into one blob. Zero schema: the wiring IS the chain, so
+ * chains can never drift out of date.
+ */
+function deriveChains() {
+  const evs = allEvents();
+  const setters = {}, needers = {}, locOf = {};
+  for (const ev of evs) {
+    locOf[ev.id] = ev.location;
+    setterFlags(ev).forEach(f => (setters[f] = setters[f] || []).push(ev.id));
+    [...(ev.requires || []), ...(ev.forbids || [])].forEach(f => (needers[f] = needers[f] || []).push(ev.id));
+  }
+  const ubiquitous = new Set(Object.entries(setters)
+    .filter(([f, s]) => s.length >= 3 && new Set(s.map(id => locOf[id])).size >= 2)
+    .map(([f]) => f));
+  const parent = {};
+  const find = x => (parent[x] === x ? x : (parent[x] = find(parent[x])));
+  evs.forEach(e => (parent[e.id] = e.id));
+  for (const [f, need] of Object.entries(needers)) {
+    if (ubiquitous.has(f)) continue;
+    const all = [...(setters[f] || []), ...need];
+    for (let i = 1; i < all.length; i++) parent[find(all[0])] = find(all[i]);
+  }
+  const comps = {};
+  for (const ev of evs) {
+    const root = find(ev.id);
+    (comps[root] = comps[root] || []).push(ev);
+  }
+  return Object.values(comps)
+    .filter(c => c.length > 1)
+    .map(c => {
+      const head = c.find(e => !(e.requires || []).length) || c[0];
+      return {
+        key: c.map(e => e.id).sort()[0],   // stable while any of the wiring survives
+        label: head.id.replace(/_/g, " "),
+        ids: new Set(c.map(e => e.id)),
+        size: c.length,
+      };
+    })
+    .sort((a, b) => b.size - a.size);
+}
+
+function anyFilterActive() {
+  const F = STATE.filters;
+  return Boolean(F.chain || F.locs.size || F.threat || F.week || F.q.trim());
+}
+
+function clearFilters() {
+  STATE.filters = { chain: null, locs: new Set(), threat: null, threatMode: "any", week: null, q: "" };
+}
+
+function eventMatches(ev, chains) {
+  const F = STATE.filters;
+  if (F.locs.size && !F.locs.has(ev.location)) return false;
+  if (F.chain) {
+    const c = chains.find(ch => ch.key === F.chain);
+    if (!c || !c.ids.has(ev.id)) return false;
+  }
+  if (F.week) {
+    if (ev.minWeek !== undefined && F.week < ev.minWeek) return false;
+    if (ev.maxWeek !== undefined && F.week > ev.maxWeek) return false;
+  }
+  if (F.threat) {
+    const m = threatMarks(ev)[F.threat];
+    if (!m) return false;
+    if (F.threatMode === "relief" && !m.neg) return false;
+    if (F.threatMode === "worsen" && !m.pos) return false;
+  }
+  const q = F.q.trim().toLowerCase();
+  if (q) {
+    const hay = [ev.id, ...(ev.requires || []), ...(ev.forbids || []), ...setterFlags(ev),
+      ev.text || "", ...branchesOf(ev).flatMap(b => [b.text || "", b.outcome || ""])].join(" ").toLowerCase();
+    if (!hay.includes(q)) return false;
+  }
+  return true;
+}
+
+function filterBar() {
+  const F = STATE.filters;
+  const chains = deriveChains();
+  if (F.chain && !chains.some(c => c.key === F.chain)) F.chain = null;
+  const bar = el("div", { class: "filterbar" });
+  bar.appendChild(el("select", { onchange: e => { F.chain = e.target.value || null; drawMap(); } },
+    el("option", { value: "" }, "All chains"),
+    ...chains.map(c => el("option", { value: c.key, selected: F.chain === c.key ? true : false }, `${c.label} (${c.size})`))));
+  for (const loc of LOCS) {
+    bar.appendChild(el("button", {
+      class: "fchip" + (F.locs.has(loc) ? " on" : ""),
+      onclick: e => {
+        if (F.locs.has(loc)) F.locs.delete(loc); else F.locs.add(loc);
+        e.target.classList.toggle("on");
+        drawMap();
+      },
+    }, locName(loc)));
+  }
+  const modeSel = el("select", { style: F.threat ? "" : "display:none", onchange: e => { F.threatMode = e.target.value; drawMap(); } },
+    ...[["any", "relief or worsen"], ["relief", "relief only"], ["worsen", "worsen only"]].map(([v, t]) =>
+      el("option", { value: v, selected: F.threatMode === v ? true : false }, t)));
+  bar.appendChild(el("select", { onchange: e => { F.threat = e.target.value || null; modeSel.style.display = F.threat ? "" : "none"; drawMap(); } },
+    el("option", { value: "" }, "Any threat"),
+    ...THREATS.map(t => el("option", { value: t, selected: F.threat === t ? true : false }, THREAT_NAMES[t]))));
+  bar.appendChild(modeSel);
+  bar.appendChild(el("select", { onchange: e => { F.week = parseInt(e.target.value, 10) || null; drawMap(); } },
+    el("option", { value: "" }, "Any week"),
+    ...[1, 2, 3, 4, 5, 6, 7].map(w => el("option", { value: String(w), selected: F.week === w ? true : false }, `Week ${w}`))));
+  // Search updates the SVG only — the bar is never rebuilt mid-keystroke.
+  bar.appendChild(el("input", { type: "text", class: "fsearch", placeholder: "search events, flags, prose…", value: F.q,
+    oninput: e => { F.q = e.target.value; drawMap(); } }));
+  bar.appendChild(el("button", { class: "fchip", onclick: newEventModal }, "+ Event"));
+  bar.appendChild(el("button", { class: "fchip", onclick: newStorylineModal }, "+ Storyline"));
+  bar.appendChild(el("span", { id: "fcount", class: "muted" }));
+  bar.appendChild(el("button", { class: "fchip", id: "fclear", style: "display:none",
+    onclick: () => { clearFilters(); render(); } }, "× clear"));
+  return bar;
+}
+
 function renderMap() {
+  const view = document.getElementById("view");
+  view.innerHTML = "";
+  view.appendChild(filterBar());
+  view.appendChild(el("div", { id: "map-wrap" }));
+  drawMap();
+}
+
+function drawMap() {
+  const chains = deriveChains();
+  const active = anyFilterActive();
+  const matched = new Set();
+  for (const ev of allEvents()) if (!active || eventMatches(ev, chains)) matched.add(ev.id);
+
+  const fcount = document.getElementById("fcount");
+  const fclear = document.getElementById("fclear");
+  if (fcount) {
+    if (active) {
+      // What the filtered set contributes to the doom economy.
+      const contrib = THREATS.map(t => {
+        let neg = 0, pos = 0;
+        for (const ev of allEvents()) {
+          if (!matched.has(ev.id)) continue;
+          const m = threatMarks(ev)[t];
+          if (m) { neg += m.neg; pos += m.pos; }
+        }
+        return neg || pos ? `${THREAT_NAMES[t]} ${[neg ? String(neg) : null, pos ? `+${pos}` : null].filter(Boolean).join("/")}` : null;
+      }).filter(Boolean).join(" · ");
+      fcount.textContent = `${matched.size} of ${allEvents().length}` + (contrib ? ` · ${contrib}` : "");
+    } else {
+      fcount.textContent = "click = edit · alt-click = isolate its chain · esc = clear filters";
+    }
+    if (fclear) fclear.style.display = active ? "" : "none";
+  }
+
   const colW = 210, nodeW = 168, nodeH = 38, vGap = 10, top = 44, padL = 20;
   const positions = {}; // eventId -> {x,y,cx of right, lx of left}
   let maxRows = 0;
@@ -220,48 +660,80 @@ function renderMap() {
   const edgeEls = edges.map(e => {
     const a = positions[e.from], b = positions[e.to];
     if (!a || !b) return null;
-    const x1 = a.x + nodeW, y1 = a.y + nodeH/2, x2 = b.x, y2 = b.y + nodeH/2;
-    const mx = (x1 + x2) / 2;
-    return svg("path", {
-      d: `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`,
+    // Edges vanish unless both ends match: dropping half-edges is what
+    // actually kills the hairball when a filter is on.
+    if (!matched.has(e.from) || !matched.has(e.to)) return null;
+    let d;
+    if (a.loc === b.loc) {
+      // Same column: loop out of the column's left side instead of
+      // cutting a backwards curve through the nodes.
+      const x1 = a.x, y1 = a.y + nodeH/2, x2 = b.x, y2 = b.y + nodeH/2;
+      d = `M ${x1} ${y1} C ${x1 - 38} ${y1}, ${x2 - 38} ${y2}, ${x2} ${y2}`;
+    } else {
+      const x1 = a.x + nodeW, y1 = a.y + nodeH/2, x2 = b.x, y2 = b.y + nodeH/2;
+      const mx = (x1 + x2) / 2;
+      d = `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
+    }
+    const p = svg("path", {
+      d,
       fill: "none", stroke: e.kind === "forbid" ? "var(--red)" : "var(--gold)",
       "stroke-width": 1.5, "stroke-dasharray": e.kind === "forbid" ? "5 4" : "none",
       opacity: 0.55,
     });
+    p.appendChild(svg("title", {}, `${e.from} —${e.kind === "forbid" ? " blocks" : " unlocks"}→ ${e.to}  (${e.flag})`));
+    return p;
   }).filter(Boolean);
 
   const heads = LOCS.map((loc, ci) =>
-    svg("text", { class: "col-head", x: padL + ci*colW + nodeW/2, y: 24, "text-anchor": "middle" }, LOC_NAMES[loc]));
+    svg("text", { class: "col-head", x: padL + ci*colW + nodeW/2, y: 24, "text-anchor": "middle" }, locName(loc)));
 
   const nodes = allEvents().map(ev => {
     const p = positions[ev.id];
     const sets = setterFlags(ev);
+    const marks = Object.entries(threatMarks(ev));
+    // One dot per touched threat: green = offers relief, red = only worsens.
+    const dots = marks.map(([t, m], k) =>
+      svg("circle", { cx: nodeW - 8 - k * 9, cy: 8, r: 3,
+        fill: m.neg ? "var(--green)" : "var(--red)", opacity: 0.9 }));
+    const weeks = ev.minWeek || ev.maxWeek
+      ? `  [wk ${ev.minWeek ?? 1}–${ev.maxWeek ?? 7}]` : "";
+    const tip = [
+      ev.id + weeks + (ev.repeatable ? "  (repeatable)" : ""),
+      ev.requires && ev.requires.length ? "needs: " + ev.requires.join(", ") : null,
+      ev.forbids && ev.forbids.length ? "forbids: " + ev.forbids.join(", ") : null,
+      sets.length ? "sets: " + sets.join(", ") : null,
+      marks.length ? "threats: " + marks.map(([t, m]) =>
+        [m.neg ? `${t} ${m.neg}` : null, m.pos ? `${t} +${m.pos}` : null].filter(Boolean).join(", ")).join(", ") : null,
+    ].filter(Boolean).join("\n");
     const g = svg("g", {
-      class: "node" + (STATE.sel === ev.id ? " sel" : ""),
+      class: "node" + (STATE.sel === ev.id ? " sel" : "") + (matched.has(ev.id) ? "" : " dim") + (isDraft(ev) ? " draft" : ""),
       transform: `translate(${p.x},${p.y})`,
-      onclick: () => { STATE.sel = ev.id; STATE.loc = p.loc; STATE.view = "edit"; render(); },
+      onclick: (e) => {
+        if (e.altKey) {
+          // Alt-click: isolate this event's whole chain (plain click edits).
+          const c = chains.find(ch => ch.ids.has(ev.id));
+          if (c) { STATE.filters.chain = c.key; render(); }
+          return;
+        }
+        STATE.sel = ev.id; STATE.loc = p.loc; STATE.view = "edit"; render();
+      },
     },
       svg("rect", { width: nodeW, height: nodeH }),
+      svg("title", {}, tip),
       svg("text", { x: 8, y: 15 }, ev.id.length > 24 ? ev.id.slice(0,23)+"…" : ev.id),
       svg("text", { class: "sub", x: 8, y: 29 },
         (ev.requires&&ev.requires.length ? "↳ needs "+ev.requires.join(", ") : sets.length ? "sets "+sets.join(", ") : shapeOf(ev))
           .slice(0, 32)),
+      ...dots,
     );
     return g;
   });
 
-  const view = document.getElementById("view");
-  view.innerHTML = "";
-  view.appendChild(el("div", { class: "legend" },
-    el("span", {}, el("span", { class: "swatch" }), "unlocks (sets → needs)"),
-    el("span", {}, el("span", { class: "swatch forbid" }), "blocks (forbids)"),
-    el("span", { class: "muted" }, "click any event to edit it"),
-  ));
-  const wrap = el("div", { id: "map-wrap" });
-  const s = svg("svg", { width, height, viewBox: `0 0 ${width} ${height}`, style: `width:${width}px;height:${height}px` },
-    ...edgeEls, ...heads, ...nodes);
-  wrap.appendChild(s);
-  view.appendChild(wrap);
+  const wrap = document.getElementById("map-wrap");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  wrap.appendChild(svg("svg", { width, height, viewBox: `0 0 ${width} ${height}`, style: `width:${width}px;height:${height}px` },
+    ...edgeEls, ...heads, ...nodes));
 }
 
 // ---- EDIT view ----
@@ -283,22 +755,49 @@ function effectEditor(effect, onChange, title) {
     el("input", { type: "text", value: effect.outcome || "", oninput: e => { effect.outcome = e.target.value; markDirty(); } }),
     el("label", {}, "Stat changes"),
     el("div", { class: "stats-grid" }, ...statInputs),
+    el("label", {}, "Threat deltas (blank = none; −2..+2, never 0; negative relieves the town)"),
+    el("div", { class: "stats-grid threats-grid" }, ...THREATS.map(t =>
+      el("div", {},
+        el("label", {}, THREAT_NAMES[t]),
+        el("input", { type: "number", min: -2, max: 2, placeholder: "—",
+          value: (effect.threats && effect.threats[t] != null) ? effect.threats[t] : "",
+          oninput: e => {
+            const v = parseInt(e.target.value, 10);
+            if (!v) { // 0, blank, or junk = no delta on this threat
+              if (effect.threats) { delete effect.threats[t]; if (!Object.keys(effect.threats).length) delete effect.threats; }
+            } else {
+              effect.threats = effect.threats || {};
+              effect.threats[t] = v;
+            }
+            markDirty();
+          }})))),
     el("label", {}, "Flags this sets (creates connections other events can need)"),
     flagPicker(effect.flags || [], list => { effect.flags = list.length ? list : undefined; markDirty(); render(); }),
   );
 }
 
 function flagPicker(current, onChange, opts = {}) {
-  const flags = allFlags();
-  const box = el("div", { class: "flagbox" },
-    ...flags.map(f => el("label", {},
+  const prod = producibleFlags();
+  const box = el("div", { class: "flagbox" });
+  const filter = el("input", { type: "text", placeholder: `filter ${allFlags().length} flags…`, style: "margin-bottom:5px;font-size:12px" });
+  const fill = () => {
+    box.innerHTML = "";
+    const q = filter.value.trim().toLowerCase();
+    // Ticked flags float to the top so the current wiring is visible at a glance.
+    const flags = allFlags()
+      .filter(f => !q || f.includes(q))
+      .sort((a, b) => (current.includes(b) ? 1 : 0) - (current.includes(a) ? 1 : 0) || a.localeCompare(b));
+    for (const f of flags) box.appendChild(el("label", {},
       el("input", { type: "checkbox", checked: current.includes(f) ? true : false, onchange: e => {
         const set = new Set(current);
         if (e.target.checked) set.add(f); else set.delete(f);
         onChange([...set]);
-      }}), f)),
-    flags.length === 0 ? el("span", { class: "muted" }, "no flags yet") : null,
-  );
+      }}), f,
+      prod.has(f) ? null : el("span", { class: "err", style: "font-size:10px" }, " ⚠ nothing sets this")));
+    if (!flags.length) box.appendChild(el("span", { class: "muted" }, q ? "no flags match" : "no flags yet"));
+  };
+  filter.addEventListener("input", fill);
+  fill();
   const add = el("div", { class: "addflag" },
     el("input", { type: "text", placeholder: "new_flag_name" }),
     el("button", { class: "btn" }, "Add"));
@@ -306,7 +805,7 @@ function flagPicker(current, onChange, opts = {}) {
     const v = add.querySelector("input").value.trim().toLowerCase().replace(/\s+/g, "_");
     if (v) { const set = new Set(current); set.add(v); onChange([...set]); }
   });
-  return el("div", {}, box, add);
+  return el("div", {}, filter, box, add);
 }
 
 function renderEdit() {
@@ -319,13 +818,25 @@ function renderEdit() {
     ...LOCS.map(loc => el("button", {
       class: "loc-tab" + (STATE.loc === loc ? " active" : ""),
       onclick: () => { STATE.loc = loc; STATE.sel = null; render(); }
-    }, LOC_NAMES[loc]))));
+    }, locName(loc)))));
 
-  // activities editor
-  left.appendChild(el("h2", {}, "Activities"));
+  // location identity + activities — edited rarely, so they fold away
   const acts = locActs(STATE.loc);
+  const locData = STATE.data.locations[STATE.loc];
+  const actDetails = el("details", { class: "gate", style: "margin:0 0 10px" },
+    el("summary", {}, el("span", { class: "muted" }, `${locName(STATE.loc)} · ${acts.length} activities`)));
+  // Materialising meta always seeds a name, so a blurb-first edit can never
+  // create a nameless (save-blocking) meta block.
+  const ensureMeta = () => (locData.meta = locData.meta || { name: locName(STATE.loc), blurb: "" });
+  actDetails.appendChild(el("label", {}, "Location name (shown on every screen)"));
+  actDetails.appendChild(el("input", { type: "text", value: (locData.meta && locData.meta.name) || LOC_NAMES[STATE.loc],
+    oninput: e => { ensureMeta().name = e.target.value; markDirty(); } }));
+  actDetails.appendChild(el("label", {}, "Location blurb (the choose-location card)"));
+  actDetails.appendChild(el("input", { type: "text", style: "font-size:12px", value: (locData.meta && locData.meta.blurb) || "",
+    oninput: e => { ensureMeta().blurb = e.target.value; markDirty(); } }));
+  actDetails.appendChild(el("label", { style: "margin-top:10px" }, "Activities"));
   acts.forEach((a, i) => {
-    left.appendChild(el("div", { style: "margin-bottom:6px" },
+    actDetails.appendChild(el("div", { style: "margin:6px 0" },
       el("input", { type: "text", value: a.name, oninput: e => { a.name = e.target.value; markDirty(); } }),
       el("input", { type: "text", value: a.blurb, style: "margin-top:3px;font-size:12px", oninput: e => { a.blurb = e.target.value; markDirty(); } }),
       el("div", { class: "muted", style: "font-size:10px;margin-top:2px" }, a.id,
@@ -333,17 +844,25 @@ function renderEdit() {
           onclick: () => { acts.splice(i,1); markDirty(); render(); } }, "remove") : null),
     ));
   });
-  if (acts.length < 4) left.appendChild(el("button", { class: "btn", style: "margin-top:4px",
-    onclick: () => { const id = `${STATE.loc}_act${acts.length+1}`; acts.push({ id, location: STATE.loc, name: "New activity", blurb: "" }); markDirty(); render(); } }, "+ activity"));
+  if (acts.length < 4) actDetails.appendChild(el("button", { class: "btn", style: "margin-top:4px",
+    onclick: () => {
+      const taken = LOCS.flatMap(l => locActs(l).map(a => a.id));
+      let n = acts.length + 1, id = `${STATE.loc}_act${n}`;
+      while (taken.includes(id)) { n++; id = `${STATE.loc}_act${n}`; }
+      acts.push({ id, location: STATE.loc, name: "New activity", blurb: "" }); markDirty(); render();
+    } }, "+ activity"));
+  left.appendChild(actDetails);
 
-  left.appendChild(el("h2", { style: "margin-top:14px" }, "Events"));
+  left.appendChild(el("h2", {}, "Events"));
   const list = el("div", { class: "evlist" },
     ...locEvents(STATE.loc).map(ev => el("div", {
       class: "evrow" + (STATE.sel === ev.id ? " sel" : ""),
       onclick: () => { STATE.sel = ev.id; render(); }
-    }, ev.id, el("span", { class: "tag " + shapeOf(ev) }, shapeOf(ev)))));
+    }, (isDraft(ev) ? "✎ " : "") + ev.id, el("span", { class: "tag " + shapeOf(ev) }, shapeOf(ev)), ...threatChips(ev))));
   left.appendChild(list);
-  left.appendChild(el("button", { class: "btn", style: "margin-top:8px", onclick: addEvent }, "+ event"));
+  left.appendChild(el("div", { style: "margin-top:8px;display:flex;gap:6px" },
+    el("button", { class: "btn", onclick: newEventModal }, "+ event"),
+    el("button", { class: "btn", onclick: newStorylineModal }, "+ storyline")));
 
   // center: the selected event form
   const center = el("div", { class: "panel" });
@@ -351,30 +870,73 @@ function renderEdit() {
   if (!ev) center.appendChild(el("p", { class: "muted" }, "Select an event on the left, or add one."));
   else center.appendChild(eventForm(ev));
 
-  // right: connections for the selected event + validation
+  // right: connections for the selected event + threat budget (problems
+  // moved to the header — click the count to jump to each offender)
   const right = el("div", {});
   right.appendChild(connectionsPanel(ev));
-  right.appendChild(validationPanel());
+  right.appendChild(threatBudgetPanel());
 
   view.appendChild(el("div", { class: "edit-grid" }, left, center, right));
 }
 
-function eventForm(ev) {
-  const f = el("div", {});
-  f.appendChild(el("div", { class: "row" },
-    el("div", {}, el("label", {}, "Event id"), el("input", { type: "text", value: ev.id, oninput: e => { ev.id = e.target.value.trim(); markDirty(); } })),
-    el("div", { style: "flex:0 0 90px" }, el("label", {}, "Weight"), el("input", { type: "number", value: ev.weight ?? 1, oninput: e => { const v = parseInt(e.target.value,10); if (v && v!==1) ev.weight = v; else delete ev.weight; markDirty(); } })),
-  ));
-  f.appendChild(el("label", { style: "display:flex;align-items:center;gap:6px;margin-top:8px" },
-    el("input", { type: "checkbox", checked: ev.repeatable ? true : false, style: "width:auto", onchange: e => { if (e.target.checked) ev.repeatable = true; else delete ev.repeatable; markDirty(); } }), "Repeatable (can fire more than once)"));
-  f.appendChild(el("div", { class: "row", style: "margin-top:8px" },
-    el("div", {}, el("label", {}, "Earliest week (1–7, blank = any)"),
-      el("input", { type: "number", value: ev.minWeek ?? "", oninput: e => { const v = parseInt(e.target.value,10); if (v>=1&&v<=7) ev.minWeek = v; else delete ev.minWeek; markDirty(); } })),
-    el("div", {}, el("label", {}, "Latest week (1–7, blank = any)"),
-      el("input", { type: "number", value: ev.maxWeek ?? "", oninput: e => { const v = parseInt(e.target.value,10); if (v>=1&&v<=7) ev.maxWeek = v; else delete ev.maxWeek; markDirty(); } })));
+/** The tuning dashboard for the four threat tracks: how much relief and
+ * aggravation the whole story offers (best/worst case per event), and this
+ * location's share. Each track climbs +13 over the week against a cap of
+ * 10, so the party needs −3 net per track to save it. */
+function threatBudgetPanel() {
+  const rows = THREATS.map(t => {
+    let relief = 0, worsen = 0, locRelief = 0, locWorsen = 0;
+    for (const loc of LOCS) for (const ev of locEvents(loc)) {
+      const m = threatMarks(ev)[t];
+      if (!m) continue;
+      relief += m.neg; worsen += m.pos;
+      if (loc === STATE.loc) { locRelief += m.neg; locWorsen += m.pos; }
+    }
+    return { t, relief, worsen, locRelief, locWorsen };
+  });
+  const cell = (v, cls) => el("td", { class: v ? cls : "muted" }, v ? (v > 0 ? `+${v}` : String(v)) : "·");
+  return el("div", { class: "panel", style: "margin-top:12px" },
+    el("h2", {}, "Threat budget"),
+    el("table", { class: "budget" },
+      el("tr", {}, el("th", {}, ""), el("th", {}, "relief"), el("th", {}, "worsen"), el("th", {}, "here")),
+      ...rows.map(r => el("tr", {},
+        el("td", {}, THREAT_NAMES[r.t]),
+        cell(r.relief, "neg"),
+        cell(r.worsen, "pos"),
+        el("td", {}, r.locRelief || r.locWorsen
+          ? [r.locRelief ? el("span", { class: "neg" }, String(r.locRelief)) : null,
+             r.locRelief && r.locWorsen ? " / " : null,
+             r.locWorsen ? el("span", { class: "pos" }, `+${r.locWorsen}`) : null]
+          : el("span", { class: "muted" }, "·")),
+      ))),
+    el("p", { class: "muted", style: "font-size:11px;margin:8px 0 0" },
+      "Each track climbs +13 over the week (cap 10): the party needs −3 net per track to save it. Relief/worsen sum each event's best and worst branch."));
+}
 
-  f.appendChild(el("label", {}, "Triggered by activities"));
-  f.appendChild(el("div", { class: "flagbox" },
+/** One line summarising everything about WHEN an event fires — shown on the
+ * collapsed disclosure so the writing surface stays calm. */
+function gateSummary(ev) {
+  const bits = [];
+  if (ev.requires && ev.requires.length) bits.push(`needs ${ev.requires.join(", ")}`);
+  if (ev.forbids && ev.forbids.length) bits.push(`not if ${ev.forbids.join(", ")}`);
+  if (ev.minWeek !== undefined || ev.maxWeek !== undefined) bits.push(`wk ${ev.minWeek ?? 1}–${ev.maxWeek ?? 7}`);
+  if (ev.weight !== undefined) bits.push(`weight ${ev.weight}`);
+  if (ev.repeatable) bits.push("repeatable");
+  bits.push((ev.activities || []).length
+    ? `${ev.activities.length} of ${locActs(STATE.loc).length} activities`
+    : "any activity");
+  return bits.join(" · ");
+}
+
+function gateDetails(ev) {
+  const d = el("details", { class: "gate", ...(STATE.gateOpen ? { open: true } : {}) });
+  d.addEventListener("toggle", () => { STATE.gateOpen = d.open; });
+  d.appendChild(el("summary", {},
+    el("span", { class: "muted" }, "When can this fire? "),
+    el("span", { class: "gsum" }, gateSummary(ev))));
+
+  d.appendChild(el("label", {}, "Triggered by activities"));
+  d.appendChild(el("div", { class: "flagbox" },
     ...locActs(STATE.loc).map(a => el("label", {},
       el("input", { type: "checkbox", checked: (ev.activities||[]).includes(a.id) ? true : false, onchange: e => {
         const set = new Set(ev.activities||[]);
@@ -384,14 +946,32 @@ function eventForm(ev) {
     el("div", { class: "muted", style: "font-size:11px;margin-top:4px" }, "none ticked = any activity here"),
   ));
 
+  d.appendChild(el("label", {}, "Requires (only fires if the player has ALL these flags)"));
+  d.appendChild(flagPicker(ev.requires || [], list => { ev.requires = list.length ? list : undefined; markDirty(); render(); }));
+  d.appendChild(el("label", {}, "Forbids (won't fire if the player has ANY of these)"));
+  d.appendChild(flagPicker(ev.forbids || [], list => { ev.forbids = list.length ? list : undefined; markDirty(); render(); }));
+
+  d.appendChild(el("div", { class: "row", style: "margin-top:8px" },
+    el("div", {}, el("label", {}, "Earliest week (1–7, blank = any)"),
+      el("input", { type: "number", value: ev.minWeek ?? "", oninput: e => { const v = parseInt(e.target.value,10); if (v>=1&&v<=7) ev.minWeek = v; else delete ev.minWeek; markDirty(); } })),
+    el("div", {}, el("label", {}, "Latest week (1–7, blank = any)"),
+      el("input", { type: "number", value: ev.maxWeek ?? "", oninput: e => { const v = parseInt(e.target.value,10); if (v>=1&&v<=7) ev.maxWeek = v; else delete ev.maxWeek; markDirty(); } })),
+    el("div", { style: "flex:0 0 90px" }, el("label", {}, "Weight"),
+      el("input", { type: "number", min: 1, value: ev.weight ?? 1, oninput: e => { const v = parseInt(e.target.value,10); if (v >= 2) ev.weight = v; else delete ev.weight; markDirty(); } }))));
+
+  d.appendChild(el("label", { style: "display:flex;align-items:center;gap:6px;margin-top:8px" },
+    el("input", { type: "checkbox", checked: ev.repeatable ? true : false, style: "width:auto", onchange: e => { if (e.target.checked) ev.repeatable = true; else delete ev.repeatable; markDirty(); } }), "Repeatable (can fire more than once)"));
+  return d;
+}
+
+function eventForm(ev) {
+  const f = el("div", {});
+  f.appendChild(el("div", {},
+    el("label", {}, "Event id"),
+    el("input", { type: "text", value: ev.id, oninput: e => { ev.id = e.target.value.trim(); STATE.sel = ev.id; markDirty(); } })));
+
   f.appendChild(el("label", {}, "Setup prose (shown before the outcome)"));
   f.appendChild(el("textarea", { oninput: e => { ev.text = e.target.value; markDirty(); } }, ev.text || ""));
-
-  // requires / forbids — THE connections
-  f.appendChild(el("label", {}, "Requires (only fires if the player has ALL these flags)"));
-  f.appendChild(flagPicker(ev.requires || [], list => { ev.requires = list.length ? list : undefined; markDirty(); render(); }));
-  f.appendChild(el("label", {}, "Forbids (won't fire if the player has ANY of these)"));
-  f.appendChild(flagPicker(ev.forbids || [], list => { ev.forbids = list.length ? list : undefined; markDirty(); render(); }));
 
   // shape
   const shape = shapeOf(ev);
@@ -415,19 +995,72 @@ function eventForm(ev) {
     f.appendChild(effectEditor(ev.fail, null, "If they fail"));
   } else {
     ev.choices.forEach((c, i) => {
+      const cShape = choiceShapeOf(c);
       const wrap = el("div", { class: "branch" },
         el("h3", {}, `Choice ${i+1}`, ev.choices.length > 2 ? el("button", { class: "btn danger", style: "float:right;padding:1px 6px;font-size:10px", onclick: () => { ev.choices.splice(i,1); markDirty(); render(); } }, "remove") : null),
         el("label", {}, "Button label (a plain action — never reveal stats)"),
         el("input", { type: "text", value: c.label, oninput: e => { c.label = e.target.value; markDirty(); } }),
-        effectEditor(c.effect, null, null));
+        el("label", {}, "Choice resolves as"),
+        el("div", { class: "row" },
+          ...["effect","check","random"].map(s => el("button", {
+            class: "btn" + (cShape === s ? " primary" : ""),
+            onclick: () => { if (choiceShapeOf(c) !== s) { setChoiceShape(c, s); markDirty(); render(); } }
+          }, s === "effect" ? "Flat outcome" : s === "check" ? "Hidden stat check" : "Random outcome"))));
+      if (cShape === "effect") {
+        wrap.appendChild(effectEditor(c.effect, null, null));
+      } else if (cShape === "check") {
+        wrap.appendChild(el("div", { class: "row", style: "margin-top:8px" },
+          el("div", {}, el("label", {}, "Stat checked (hidden)"),
+            el("select", { onchange: e => { c.check.stat = e.target.value; markDirty(); } },
+              ...STATE.data.stats.map(s => el("option", { value: s, selected: c.check.stat === s ? true : false }, s)))),
+          el("div", { style: "flex:0 0 90px" }, el("label", {}, "Difficulty"),
+            el("input", { type: "number", value: c.check.dc, oninput: e => { c.check.dc = parseInt(e.target.value,10)||1; markDirty(); } }))));
+        wrap.appendChild(effectEditor(c.pass, null, "If they pass"));
+        wrap.appendChild(effectEditor(c.fail, null, "If they fail"));
+      } else {
+        // Live odds: each outcome shows its share of the total weight.
+        const oddsSpans = [];
+        const refreshOdds = () => {
+          const total = c.random.reduce((s, r) => s + (r.weight ?? 1), 0);
+          oddsSpans.forEach((sp, j) => {
+            const w = c.random[j].weight ?? 1;
+            sp.textContent = `= ${w} in ${total} (${Math.round((100 * w) / total)}%)`;
+          });
+        };
+        c.random.forEach((r, j) => {
+          const odds = el("span", { class: "odds" });
+          oddsSpans.push(odds);
+          wrap.appendChild(el("div", { class: "branch" },
+            el("h3", {}, `Random outcome ${j+1}`, c.random.length > 2 ? el("button", { class: "btn danger", style: "float:right;padding:1px 6px;font-size:10px", onclick: () => { c.random.splice(j,1); markDirty(); render(); } }, "remove") : null),
+            el("div", { class: "row" },
+              el("div", { style: "flex:0 0 120px" }, el("label", {}, "Weight (odds share)"),
+                el("input", { type: "number", min: 1, value: r.weight ?? 1, oninput: e => { const v = parseInt(e.target.value,10); if (v > 0) r.weight = v; else delete r.weight; markDirty(); refreshOdds(); } })),
+              odds),
+            effectEditor(r.effect, null, null)));
+        });
+        refreshOdds();
+        wrap.appendChild(el("button", { class: "btn", style: "margin-top:6px", onclick: () => { c.random.push({ weight: 1, effect: { text: "", outcome: "" } }); markDirty(); render(); } }, "+ random outcome"));
+      }
       f.appendChild(wrap);
     });
     if (ev.choices.length < 3) f.appendChild(el("button", { class: "btn", style: "margin-top:6px", onclick: () => { ev.choices.push({ label: "New choice", effect: { text: "", outcome: "" } }); markDirty(); render(); } }, "+ choice"));
   }
 
-  f.appendChild(el("div", { style: "margin-top:16px" },
+  f.appendChild(gateDetails(ev));
+
+  f.appendChild(el("div", { style: "margin-top:16px;display:flex;gap:8px" },
+    el("button", { class: "btn", onclick: () => duplicateEvent(ev) }, "Duplicate event"),
     el("button", { class: "btn danger", onclick: () => deleteEvent(ev) }, "Delete event")));
   return f;
+}
+
+function duplicateEvent(ev) {
+  const copy = JSON.parse(JSON.stringify(ev));
+  let id = `${ev.id}_copy`, n = 2;
+  while (allEvents().some(e => e.id === id)) id = `${ev.id}_copy${n++}`;
+  copy.id = id;
+  locEvents(STATE.loc).push(copy);
+  STATE.sel = id; markDirty(); render();
 }
 
 function setShape(ev, shape) {
@@ -435,6 +1068,13 @@ function setShape(ev, shape) {
   if (shape === "effect") ev.effect = { text: "", outcome: "" };
   else if (shape === "check") { ev.check = { stat: "will", dc: 4 }; ev.pass = { text: "", outcome: "" }; ev.fail = { text: "", outcome: "" }; }
   else ev.choices = [{ label: "Option one", effect: { text: "", outcome: "" } }, { label: "Option two", effect: { text: "", outcome: "" } }];
+}
+
+function setChoiceShape(c, shape) {
+  delete c.effect; delete c.check; delete c.pass; delete c.fail; delete c.random;
+  if (shape === "effect") c.effect = { text: "", outcome: "" };
+  else if (shape === "check") { c.check = { stat: "will", dc: 4 }; c.pass = { text: "", outcome: "" }; c.fail = { text: "", outcome: "" }; }
+  else c.random = [{ weight: 1, effect: { text: "", outcome: "" } }, { weight: 1, effect: { text: "", outcome: "" } }];
 }
 
 function connectionsPanel(ev) {
@@ -464,23 +1104,28 @@ function connectionsPanel(ev) {
   return p;
 }
 
-function validationPanel() {
+/** The header's "N problems" click-through: every row jumps to its event. */
+function toggleProblems() {
+  const existing = document.getElementById("problems");
+  if (existing) { existing.remove(); return; }
   const errs = validate();
-  const p = el("div", { class: "panel", style: "margin-top:12px" }, el("h2", {}, "Validation"));
-  if (!errs.length) p.appendChild(el("p", { class: "ok" }, "✓ All checks pass"));
-  else p.appendChild(el("ul", { class: "errlist" }, ...errs.slice(0, 30).map(e => el("li", {}, e))));
-  return p;
+  if (!errs.length) return;
+  const panel = el("div", { id: "problems" }, ...errs.map(msg => {
+    const prefix = msg.split(":")[0].trim();
+    // "<id> choice 2: …" rows point at their event; "<location>: …" rows
+    // open that location; plain-id rows jump straight to the event.
+    const ev = allEvents().find(e => e.id === prefix)
+      || allEvents().find(e => e.id === prefix.replace(/ choice \d+$/, ""));
+    const loc = !ev && LOCS.includes(prefix) ? prefix : null;
+    return el("div", { onclick: () => {
+      panel.remove();
+      if (ev) { STATE.loc = ev.location; STATE.sel = ev.id; STATE.view = "edit"; render(); }
+      else if (loc) { STATE.loc = loc; STATE.sel = null; STATE.view = "edit"; render(); }
+    } }, msg);
+  }));
+  document.body.appendChild(panel);
 }
 
-function addEvent() {
-  const loc = STATE.loc;
-  let n = locEvents(loc).length + 1;
-  let id = `${loc}_event${n}`;
-  while (allEvents().some(e => e.id === id)) { n++; id = `${loc}_event${n}`; }
-  const ev = { id, location: loc, activities: [], text: "Something happens.", effect: { text: "It resolves.", outcome: "did a thing." } };
-  locEvents(loc).push(ev);
-  STATE.sel = id; markDirty(); render();
-}
 function deleteEvent(ev) {
   const arr = locEvents(STATE.loc);
   const i = arr.findIndex(e => e.id === ev.id);
@@ -537,20 +1182,107 @@ function render() {
   refreshStatus();
 }
 
+/** Drop empty containers the form editors create as a side effect
+ * ({stats:{}}, {threats:{}}, flags:[]), so saves never churn the JSON. */
+function cleanupData() {
+  for (const loc of LOCS) {
+    // A meta block with nothing in it is form residue, not content.
+    const meta = STATE.data.locations[loc].meta;
+    if (meta && !(meta.name && meta.name.trim()) && !(meta.blurb && meta.blurb.trim())) {
+      delete STATE.data.locations[loc].meta;
+    }
+    for (const ev of locEvents(loc)) {
+      for (const b of branchesOf(ev)) {
+        if (b.stats && !Object.keys(b.stats).length) delete b.stats;
+        if (b.threats && !Object.keys(b.threats).length) delete b.threats;
+        if (b.flags && !b.flags.length) delete b.flags;
+      }
+    }
+  }
+  const o = STATE.data.origins || {};
+  for (const orig of [...(o.roles||[]), ...(o.backgrounds||[])]) {
+    if (orig.bonus && !Object.keys(orig.bonus).length) delete orig.bonus;
+  }
+}
+
 async function save() {
+  cleanupData();
   const res = await fetch("/api/content", { method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ locations: STATE.data.locations, origins: STATE.data.origins }) });
   const body = await res.json();
   const s = document.getElementById("status");
-  if (res.ok) { STATE.dirty = false; s.className = "ok"; s.textContent = "saved ✓"; document.getElementById("save").disabled = true; }
-  else { s.className = "err"; s.textContent = (body.errors ? body.errors[0] : body.error) || "save failed"; }
+  if (res.ok) {
+    STATE.dirty = false; s.className = "ok"; s.textContent = "saved ✓";
+    document.getElementById("save").disabled = true;
+    loadBackups();
+  } else {
+    s.className = "err";
+    s.textContent = body.errors
+      ? body.errors.slice(0, 3).join(" · ") + (body.errors.length > 3 ? ` · +${body.errors.length - 3} more` : "")
+      : body.error || "save failed";
+  }
+}
+
+async function loadBackups() {
+  try {
+    const res = await fetch("/api/backups");
+    const { backups } = await res.json();
+    const wrap = document.getElementById("backup-wrap");
+    const sel = document.getElementById("backup-list");
+    sel.innerHTML = "";
+    for (const b of backups) sel.appendChild(el("option", { value: b }, b.replace("T", "  ")));
+    wrap.style.display = backups.length ? "inline-flex" : "none";
+  } catch { /* backups are a convenience — never block the editor on them */ }
+}
+
+async function restore() {
+  const id = document.getElementById("backup-list").value;
+  if (!id) return;
+  if (!confirm(`Restore snapshot ${id}?\n\nThe current files are backed up first, so this is undoable.`)) return;
+  const res = await fetch("/api/restore", { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id }) });
+  const s = document.getElementById("status");
+  if (res.ok) {
+    STATE.data = await res.json();
+    STATE.dirty = false; STATE.sel = null;
+    s.className = "ok"; s.textContent = "restored ✓";
+    render(); loadBackups();
+  } else {
+    const body = await res.json().catch(() => ({}));
+    s.className = "err"; s.textContent = body.error || "restore failed";
+  }
 }
 
 async function load() {
-  const res = await fetch("/api/content");
-  STATE.data = await res.json();
+  try {
+    const res = await fetch("/api/content");
+    if (!res.ok) throw new Error(`server said ${res.status}`);
+    STATE.data = await res.json();
+  } catch (err) {
+    document.getElementById("view").appendChild(el("div", { class: "panel", style: "margin:40px auto;max-width:480px;text-align:center" },
+      el("h2", {}, "Couldn't load the story"),
+      el("p", { class: "err" }, String(err.message || err)),
+      el("p", { class: "muted" }, "Is the editor server still running? Restart with npm run editor, then reload this page.")));
+    return;
+  }
   document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => { STATE.view = t.dataset.view; render(); }));
   document.getElementById("save").addEventListener("click", save);
+  document.getElementById("restore").addEventListener("click", restore);
+  document.getElementById("status").addEventListener("click", toggleProblems);
+  window.addEventListener("beforeunload", e => {
+    if (STATE.dirty) { e.preventDefault(); e.returnValue = ""; }
+  });
+  window.addEventListener("keydown", e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+      e.preventDefault();
+      if (!document.getElementById("save").disabled) save();
+    }
+    if (e.key === "Escape") {
+      if (document.getElementById("overlay")) { closeModal(); return; }
+      if (STATE.view === "map" && anyFilterActive()) { clearFilters(); render(); }
+    }
+  });
+  loadBackups();
   render();
 }
 load();
