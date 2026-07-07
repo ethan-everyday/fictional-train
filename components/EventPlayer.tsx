@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ChronicleHeading, Plate, Rule } from "@/components/Ornament";
 import { DeltaChips } from "@/components/StatBits";
 import {
   activitiesFor,
@@ -143,6 +144,7 @@ export default function EventPlayer({
       deltas,
       flagsSet: resolved.flags ?? [],
       threats: resolved.threats,
+      note: resolved.note,
     });
   }
 
@@ -150,26 +152,38 @@ export default function EventPlayer({
 
   return (
     <main className="flex min-h-screen flex-col p-6">
-      <p className="font-display mb-4 text-center text-base uppercase tracking-widest text-amber-400">
-        {locName}
-      </p>
+      <ChronicleHeading className="mb-5 pt-1">{locName}</ChronicleHeading>
 
       {stage === "activity" && (
         <div className="flex flex-1 flex-col">
-          <p className="story-prose mb-6 text-lg leading-relaxed text-parch-200">
-            The night is yours. What will you do here?
-          </p>
+          <div className="story-prose mb-6">
+            <p className="text-lg leading-relaxed text-parch-200">
+              The night is yours. What will you do here?
+            </p>
+          </div>
+          {/* A framed woodcut of tonight's haunt fills the middle of the page;
+              Plate degrades to nothing if the file is missing, so the buttons
+              simply drift down and the screen stays intact. */}
+          <div className="my-auto flex justify-center py-4">
+            <Plate
+              src={`/images/locations/${location}.png`}
+              className="w-56 rotate-1"
+              imgClassName="w-full"
+            />
+          </div>
           <div className="mt-auto flex flex-col gap-3 pb-4">
             {activities.map((a) => (
               <button
                 key={a.id}
                 onClick={() => chooseActivity(a.id)}
-                className="rounded-xl border border-amber-500/50 bg-oak px-5 py-4 text-left active:bg-bark"
+                className="btn-parch w-full flex-col items-start gap-0.5 px-5 py-4 text-left normal-case tracking-normal"
               >
-                <span className="block text-lg font-semibold text-parch-100">
+                <span className="font-display block w-full text-base tracking-wide text-parch-100">
                   {a.name}
                 </span>
-                <span className="block text-sm text-parch-400">{a.blurb}</span>
+                <span className="font-prose block w-full text-sm italic leading-snug text-parch-400">
+                  {a.blurb}
+                </span>
               </button>
             ))}
           </div>
@@ -187,17 +201,14 @@ export default function EventPlayer({
                 <button
                   key={i}
                   onClick={() => chooseOption(i)}
-                  className="rounded-xl border border-amber-500/50 bg-oak px-5 py-4 text-left text-lg font-semibold text-parch-100 active:bg-bark"
+                  className="font-prose btn-parch w-full justify-start px-5 py-4 text-left text-base normal-case tracking-normal text-parch-100"
                 >
                   {c.label}
                 </button>
               ))}
             </div>
           ) : (
-            <button
-              onClick={reveal}
-              className="mt-auto rounded-xl bg-bark px-5 py-4 text-lg font-bold text-parch-200 active:bg-bark-light"
-            >
+            <button onClick={reveal} className="btn-quest mt-auto w-full py-4 text-base">
               Continue…
             </button>
           )}
@@ -208,7 +219,7 @@ export default function EventPlayer({
         <div className="flex flex-1 flex-col">
           <div className="story-prose flex flex-col gap-4 pb-4">
             {event && !event.choices && (
-              <p className="text-base leading-relaxed text-parch-400">
+              <p className="text-lg leading-relaxed text-parch-400">
                 {event.text}
               </p>
             )}
@@ -216,14 +227,12 @@ export default function EventPlayer({
               {resolved.text}
             </p>
           </div>
+          <Rule className="mb-4" />
           <div className="mb-6 flex flex-col items-center gap-3">
             <DeltaChips deltas={fullDelta(stats, resolved)} />
             <ThreatLines threats={resolved.threats} />
           </div>
-          <button
-            onClick={finish}
-            className="font-display mt-auto rounded-xl bg-amber-500 px-5 py-4 text-xl text-night active:bg-amber-400"
-          >
+          <button onClick={finish} className="btn-quest mt-auto w-full py-4 text-base">
             Sleep on it →
           </button>
         </div>
@@ -270,8 +279,8 @@ function ThreatLines({ threats }: { threats?: ThreatDeltas }) {
       {lines.map((l) => (
         <p
           key={l.id}
-          className={`text-center text-sm italic ${
-            l.eased ? "text-emerald-300" : "text-rose-300"
+          className={`font-prose text-center text-sm italic ${
+            l.eased ? "text-amber-200/90" : "text-red-300"
           }`}
         >
           {l.text}

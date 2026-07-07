@@ -24,9 +24,14 @@ const config: Config = {
           500: "#9d8459", // secondary text
           600: "#7c6845", // faint text
         },
+        gold: {
+          DEFAULT: "#d4a937", // illuminated gold — accents, drop caps
+          dim: "#a8842c", // tarnished gold — quieter accents
+        },
       },
       fontFamily: {
         display: ["var(--font-display)", "Georgia", "serif"],
+        prose: ["var(--font-prose)", "Georgia", "serif"],
       },
     },
   },

@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { Art } from "@/components/Art";
 
 /**
  * Atmospheric host backdrops, drawn in SVG so they ship offline and theme
@@ -10,7 +11,7 @@ import type { ReactNode } from "react";
 /** A ship crossing a dark, moonless sea — and two faint red eyes watching. */
 export function SeaScene({ children }: { children: ReactNode }) {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#070b12]">
+    <div className="relative min-h-screen overflow-hidden bg-[#0a0704]">
       <svg
         aria-hidden
         className="pointer-events-none absolute inset-0 h-full w-full"
@@ -19,40 +20,42 @@ export function SeaScene({ children }: { children: ReactNode }) {
       >
         <defs>
           <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#0a1020" />
-            <stop offset="55%" stopColor="#0b1424" />
-            <stop offset="100%" stopColor="#040810" />
+            <stop offset="0%" stopColor="#14100a" />
+            <stop offset="55%" stopColor="#100c07" />
+            <stop offset="100%" stopColor="#0a0704" />
           </linearGradient>
           <radialGradient id="eyeglow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="rgba(220,40,40,0.5)" />
+            <stop offset="0%" stopColor="rgba(220,40,40,0.65)" />
             <stop offset="100%" stopColor="transparent" />
           </radialGradient>
         </defs>
         <rect width="1200" height="800" fill="url(#sky)" />
 
-        {/* The Herald, watching from the dark above the horizon. */}
+        {/* The Herald, watching from the dark above the horizon — kept in the
+            clear sky at upper-left so the eyes never sit inside the centred
+            text column, and low enough to survive the 16:9 slice-crop. */}
         <g className="herald-eyes">
-          <circle cx="565" cy="150" r="26" fill="url(#eyeglow)" />
-          <circle cx="635" cy="150" r="26" fill="url(#eyeglow)" />
-          <circle cx="565" cy="150" r="5" fill="#ff5a5a" />
-          <circle cx="635" cy="150" r="5" fill="#ff5a5a" />
+          <circle cx="200" cy="110" r="34" fill="url(#eyeglow)" />
+          <circle cx="270" cy="110" r="34" fill="url(#eyeglow)" />
+          <circle cx="200" cy="110" r="5" fill="#ff5a5a" />
+          <circle cx="270" cy="110" r="5" fill="#ff5a5a" />
         </g>
 
         {/* The ship, bobbing on the swell. */}
         <g className="sea-ship">
           <g transform="translate(600 470)">
-            <path d="M-70 0 Q0 34 70 0 L54 26 Q0 40 -54 26 Z" fill="#05080e" />
-            <rect x="-2" y="-90" width="4" height="92" fill="#05080e" />
-            <path d="M2 -86 Q56 -64 48 -16 L2 -16 Z" fill="#0c1422" />
-            <path d="M-2 -78 Q-44 -58 -40 -22 L-2 -22 Z" fill="#0c1422" />
+            <path d="M-70 0 Q0 34 70 0 L54 26 Q0 40 -54 26 Z" fill="#0d0905" />
+            <rect x="-2" y="-90" width="4" height="92" fill="#0d0905" />
+            <path d="M2 -86 Q56 -64 48 -16 L2 -16 Z" fill="#1e1509" />
+            <path d="M-2 -78 Q-44 -58 -40 -22 L-2 -22 Z" fill="#1e1509" />
           </g>
         </g>
 
         {/* Wave layers, sliding slowly across each other. */}
         <g>
-          <path className="wave wave-a" d="M0 520 Q150 500 300 520 T600 520 T900 520 T1200 520 T1500 520 V800 H0 Z" fill="#0a1626" opacity="0.9" />
-          <path className="wave wave-b" d="M0 565 Q150 545 300 565 T600 565 T900 565 T1200 565 T1500 565 V800 H0 Z" fill="#0b1a2e" opacity="0.9" />
-          <path className="wave wave-c" d="M0 615 Q150 595 300 615 T600 615 T900 615 T1200 615 T1500 615 V800 H0 Z" fill="#0d2138" opacity="0.95" />
+          <path className="wave wave-a" d="M0 520 Q150 500 300 520 T600 520 T900 520 T1200 520 T1500 520 V800 H0 Z" fill="#1a140c" opacity="0.9" />
+          <path className="wave wave-b" d="M0 565 Q150 545 300 565 T600 565 T900 565 T1200 565 T1500 565 V800 H0 Z" fill="#201810" opacity="0.9" />
+          <path className="wave wave-c" d="M0 615 Q150 595 300 615 T600 615 T900 615 T1200 615 T1500 615 V800 H0 Z" fill="#26190f" opacity="0.95" />
         </g>
       </svg>
       <div className="relative z-10">{children}</div>
@@ -64,6 +67,12 @@ export function SeaScene({ children }: { children: ReactNode }) {
 export function CampfireScene({ children }: { children: ReactNode }) {
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0b0805]">
+      {/* A whisper of the woodcut fireside under the glow and SVG flames —
+          warm-on-warm; delete this one line if it ever fights the glow. */}
+      <Art
+        src="/images/scenes/campfire.png"
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-[0.15]"
+      />
       <div
         aria-hidden
         className="campfire-glow pointer-events-none absolute inset-0 bg-[radial-gradient(900px_700px_at_50%_88%,rgba(245,150,40,0.22),rgba(140,60,15,0.08)_45%,transparent_70%)]"

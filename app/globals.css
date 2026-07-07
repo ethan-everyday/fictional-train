@@ -34,7 +34,7 @@
 
 /* Storylet prose reads like a manuscript: serif body, illuminated drop cap. */
 .story-prose p {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-prose), Georgia, "Times New Roman", serif;
 }
 
 .story-prose p:first-of-type::first-letter {
@@ -48,6 +48,17 @@
 
 .font-display {
   font-family: var(--font-display), Georgia, serif;
+}
+
+/* Shared chronicle buttons: call sites keep their own sizing classes;
+   these carry the voice (Cinzel, small caps, candlelit amber). */
+@layer components {
+  .btn-quest {
+    @apply inline-flex items-center justify-center rounded-lg border border-amber-300/50 bg-amber-500 px-6 py-3 font-display text-sm uppercase tracking-wide text-night shadow-lg shadow-amber-900/40 transition-colors hover:bg-amber-400 active:translate-y-px md:text-base;
+  }
+  .btn-parch {
+    @apply inline-flex items-center justify-center rounded-lg border border-bark-light bg-oak/80 px-6 py-3 font-display text-sm uppercase tracking-wide text-parch-200 shadow transition-colors hover:border-amber-400/60 active:translate-y-px md:text-base;
+  }
 }
 
 /* Title screen: the woodcut breathes, very slowly. */
@@ -159,6 +170,36 @@
 .flame-1 { animation: flicker-1 0.9s ease-in-out infinite; }
 .flame-2 { animation: flicker-2 0.7s ease-in-out infinite; }
 
+/* Framed plates drift, barely, like pages stirred by a draught. */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+.float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* A wax seal throbbing: for threats at their maximum. */
+@keyframes seal-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 0.82;
+  }
+}
+.seal-pulse {
+  animation: seal-pulse 2.4s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .fade-up,
   .fade-up-1,
@@ -171,7 +212,9 @@
   .sea-ship,
   .herald-eyes,
   .campfire-glow,
-  .flame {
+  .flame,
+  .float,
+  .seal-pulse {
     animation: none;
   }
 }

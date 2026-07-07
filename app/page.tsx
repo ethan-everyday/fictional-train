@@ -1,5 +1,6 @@
 import Link from "next/link";
 import MusicToggle from "@/components/MusicToggle";
+import { Rule } from "@/components/Ornament";
 import { LOCATIONS, NIGHT_COUNT } from "@/lib/game/constants";
 
 export default function Home() {
@@ -21,17 +22,19 @@ export default function Home() {
         className="lantern pointer-events-none absolute inset-0 bg-[radial-gradient(1000px_600px_at_50%_120%,rgba(245,158,11,0.14),transparent_65%)]"
       />
 
-      <div className="relative flex w-full max-w-4xl flex-1 flex-col items-center justify-center gap-12 px-6 pb-16 pt-[30vh] text-center">
-        <header className="fade-up">
-          <p className="mb-4 text-sm font-bold uppercase tracking-[0.4em] text-amber-300 [text-shadow:0_1px_8px_rgba(9,9,11,0.9)]">
+      <div className="relative flex w-full max-w-4xl flex-1 flex-col items-center justify-center gap-12 px-6 pb-16 pt-[28vh] text-center">
+        <header className="fade-up flex flex-col items-center">
+          <p className="mb-4 font-display text-xs font-bold uppercase tracking-[0.4em] text-amber-300 [text-shadow:0_1px_8px_rgba(9,9,11,0.9)] sm:text-sm">
             A party game of village fortunes
           </p>
-          <h1 className="text-7xl font-black leading-none tracking-tight [text-shadow:0_2px_24px_rgba(9,9,11,0.95)] sm:text-8xl">
+          <Rule className="mb-4 w-64 max-w-full" />
+          <h1 className="font-display text-7xl font-bold leading-[0.95] text-parch-100 [text-shadow:0_2px_24px_rgba(9,9,11,0.95)] sm:text-8xl">
             SEVEN
             <br />
             NIGHTS
           </h1>
-          <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-parch-300 [text-shadow:0_1px_12px_rgba(9,9,11,0.9)]">
+          <Rule className="mt-5 w-64 max-w-full" />
+          <p className="font-prose mx-auto mt-5 max-w-xl text-lg leading-relaxed text-parch-300 [text-shadow:0_1px_12px_rgba(9,9,11,0.9)] sm:text-xl">
             Seven nights before the Michaelmas Fair, when the lord reckons all
             accounts. {LOCATIONS.length} places to spend them, a village full
             of people to win over — or cross. The big screen tells the story.
@@ -41,16 +44,10 @@ export default function Home() {
 
         <div className="fade-up fade-up-1 flex flex-col items-center gap-5">
           <div className="flex flex-col gap-4 sm:flex-row">
-            <Link
-              href="/host"
-              className="rounded-xl bg-amber-500 px-10 py-5 text-center text-xl font-black text-night shadow-lg shadow-amber-500/20 hover:bg-amber-400"
-            >
+            <Link href="/host" className="btn-quest px-10 py-5 text-lg">
               HOST on this screen
             </Link>
-            <Link
-              href="/play"
-              className="rounded-xl border-2 border-parch-600 bg-night/60 px-10 py-5 text-center text-xl font-black backdrop-blur hover:border-amber-500/60"
-            >
+            <Link href="/play" className="btn-parch px-10 py-5 text-lg">
               JOIN on this phone
             </Link>
           </div>
@@ -75,7 +72,7 @@ export default function Home() {
           />
         </section>
 
-        <footer className="fade-up fade-up-3 text-sm text-parch-600">
+        <footer className="fade-up fade-up-3 font-display text-xs uppercase tracking-[0.25em] text-parch-600">
           2–6 players · one TV or laptop · phones stay private ·{" "}
           {NIGHT_COUNT} nights, three endings
         </footer>
@@ -86,12 +83,16 @@ export default function Home() {
 
 function Step({ n, title, text }: { n: number; title: string; text: string }) {
   return (
-    <div className="rounded-2xl border border-bark/80 bg-oak/40 p-6 text-left backdrop-blur-sm">
-      <p className="font-mono text-sm font-bold text-amber-400">
+    <div className="rounded-2xl border border-bark/80 bg-oak/40 p-6 text-center backdrop-blur-sm">
+      <p className="font-display text-xs font-bold uppercase tracking-[0.3em] text-amber-400">
         NIGHTFALL · {n}
       </p>
-      <h2 className="mt-1 text-xl font-bold">{title}</h2>
-      <p className="mt-2 text-sm leading-relaxed text-parch-400">{text}</p>
+      <h2 className="mt-2 font-display text-xl font-bold text-parch-100">
+        {title}
+      </h2>
+      <p className="font-prose mt-2 text-sm leading-relaxed text-parch-400">
+        {text}
+      </p>
     </div>
   );
 }

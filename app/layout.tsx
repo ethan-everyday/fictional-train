@@ -2,10 +2,36 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 
-// Medieval display face for headers; self-hosted (see fonts/LICENSE.txt).
+// Chronicle display face: Cinzel variable TTF for titles, buttons and
+// numerals of consequence; self-hosted (see fonts/OFL-Cinzel.txt).
 const displayFont = localFont({
-  src: "./fonts/MedievalSharp.woff2",
+  src: [
+    {
+      path: "./fonts/Cinzel-Variable.ttf",
+      weight: "400 900",
+      style: "normal",
+    },
+  ],
   variable: "--font-display",
+  display: "swap",
+});
+
+// Manuscript prose face: IM Fell English for all narrative text;
+// self-hosted (see fonts/OFL-IMFellEnglish.txt).
+const proseFont = localFont({
+  src: [
+    {
+      path: "./fonts/IMFellEnglish-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "./fonts/IMFellEnglish-Italic.ttf",
+      weight: "400",
+      style: "italic",
+    },
+  ],
+  variable: "--font-prose",
   display: "swap",
 });
 
@@ -31,7 +57,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={displayFont.variable}>
+    <html lang="en" className={`${displayFont.variable} ${proseFont.variable}`}>
       <body className="min-h-screen bg-night text-parch-100 antialiased">
         {children}
       </body>

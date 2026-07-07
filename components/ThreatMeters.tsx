@@ -1,5 +1,6 @@
 "use client";
 
+import { Art } from "@/components/Art";
 import {
   THREAT_BLURBS,
   THREAT_CAP,
@@ -45,14 +46,16 @@ function Meter({
     <span
       aria-hidden
       className={`flex items-center ${compact ? "gap-[2px]" : "gap-1"} ${
-        maxed ? "animate-pulse" : ""
+        maxed ? "seal-pulse" : ""
       }`}
     >
       {Array.from({ length: THREAT_CAP }, (_, i) => (
         <span
           key={i}
           className={`${
-            compact ? "h-1.5 w-1.5 rounded-full" : "h-3 w-5 rounded-sm"
+            compact
+              ? "h-1.5 w-1.5 rounded-full"
+              : "h-3 w-5 rounded-[2px] shadow-[inset_0_1px_2px_rgba(0,0,0,0.45)]"
           } ${segmentClass(i, i < score, maxed)}`}
         />
       ))}
@@ -84,13 +87,23 @@ export function ThreatMeters({
             className="flex flex-col items-center gap-1.5 text-center"
             aria-label={`${THREAT_LABELS[id]}: ${score} of ${THREAT_CAP}`}
           >
-            <p
-              className={`font-display text-lg uppercase tracking-[0.25em] ${
-                maxed ? "text-red-400" : "text-parch-300"
-              }`}
-            >
-              {THREAT_LABELS[id]}
-            </p>
+            <div className="flex items-center justify-center gap-2.5">
+              <Art
+                src={`/images/threats/${id}.png`}
+                className={`h-8 w-8 rounded-full object-cover ${
+                  maxed
+                    ? "seal-pulse ring-1 ring-red-500/70"
+                    : "opacity-90 ring-1 ring-gold/50"
+                }`}
+              />
+              <p
+                className={`font-display text-lg uppercase tracking-[0.25em] ${
+                  maxed ? "text-red-400" : "text-parch-300"
+                }`}
+              >
+                {THREAT_LABELS[id]}
+              </p>
+            </div>
             <div className="flex items-center gap-3">
               <Meter score={score} maxed={maxed} />
               <span
@@ -134,10 +147,18 @@ export function ThreatMetersCompact({ threats }: { threats: ThreatScores }) {
           <span
             key={id}
             className={`flex items-center gap-2 rounded-full border px-3 py-1.5 ${
-              maxed ? "border-red-500/60 bg-red-950/40" : "border-bark bg-oak/60"
+              maxed
+                ? "seal-pulse border-red-500/60 bg-red-950/40"
+                : "border-bark bg-oak/60"
             }`}
             aria-label={`${THREAT_LABELS[id]}: ${score} of ${THREAT_CAP}`}
           >
+            <Art
+              src={`/images/threats/${id}.png`}
+              className={`h-4 w-4 rounded-full object-cover opacity-90 ${
+                maxed ? "ring-1 ring-red-500/70" : "ring-1 ring-gold/40"
+              }`}
+            />
             <span
               className={`text-xs font-bold uppercase tracking-wider ${
                 maxed ? "text-red-400" : "text-parch-500"

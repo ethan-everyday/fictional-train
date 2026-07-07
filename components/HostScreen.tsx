@@ -2,6 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import { Art, BackdropArt } from "@/components/Art";
+import {
+  ChronicleHeading,
+  PageFrame,
+  Plate,
+  Rule,
+  Vignette,
+} from "@/components/Ornament";
 import { DeltaChips } from "@/components/StatBits";
 import { ThreatMeters, ThreatMetersCompact } from "@/components/ThreatMeters";
 import TitleScreen from "@/components/TitleScreen";
@@ -57,6 +65,7 @@ import {
   usePhase,
   useThreats,
 } from "@/lib/game/state";
+import { completedStorylines } from "@/lib/game/content";
 import { playerEnding, townEnding } from "@/lib/game/finale";
 import {
   audioUnlocked,
@@ -71,6 +80,7 @@ import type { PlayerStats, StatId, ThreatScores } from "@/lib/game/types";
 
 // How long a ping keeps a player's row lit on the lobby screen.
 const PING_FLASH_MS = 1500;
+
 const HOST_ROOM_KEY = "7n:host-room";
 const HOST_ROOM_MAX_AGE_MS = 2 * 60 * 60 * 1000;
 
@@ -134,7 +144,7 @@ export default function HostScreen() {
               sessionStorage.clear();
               window.location.reload();
             }}
-            className="rounded-xl bg-amber-500 px-8 py-3 text-lg font-bold text-night hover:bg-amber-400"
+            className="btn-quest px-8 py-3 text-lg md:text-lg"
           >
             Clear saved data &amp; open a fresh room
           </button>
@@ -177,10 +187,11 @@ function ConnectingScreen() {
   return (
     <Centered>
       <div className="fade-up flex w-full max-w-md flex-col items-center gap-6 text-center">
-        <p className="text-sm font-bold uppercase tracking-[0.4em] text-amber-400/80">
+        <p className="font-display text-sm font-bold uppercase tracking-[0.4em] text-amber-400/80">
           Seven Nights
         </p>
         <h1 className="text-4xl font-black tracking-tight">Opening the room</h1>
+        <Rule />
         <div
           className="h-3 w-full overflow-hidden rounded-full border border-bark bg-oak"
           role="progressbar"
@@ -348,29 +359,35 @@ function HostGame({ roomCode }: { roomCode: string }) {
       return <PrologueScreen onBegin={beginAfterPrologue} />;
     case "night-intro":
       return (
-        <Centered>
+        <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden p-8">
+          <BackdropArt
+            src="/images/scenes/week-intro.png"
+            imgClassName="opacity-[0.22] sepia-[.3]"
+          />
+          <Vignette />
           <div className="fade-up text-center">
+            <ChronicleHeading className="mb-6">The Week Turns</ChronicleHeading>
             <NightDots night={night} />
             <p aria-hidden className="mt-4 text-xl tracking-[0.8em] text-amber-400/60">
               ❦
             </p>
-            <h1 className="mt-2 text-8xl font-black tracking-tight">
+            <h1 className="mt-2 text-8xl font-black tracking-[0.04em]">
               WEEK {night}
             </h1>
             {activeEvent ? (
               <>
-                <p className="mx-auto mt-6 max-w-2xl text-2xl font-bold text-red-300">
+                <p className="font-prose mx-auto mt-6 max-w-2xl text-2xl italic text-red-300">
                   {activeEvent.introOverride}
                 </p>
                 {activeEvent.closedLocation && (
-                  <p className="mt-4 text-lg uppercase tracking-widest text-red-400/80">
+                  <p className="font-display mt-4 text-lg uppercase tracking-widest text-red-400/80">
                     {locationDef(activeEvent.closedLocation).name} is closed
                     tonight
                   </p>
                 )}
               </>
             ) : (
-              <p className="mx-auto mt-6 max-w-2xl text-2xl text-parch-400">
+              <p className="font-prose mx-auto mt-6 max-w-2xl text-2xl italic text-parch-300">
                 {nightIntro(night)}
               </p>
             )}
@@ -384,7 +401,8 @@ function HostGame({ roomCode }: { roomCode: string }) {
               />
             </div>
           </div>
-        </Centered>
+          <PageFrame />
+        </main>
       );
     case "choose-location":
       return (
@@ -442,13 +460,17 @@ function MuteButton() {
 function NightDots({ night }: { night: number }) {
   return (
     <div
-      className="flex justify-center gap-2 text-base"
+      className="flex justify-center gap-2.5 text-sm"
       aria-label={`Week ${night} of ${NIGHT_COUNT}`}
     >
       {Array.from({ length: NIGHT_COUNT }, (_, i) => (
         <span
           key={i}
-          className={i < night ? "text-amber-400" : "text-bark-light"}
+          className={
+            i < night
+              ? "text-amber-400 [text-shadow:0_0_8px_rgba(212,169,55,0.45)]"
+              : "text-bark-light"
+          }
         >
           ✦
         </span>
@@ -475,26 +497,29 @@ function useClock(intervalMs: number): number {
  * the room after BEGIN (the lobby itself is just join + character select). */
 function SettingProse() {
   return (
-    <div className="fade-up mx-auto max-w-3xl space-y-5 text-center text-xl leading-relaxed text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.95)]">
-      <p>
-        It is 1348. God, angry with His creation, looses war, plague and famine
-        across the continent. Millions begin to die of a black death spreading
-        out of the east; the lords bar themselves in their castles while their
-        serfs die in their thousands.
-      </p>
-      <p>
-        You are fugitives, bound for England aboard the{" "}
-        <span className="italic">St Michael's Fortune</span>, lucky to have
-        outrun the brigands, the starving mobs, and the plague itself — for a
-        time. Ahead lies the ancient fortress town of St Sebastian.
-      </p>
-      <p className="font-display text-2xl leading-snug text-red-300 [text-shadow:0_0_22px_rgba(220,40,40,0.5)]">
+    <div className="mx-auto max-w-3xl space-y-5 text-center text-xl leading-relaxed text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.95)]">
+      {/* The chronicle's opening leaf: IM Fell prose, illuminated drop cap. */}
+      <div className="story-prose space-y-5">
+        <p className="fade-up">
+          It is 1348. God, angry with His creation, looses war, plague and famine
+          across the continent. Millions begin to die of a black death spreading
+          out of the east; the lords bar themselves in their castles while their
+          serfs die in their thousands.
+        </p>
+        <p className="fade-up fade-up-1">
+          You are fugitives, bound for England aboard the{" "}
+          <span className="italic">St Michael's Fortune</span>, lucky to have
+          outrun the brigands, the starving mobs, and the plague itself — for a
+          time. Ahead lies the ancient fortress town of St Sebastian.
+        </p>
+      </div>
+      <p className="fade-up fade-up-2 font-display text-2xl leading-snug text-red-300 [text-shadow:0_0_22px_rgba(220,40,40,0.5)]">
         On a moonless night a vision comes — a pair of glowing red eyes in the
         black: “YOU ARE MY HERALD. THIS TOWN HOLDS SECRET THINGS, PRECIOUS TO
         ME. SAVE IT, AND I SHALL REWARD THEE. FAIL — AND YOU WILL PERISH, AS ALL
         MUST IN THE END.”
       </p>
-      <p className="text-white/90">
+      <p className="fade-up fade-up-3 font-prose italic text-white/90">
         Seven weeks before the world's end.
       </p>
     </div>
@@ -514,14 +539,17 @@ function PrologueScreen({ onBegin }: { onBegin: () => void }) {
   if (beat === 0) {
     return (
       <SeaScene>
-        <main className="flex min-h-screen flex-col items-center justify-center gap-8 px-8 py-12">
+        <main className="relative flex min-h-screen flex-col items-center justify-center gap-8 px-8 py-12">
+          <Vignette />
+          <ChronicleHeading className="fade-up">The Crossing</ChronicleHeading>
           <SettingProse />
           <button
             onClick={() => setBeat(1)}
-            className="font-display rounded-xl border border-amber-500/60 px-10 py-3 text-xl text-amber-300 hover:border-amber-400 hover:text-amber-200"
+            className="fade-up fade-up-3 btn-quest px-10 py-3 text-xl md:text-xl"
           >
             Go on →
           </button>
+          <PageFrame />
         </main>
       </SeaScene>
     );
@@ -530,15 +558,17 @@ function PrologueScreen({ onBegin }: { onBegin: () => void }) {
   // Beat 2: arrival at St Sebastian.
   return (
     <SeaScene>
-      <main className="flex min-h-screen flex-col items-center justify-center gap-7 px-8 py-12">
+      <main className="relative flex min-h-screen flex-col items-center justify-center gap-7 px-8 py-12">
+        <Vignette />
+        <ChronicleHeading className="fade-up">Landfall</ChronicleHeading>
         <div className="fade-up max-w-3xl space-y-5 text-center text-xl leading-relaxed text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.95)]">
-          <p>
+          <p className="font-prose">
             At dawn the ship rounds the headland and St Sebastian rises from the
             sea-mist: grey walls older than any living memory, a squat keep, a
             huddle of roofs above a working harbour. Gulls wheel. Bells ring for
             no reason you can name.
           </p>
-          <p>
+          <p className="font-prose">
             The town is loud and blind and busy — fishermen crying their catch,
             traders haggling, children underfoot — a place that does not yet know
             it is already dead. Behind you the open sea is empty. Ahead, the
@@ -549,12 +579,24 @@ function PrologueScreen({ onBegin }: { onBegin: () => void }) {
             begin.
           </p>
         </div>
+        {/* A framed woodcut plate, like the lobby's parchment poster — the
+            animated sea keeps moving around it. The float wrapper is separate
+            from the Plate so the drift animation never fights the rotation
+            (and if the file is missing, only an empty invisible div remains). */}
+        <div className="fade-up fade-up-1 float w-full max-w-lg">
+          <Plate
+            src="/images/scenes/arrival.png"
+            className="w-full -rotate-1"
+            imgClassName="w-full"
+          />
+        </div>
         <button
           onClick={onBegin}
-          className="font-display rounded-xl bg-amber-500 px-12 py-4 text-2xl text-night hover:bg-amber-400"
+          className="fade-up fade-up-2 btn-quest px-12 py-4 text-2xl md:text-2xl"
         >
           Make landfall →
         </button>
+        <PageFrame />
       </main>
     </SeaScene>
   );
@@ -589,29 +631,34 @@ function LobbyScreen({
   // cinematic once everyone's built a character and the host hits BEGIN.
   return (
     <SeaScene>
-      <main className="flex min-h-screen flex-col items-center gap-7 px-6 py-9">
+      <main className="relative flex min-h-screen flex-col items-center gap-7 px-6 py-9">
+      <Vignette />
       <header className="text-center">
-        <p className="text-sm font-bold uppercase tracking-[0.4em] text-amber-300 [text-shadow:0_2px_10px_rgba(0,0,0,0.9)]">
+        <ChronicleHeading className="mb-3">The Muster</ChronicleHeading>
+        <p className="font-display text-sm font-bold uppercase tracking-[0.4em] text-amber-300 [text-shadow:0_2px_10px_rgba(0,0,0,0.9)]">
           St Sebastian · 1348
         </p>
         <h1 className="mt-1 text-5xl font-black text-parch-100 [text-shadow:0_2px_16px_rgba(0,0,0,0.9)]">
           Gather your party
         </h1>
-        <p className="mt-2 text-lg text-white/75 [text-shadow:0_2px_10px_rgba(0,0,0,0.9)]">
+        <p className="font-prose mt-2 text-lg italic text-white/75 [text-shadow:0_2px_10px_rgba(0,0,0,0.9)]">
           Join on a phone, choose who you are, then begin the seven weeks.
         </p>
       </header>
 
       {/* Join: code then QR, stacked straight down the centre. */}
       <section className="flex flex-col items-center gap-5">
-        <div className="text-center">
-          <p className="text-xl text-white/80 [text-shadow:0_2px_10px_rgba(0,0,0,0.9)]">
+        <div className="flex flex-col items-center text-center">
+          <p className="font-prose text-xl italic text-white/80 [text-shadow:0_2px_10px_rgba(0,0,0,0.9)]">
             Join on your phone
           </p>
-          <p className="my-1 font-mono text-7xl font-black tracking-[0.2em] text-amber-400 [text-shadow:0_2px_16px_rgba(0,0,0,0.9)]">
-            {roomCode}
-          </p>
-          <p className="text-base text-white/50">{joinUrl}</p>
+          {/* Letterpress room code — the e2e locates p.font-mono.text-7xl. */}
+          <div className="my-2 rounded-sm border border-amber-400/25 bg-night/60 px-8 py-3 shadow-[inset_0_2px_12px_rgba(0,0,0,0.75)]">
+            <p className="font-mono text-7xl font-black tracking-[0.25em] text-amber-400 [text-shadow:0_2px_16px_rgba(0,0,0,0.9)]">
+              {roomCode}
+            </p>
+          </div>
+          <p className="font-mono text-sm tracking-wide text-parch-500">{joinUrl}</p>
           <button
             onClick={() => {
               // Full wipe, not just our saved room: a stale/kicked identity in
@@ -620,35 +667,40 @@ function LobbyScreen({
               sessionStorage.clear();
               window.location.reload();
             }}
-            className="mt-3 text-sm text-white/40 underline hover:text-white/70"
+            className="font-display mt-3 border-b border-parch-600/40 text-xs uppercase tracking-[0.2em] text-parch-500 hover:border-amber-400/60 hover:text-parch-300"
           >
             Start a fresh room
           </button>
         </div>
 
-        <div className="-rotate-1 rounded-sm border-4 border-double border-bark bg-parch-100 p-4 shadow-[0_10px_34px_rgba(0,0,0,0.6)]">
-          <p className="font-display mb-2 text-center text-sm uppercase tracking-[0.25em] text-[#3a2a14]">
-            By order of the lord
-          </p>
-          <QRCodeSVG
-            value={joinUrl}
-            size={180}
-            bgColor="#f2e8ce"
-            fgColor="#1d1408"
-          />
-          <p className="font-display mt-2 text-center text-sm text-[#3a2a14]">
-            scan &amp; join the week
-          </p>
+        {/* The join poster drifts like a page in a draught; the float wrapper
+            is separate so the animation never fights the rotation. */}
+        <div className="float">
+          <div className="-rotate-1 rounded-sm border-4 border-double border-bark bg-parch-100 p-4 shadow-[0_10px_34px_rgba(0,0,0,0.6)]">
+            <p className="font-display mb-2 text-center text-sm uppercase tracking-[0.25em] text-[#3a2a14]">
+              By order of the lord
+            </p>
+            <QRCodeSVG
+              value={joinUrl}
+              size={180}
+              bgColor="#f2e8ce"
+              fgColor="#1d1408"
+            />
+            <p className="font-display mt-2 text-center text-sm text-[#3a2a14]">
+              scan &amp; join the week
+            </p>
+          </div>
         </div>
       </section>
 
-      <section className="w-full max-w-2xl rounded-2xl bg-night/55 p-5 backdrop-blur-sm">
-        <h2 className="mb-4 text-center text-xl font-bold text-white/85">
+      <section className="w-full max-w-2xl rounded-sm border border-parch-600/25 bg-night/55 p-5 backdrop-blur-sm">
+        <h2 className="font-display mb-2 text-center text-xl tracking-wide text-parch-100/90">
           {players.length === 0
             ? "Waiting for fugitives to come ashore…"
             : `${readyCount} of ${players.length} have chosen their lot`}
         </h2>
-        <ul className="flex flex-col gap-3">
+        <Rule className="mb-4" />
+        <ul className="flex flex-col gap-2.5">
           {players.map((player) => {
             const ping = pingByPlayer.get(player.id) ?? null;
             const waved = ping !== null && now - ping.at < PING_FLASH_MS;
@@ -656,19 +708,19 @@ function LobbyScreen({
             return (
               <li
                 key={`${player.id}-${ping?.count ?? 0}`}
-                className={`flex items-center justify-between rounded-xl border border-bark px-6 py-3 text-2xl ${
+                className={`flex items-center justify-between rounded-sm border border-parch-600/25 bg-parch-100/[0.04] px-6 py-3 text-2xl ${
                   waved ? "ping-flash" : ""
                 } ${away ? "opacity-50" : ""}`}
               >
                 <span className="flex items-center gap-4 font-bold">
                   <PlayerDot player={player} />
-                  {playerName(player)}
+                  <span className="font-display">{playerName(player)}</span>
                   {away ? (
-                    <span className="text-base font-normal text-parch-500">
+                    <span className="font-prose text-base font-normal italic text-parch-500">
                       reconnecting…
                     </span>
                   ) : (
-                    <span className="text-base font-normal text-parch-500">
+                    <span className="font-prose text-base font-normal italic text-parch-500">
                       {roleLabel(player)}
                     </span>
                   )}
@@ -687,7 +739,7 @@ function LobbyScreen({
                     }}
                     title={`Kick ${playerName(player)}`}
                     aria-label={`Kick ${playerName(player)}`}
-                    className="rounded-lg border border-bark-light px-3 py-1 text-base font-bold text-parch-500 hover:border-red-500 hover:text-red-400"
+                    className="font-display rounded-sm border border-bark-light px-3 py-1 text-sm uppercase tracking-wider text-parch-500 hover:border-red-500 hover:text-red-400"
                   >
                     Kick
                   </button>
@@ -697,27 +749,32 @@ function LobbyScreen({
           })}
         </ul>
         {players.length > 0 && (
-          <button
-            disabled={!allReady}
-            onClick={() => {
-              // This click is the user gesture that unlocks autoplay for the
-              // whole session; the ambient bed starts here.
-              unlockAudio().then((ok) => {
-                if (ok) playAmbient();
-              });
-              startGame(players);
-            }}
-            className="font-display mx-auto mt-8 block rounded-xl bg-amber-500 px-12 py-4 text-2xl text-night hover:bg-amber-400 disabled:opacity-40"
-          >
-            {allReady ? "BEGIN THE WEEK" : "Waiting for players to choose…"}
-          </button>
+          <div className="mt-8 flex justify-center">
+            <button
+              disabled={!allReady}
+              onClick={() => {
+                // This click is the user gesture that unlocks autoplay for the
+                // whole session; the ambient bed starts here.
+                unlockAudio().then((ok) => {
+                  if (ok) playAmbient();
+                });
+                startGame(players);
+              }}
+              className={`btn-quest px-12 py-4 text-2xl md:text-2xl disabled:opacity-40 ${
+                allReady ? "" : "normal-case"
+              }`}
+            >
+              {allReady ? "BEGIN THE WEEK" : "Waiting for players to choose…"}
+            </button>
+          </div>
         )}
         {players.length === 1 && allReady && (
-          <p className="mt-2 text-center text-sm text-white/50">
+          <p className="font-prose mt-2 text-center text-sm italic text-white/50">
             (Solo works for testing; it's better with 2–6.)
           </p>
         )}
       </section>
+      <PageFrame />
       </main>
     </SeaScene>
   );
@@ -742,57 +799,81 @@ function ChooseScreen({
 }) {
   const secondsLeft = Math.max(0, Math.ceil((deadline - now) / 1000));
   return (
-    <main className="flex min-h-screen flex-col gap-8 p-10">
-      <header className="flex items-baseline justify-between">
-        <div className="flex items-baseline gap-6">
-          <h1 className="text-4xl font-black">
-            Week {night} · Where is everyone going?
-          </h1>
+    <main className="relative isolate flex min-h-screen flex-col gap-6 p-10">
+      <Vignette />
+      <header className="flex flex-col items-center gap-2 text-center">
+        <ChronicleHeading>The Town Awaits</ChronicleHeading>
+        <h1 className="text-4xl font-black">
+          Week {night} · Where is everyone going?
+        </h1>
+        <div className="flex items-center gap-5">
           <NightDots night={night} />
+          <span
+            className={`font-mono text-3xl font-bold ${
+              secondsLeft <= 10 ? "text-red-400" : "text-parch-400"
+            }`}
+          >
+            {secondsLeft}s
+          </span>
         </div>
-        <span
-          className={`font-mono text-4xl font-bold ${
-            secondsLeft <= 10 ? "text-red-400" : "text-parch-400"
-          }`}
-        >
-          {secondsLeft}s
-        </span>
       </header>
-      <div className="grid flex-1 grid-cols-4 gap-5">
+      {/* Centred wrap (not a grid): 7 cards break 4-over-3 with the short
+          row centred, per the host-screen centred-composition rule. */}
+      <div className="flex flex-1 flex-wrap content-center justify-center gap-5">
         {LOCATIONS.map((loc) => {
           const isClosed = loc.id === closed;
           const here = players.filter((p) => playerPick(p, night) === loc.id);
           return (
             <div
               key={loc.id}
-              className={`flex flex-col rounded-2xl border p-6 ${
+              className={`relative flex min-w-[240px] basis-[23.5%] flex-col overflow-hidden rounded-sm border-2 ${
                 isClosed
-                  ? "border-red-900/60 opacity-50"
+                  ? "border-red-900/60 bg-oak/30 opacity-60"
                   : here.length > 0
-                    ? "border-amber-500/60 bg-amber-500/5"
-                    : "border-bark"
+                    ? "border-amber-500/60 bg-amber-500/[0.06] shadow-[0_0_26px_rgba(212,169,55,0.10)]"
+                    : "border-bark bg-oak/30"
               }`}
             >
-              <h2 className="text-2xl font-bold">{loc.name}</h2>
-              <p className="text-parch-400">
+              <Art
+                src={`/images/locations/${loc.id}.png`}
+                className={`pointer-events-none h-28 w-full border-b border-bark/60 object-cover 2xl:h-40 ${
+                  isClosed ? "grayscale" : "sepia-[.2]"
+                }`}
+              />
+              {/* Engraved caption bar under the plate. */}
+              <div className="border-b border-bark/50 bg-night/40 px-3 py-2 text-center">
+                <h2 className="font-display text-lg uppercase tracking-[0.15em] text-parch-200">
+                  {loc.name}
+                </h2>
+              </div>
+              <p className="font-prose px-4 pt-3 italic leading-snug text-parch-400">
                 {isClosed ? "Closed tonight." : loc.blurb}
               </p>
-              <div className="mt-auto flex flex-wrap gap-2 pt-4">
+              <div className="mt-auto flex flex-wrap justify-center gap-2 p-4">
                 {here.map((p) => (
                   <PlayerChip key={p.id} player={p} />
                 ))}
               </div>
+              {isClosed && (
+                <span
+                  aria-hidden
+                  className="font-display absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-12 rounded-sm border-2 border-red-500/60 bg-night/70 px-4 py-1 text-2xl uppercase tracking-[0.3em] text-red-400/90"
+                >
+                  Closed
+                </span>
+              )}
             </div>
           );
         })}
       </div>
       <div className="flex flex-col items-center gap-3">
         <ThreatMetersCompact threats={threats} />
-        <p className="text-center text-xl text-parch-400">
+        <p className="font-prose text-center text-xl italic text-parch-400">
           {players.filter((p) => playerPick(p, night)).length} of{" "}
           {players.length} decided · stragglers get sent somewhere random
         </p>
       </div>
+      <PageFrame />
     </main>
   );
 }
@@ -810,12 +891,17 @@ function StoryletsScreen({
 }) {
   const assigned = players.filter((p) => assignments?.[p.id]);
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-10 p-10">
-      <NightDots night={night} />
-      <h1 className="text-5xl font-black text-parch-300">
-        Week {night} in St Sebastian…
-      </h1>
-      <ul className="flex w-full max-w-3xl flex-col gap-4">
+    <main className="relative isolate flex min-h-screen flex-col items-center justify-center gap-8 p-10">
+      <Vignette />
+      <div className="flex flex-col items-center gap-3 text-center">
+        <ChronicleHeading>The Chronicle Is Written</ChronicleHeading>
+        <NightDots night={night} />
+        <h1 className="text-5xl font-black text-parch-300">
+          Week {night} in St Sebastian…
+        </h1>
+      </div>
+      {/* Each row a manuscript line: seal, plate thumbnail, entry, ink mark. */}
+      <ul className="w-full max-w-3xl">
         {assigned.map((p) => {
           const done = playerResult(p, night) !== null;
           const away = !playerConnected(p);
@@ -823,15 +909,19 @@ function StoryletsScreen({
           return (
             <li
               key={p.id}
-              className={`flex items-center justify-between rounded-xl border border-bark px-6 py-4 text-2xl ${
+              className={`flex items-center justify-between gap-4 border-b border-parch-600/15 px-4 py-4 text-2xl first:border-t ${
                 away ? "opacity-50" : ""
               }`}
             >
               <span className="flex items-center gap-4">
                 <PlayerDot player={p} />
+                <Art
+                  src={`/images/locations/${assignments![p.id]}.png`}
+                  className="pointer-events-none h-10 w-14 rounded border border-bark/60 object-cover sepia-[.2]"
+                />
                 <span>
-                  <span className="font-bold">{playerName(p)}</span>
-                  <span className="text-parch-400"> is at {loc.name}…</span>
+                  <span className="font-display font-bold">{playerName(p)}</span>
+                  <span className="font-prose italic text-parch-400"> is at {loc.name}…</span>
                   {away && !done && (
                     <span className="ml-3 text-base text-red-400/80">
                       (phone lost — reconnecting?)
@@ -840,7 +930,7 @@ function StoryletsScreen({
                 </span>
               </span>
               <span
-                className={done ? "text-emerald-400" : "animate-pulse text-parch-600"}
+                className={done ? "text-amber-300" : "animate-pulse text-parch-500"}
               >
                 {done ? "✓" : "…"}
               </span>
@@ -848,7 +938,7 @@ function StoryletsScreen({
           );
         })}
       </ul>
-      <p className="text-parch-500">
+      <p className="font-prose italic text-parch-500">
         Their phones know things this screen doesn't.
       </p>
       <button
@@ -861,10 +951,11 @@ function StoryletsScreen({
             beginResolve();
           }
         }}
-        className="rounded-lg border border-bark px-5 py-2 text-sm text-parch-600 hover:border-parch-600 hover:text-parch-400"
+        className="font-display rounded-sm border border-bark px-5 py-2 text-xs uppercase tracking-[0.15em] text-parch-600 hover:border-parch-600 hover:text-parch-400"
       >
         A phone died? End the week without them →
       </button>
+      <PageFrame />
     </main>
   );
 }
@@ -908,24 +999,29 @@ function ResolveScreen({
 
   return (
     <CampfireScene>
-      <main className="flex min-h-screen flex-col gap-6 p-10">
+      <main className="relative flex min-h-screen flex-col gap-6 p-10">
+        <Vignette />
         <div className="flex flex-col items-center gap-3">
+          <ChronicleHeading>Around the Fire</ChronicleHeading>
           <NightDots night={night} />
           <h1 className="font-display text-center text-3xl text-amber-200/90 [text-shadow:0_2px_12px_rgba(0,0,0,0.9)]">
             Around the fire, week {night}
           </h1>
-          <p className="text-center text-white/55">
+          <p className="font-prose text-center italic text-white/55">
             You take stock of the day, and tell each other what you saw.
           </p>
           {/* Where the four dooms stood as the week played out; tonight's
               relief or recklessness lands when the week ends. */}
           <ThreatMetersCompact threats={threats} />
         </div>
+        {/* Parchment scraps read into the record, one by one. */}
         <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center gap-4">
-          {results.slice(0, shown).map(({ player, result }) => (
+          {results.slice(0, shown).map(({ player, result }, i) => (
             <div
               key={player.id}
-              className="fade-up rounded-2xl border border-amber-900/40 bg-black/45 p-5 backdrop-blur-sm"
+              className={`fade-up rounded-sm border border-amber-900/40 bg-black/45 p-5 shadow-lg shadow-black/40 backdrop-blur-sm ${
+                i % 2 === 0 ? "rotate-[0.5deg]" : "-rotate-[0.5deg]"
+              }`}
             >
               <p className="text-2xl leading-snug">
                 <span
@@ -935,7 +1031,7 @@ function ResolveScreen({
                   {playerName(player)}
                 </span>
                 <span className="text-white/60"> — </span>
-                <span className="text-white/95">{result!.outcome}</span>
+                <span className="font-prose text-white/95">{result!.outcome}</span>
               </p>
               <div className="mt-3">
                 <DeltaChips deltas={result!.deltas} />
@@ -950,10 +1046,11 @@ function ResolveScreen({
               endNight(night, players);
             }
           }}
-          className="font-display mx-auto rounded-xl border border-amber-700/50 px-8 py-3 text-lg text-amber-200/80 hover:border-amber-400"
+          className="btn-quest mx-auto px-8 py-3 text-lg md:text-lg"
         >
           {night >= NIGHT_COUNT ? "To the reckoning →" : `On to week ${night + 1} →`}
         </button>
+        <PageFrame />
       </main>
     </CampfireScene>
   );
@@ -990,24 +1087,35 @@ function FinaleScreen({
   const voted = players.filter((p) => playerVote(p)).length;
 
   return (
-    <main className="flex min-h-screen flex-col items-center gap-8 p-10">
-      <h1 className="text-5xl font-black">THE SEVENTH WEEK ENDS</h1>
-      <div className="max-w-3xl space-y-5 text-center">
+    <main className="relative isolate flex min-h-screen flex-col items-center gap-8 overflow-hidden p-10">
+      <BackdropArt
+        src="/images/scenes/finale.png"
+        imgClassName="opacity-[0.16] sepia-[.3]"
+      />
+      <Vignette />
+      <div className="flex flex-col items-center gap-3 text-center">
+        <ChronicleHeading>The Reckoning</ChronicleHeading>
+        <h1 className="text-5xl font-black">THE SEVENTH WEEK ENDS</h1>
+        <Rule />
+      </div>
+      {/* The town's ending, an illuminated page: IM Fell prose with a drop
+          cap; the final loud line rings out in Cinzel. */}
+      <div className="max-w-2xl space-y-5 text-center">
         {ending ? (
-          ending.map((p, i) => (
-            <p
-              key={i}
-              className={
-                i === ending.length - 1
-                  ? "pt-2 text-3xl font-black tracking-wide text-amber-400"
-                  : "text-2xl text-parch-300"
-              }
-            >
-              {p}
+          <>
+            <div className="story-prose space-y-5">
+              {ending.slice(0, -1).map((p, i) => (
+                <p key={i} className="text-2xl leading-relaxed text-parch-300">
+                  {p}
+                </p>
+              ))}
+            </div>
+            <p className="font-display pt-2 text-3xl font-black tracking-wide text-amber-400">
+              {ending[ending.length - 1]}
             </p>
-          ))
+          </>
         ) : (
-          <p className="animate-pulse text-2xl text-parch-500">
+          <p className="font-prose animate-pulse text-2xl italic text-parch-500">
             St Sebastian waits to learn its fate…
           </p>
         )}
@@ -1019,18 +1127,18 @@ function FinaleScreen({
       </div>
 
       <section className="mt-4 w-full max-w-2xl">
-        <h2 className="mb-3 text-center text-xl font-bold text-parch-400">
+        <h2 className="font-display mb-3 text-center text-xl tracking-wide text-parch-300">
           Whose week was the wildest? · {voted}/{players.length} voted
         </h2>
         <ul className="flex flex-col gap-2">
           {players.map((p) => (
             <li
               key={p.id}
-              className="flex items-center justify-between rounded-xl border border-bark px-6 py-3 text-xl"
+              className="flex items-center justify-between rounded-sm border border-parch-600/25 bg-parch-100/[0.04] px-6 py-3 text-xl"
             >
               <span className="flex items-center gap-3 font-bold">
                 <PlayerDot player={p} />
-                {playerName(p)}
+                <span className="font-display">{playerName(p)}</span>
               </span>
               <span className="font-mono text-amber-400">
                 {"★".repeat(votes.get(p.id) ?? 0)}
@@ -1042,10 +1150,11 @@ function FinaleScreen({
 
       <button
         onClick={() => beginEpilogue()}
-        className="font-display rounded-xl bg-amber-500 px-10 py-4 text-xl text-night hover:bg-amber-400"
+        className="btn-quest px-10 py-4 text-xl md:text-xl"
       >
         END THE WEEK
       </button>
+      <PageFrame />
     </main>
   );
 }
@@ -1071,43 +1180,64 @@ function EpilogueScreen({
   );
 
   return (
-    <main className="flex min-h-screen flex-col items-center gap-10 p-10">
-      <h1 className="text-5xl font-black">SEVEN WEEKS, ENDED</h1>
+    <main className="relative isolate flex min-h-screen flex-col items-center gap-10 overflow-hidden p-10">
+      <BackdropArt
+        src="/images/scenes/epilogue.png"
+        imgClassName="opacity-[0.10] sepia-[.3]"
+      />
+      <Vignette />
+      <div className="flex flex-col items-center gap-3 text-center">
+        <ChronicleHeading>What Became of Them</ChronicleHeading>
+        <h1 className="text-5xl font-black">SEVEN WEEKS, ENDED</h1>
+      </div>
       <ThreatMetersCompact threats={threats} />
       {wildest && (
-        <p className="text-2xl text-parch-300">
+        <p className="font-prose text-2xl italic text-parch-300">
           The village agrees:{" "}
-          <span className="font-black text-amber-400">{playerName(wildest)}</span>{" "}
+          <span className="font-display font-black not-italic text-amber-400">
+            {playerName(wildest)}
+          </span>{" "}
           had the wildest week.
         </p>
       )}
-      <table className="w-full max-w-3xl border-separate border-spacing-y-2 text-xl">
+      {/* The chronicle's ledger: hairline rules, Cinzel numerals, vellum tint. */}
+      <table className="w-full max-w-3xl border-collapse text-xl">
         <thead>
-          <tr className="text-left text-sm uppercase tracking-widest text-parch-500">
-            <th className="px-4">Player</th>
+          <tr className="text-sm uppercase tracking-widest text-parch-500">
+            <th className="font-display border-b border-parch-600/40 px-4 pb-2 text-left font-normal">
+              Player
+            </th>
             {(Object.keys(STAT_LABELS) as StatId[]).map((s) => (
-              <th key={s} className="px-4 text-center">
+              <th
+                key={s}
+                className="font-display border-b border-parch-600/40 px-4 pb-2 text-center font-normal"
+              >
                 {STAT_LABELS[s]}
               </th>
             ))}
-            <th className="px-4 text-center">Marks</th>
+            <th className="font-display border-b border-parch-600/40 px-4 pb-2 text-center font-normal">
+              Marks
+            </th>
           </tr>
         </thead>
         <tbody>
           {players.map((p) => {
             const stats = playerStats(p);
             return (
-              <tr key={p.id} className="rounded-xl bg-oak/60">
-                <td className="flex items-center gap-3 rounded-l-xl px-4 py-3 font-bold">
+              <tr
+                key={p.id}
+                className="border-b border-parch-600/15 odd:bg-parch-100/[0.04]"
+              >
+                <td className="flex items-center gap-3 px-4 py-3 font-bold">
                   <PlayerDot player={p} />
-                  {playerName(p)}
+                  <span className="font-display">{playerName(p)}</span>
                 </td>
                 {(Object.keys(STAT_LABELS) as StatId[]).map((s) => (
-                  <td key={s} className="px-4 text-center font-mono">
+                  <td key={s} className="font-display px-4 text-center text-parch-200">
                     {stats[s]}
                   </td>
                 ))}
-                <td className="rounded-r-xl px-4 text-center font-mono">
+                <td className="font-display px-4 text-center text-parch-200">
                   {playerFlags(p).length}
                 </td>
               </tr>
@@ -1116,23 +1246,42 @@ function EpilogueScreen({
         </tbody>
       </table>
       <section className="w-full max-w-6xl">
-        <h2 className="mb-4 text-center text-xl font-bold text-parch-400">
+        <h2 className="font-display mb-3 text-center text-xl tracking-wide text-parch-400">
           What became of each of you
         </h2>
+        <Rule className="mb-5" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {players.map((p) => (
             <div
               key={p.id}
-              className="rounded-2xl border border-bark bg-oak/40 p-5"
+              className="rounded-sm border border-parch-600/30 bg-parch-100/[0.03] p-5"
             >
-              <p className="mb-2 flex items-center gap-2 text-lg font-bold">
+              <p className="font-display mb-2 flex items-center gap-2 text-lg font-bold">
                 <PlayerDot player={p} />
                 {playerName(p)}
               </p>
               {/* Everyone sees every player's ending. */}
-              <p className="story-prose mb-3 text-sm leading-relaxed text-parch-200">
-                {playerEnding(playerFlags(p))}
-              </p>
+              <div className="story-prose mb-3">
+                <p className="text-sm leading-relaxed text-parch-200">
+                  {playerEnding(playerFlags(p))}
+                </p>
+              </div>
+              {/* Storylines this player saw through to the end — sealed letters. */}
+              {completedStorylines(playerFlags(p)).map((s) => (
+                <div
+                  key={s.id}
+                  className="relative mb-3 rounded-sm border border-amber-500/40 bg-amber-500/5 px-4 py-3"
+                >
+                  <span
+                    aria-hidden
+                    className="absolute -right-1.5 -top-1.5 h-3.5 w-3.5 rounded-full bg-gold shadow ring-2 ring-night"
+                  />
+                  <p className="font-display mb-1 text-amber-400">{s.title}</p>
+                  <p className="font-prose text-sm leading-relaxed text-parch-200">
+                    {s.ending}
+                  </p>
+                </div>
+              ))}
               <ol className="flex flex-col gap-1.5 text-sm leading-snug text-parch-500">
                 {playerHistory(p).map((h) => (
                   <li key={h.night}>
@@ -1152,10 +1301,11 @@ function EpilogueScreen({
       </section>
       <button
         onClick={() => backToLobby()}
-        className="font-display rounded-xl border border-bark-light px-10 py-4 text-xl text-parch-300 hover:border-parch-500"
+        className="btn-parch px-10 py-4 text-xl md:text-xl"
       >
         Play another week →
       </button>
+      <PageFrame />
     </main>
   );
 }
@@ -1169,21 +1319,24 @@ function roleLabel(player: PlayerState): string {
   return roleDef(character.role)?.name ?? "ready";
 }
 
+/** A player's colour as a wax seal: pressed dot in a pale vellum ring. */
 function PlayerDot({ player }: { player: PlayerState }) {
   return (
     <span
-      className="inline-block h-5 w-5 shrink-0 rounded-full"
+      className="inline-block h-5 w-5 shrink-0 rounded-full shadow-[0_1px_4px_rgba(0,0,0,0.6)] ring-2 ring-parch-100/25"
       style={{ backgroundColor: playerColor(player) }}
     />
   );
 }
 
+/** A small wax seal with the player's name, for the location plates. */
 function PlayerChip({ player }: { player: PlayerState }) {
   return (
-    <span
-      className="rounded-full px-3 py-1 text-sm font-bold text-night"
-      style={{ backgroundColor: playerColor(player) }}
-    >
+    <span className="flex items-center gap-1.5 rounded-full border border-parch-500/40 bg-night/60 py-1 pl-1.5 pr-3 text-sm font-bold text-parch-200">
+      <span
+        className="inline-block h-3.5 w-3.5 shrink-0 rounded-full ring-1 ring-parch-100/40"
+        style={{ backgroundColor: playerColor(player) }}
+      />
       {playerName(player)}
     </span>
   );
