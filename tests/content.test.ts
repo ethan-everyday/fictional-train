@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { describe, expect, it } from "vitest";
-import { ACTIVITIES, EVENTS } from "@/lib/game/content";
+import { ACTIVITIES, EVENTS, STORYLINES } from "@/lib/game/content";
 import { ROLES, BACKGROUNDS } from "@/lib/game/character";
 import {
   LOCATIONS,
@@ -205,6 +205,31 @@ describe("content contract", () => {
           expect(STAT_IDS, `${ev.id} effect stat`).toContain(stat);
         }
       }
+    }
+  });
+
+  it("keeps notes well-formed — a non-empty id, text a string", () => {
+    for (const ev of EVENTS) {
+      for (const b of branches(ev)) {
+        if (b.note === undefined) continue;
+        expect(typeof b.note.id, `${ev.id} note id`).toBe("string");
+        expect(b.note.id.trim().length, `${ev.id} note id empty`).toBeGreaterThan(0);
+        expect(typeof b.note.text, `${ev.id} note text`).toBe("string");
+      }
+    }
+  });
+
+  it("registers storylines completely — unique ids, title, ending, a doneFlag some event sets", () => {
+    const ids = STORYLINES.map((s) => s.id);
+    expect(new Set(ids).size, "storyline ids unique").toBe(ids.length);
+    const producible = producibleFlags();
+    for (const s of STORYLINES) {
+      expect(s.title.trim().length, `${s.id} title`).toBeGreaterThan(0);
+      expect(s.ending.trim().length, `${s.id} ending`).toBeGreaterThan(0);
+      expect(
+        producible.has(s.doneFlag),
+        `${s.id} doneFlag "${s.doneFlag}" is never set by any event`,
+      ).toBe(true);
     }
   });
 

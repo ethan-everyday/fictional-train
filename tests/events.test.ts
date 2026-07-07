@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   activitiesFor,
   applyEffect,
@@ -37,24 +37,44 @@ describe("activities", () => {
 });
 
 describe("eligibility rules", () => {
+  // SYNTHETIC fixtures pushed into the pool for this file only, so the rules
+  // stay provable even on a clean content slate (the 2026-07-03 rewrite).
+  // Each vitest file gets its own module registry — no cross-file leakage.
+  const tavernAct = () => activitiesFor("tavern")[0].id;
+  const flat = { text: "x", outcome: "did." };
+  const FIXTURES: GameEvent[] = [
+    { id: "__test_once", location: "tavern", activities: [], text: "t", effect: flat },
+    { id: "__test_gated", location: "tavern", activities: [], requires: ["__test_flag"], text: "t", effect: flat },
+    { id: "__test_bound", location: "tavern", activities: [], text: "t", effect: flat },
+  ];
+  beforeAll(() => {
+    FIXTURES[0].activities = [tavernAct()];
+    FIXTURES[2].activities = [tavernAct()];
+    EVENTS.push(...FIXTURES);
+  });
+  afterAll(() => {
+    for (const f of FIXTURES) {
+      const i = EVENTS.indexOf(f);
+      if (i >= 0) EVENTS.splice(i, 1);
+    }
+  });
+
   it("drops a once-only event after it has been seen", () => {
-    const ev = EVENTS.find((e) => !e.repeatable && e.activities.length > 0);
-    expect(ev, "a once-only, activity-bound event exists").toBeTruthy();
-    const act = ev!.activities[0];
-    const fresh = eligibleEvents(ev!.location, act, [], []);
-    expect(fresh.some((e) => e.id === ev!.id)).toBe(true);
-    const seen = eligibleEvents(ev!.location, act, [], [ev!.id]);
-    expect(seen.some((e) => e.id === ev!.id)).toBe(false);
+    const ev = FIXTURES[0];
+    const act = ev.activities[0];
+    const fresh = eligibleEvents(ev.location, act, [], []);
+    expect(fresh.some((e) => e.id === ev.id)).toBe(true);
+    const seen = eligibleEvents(ev.location, act, [], [ev.id]);
+    expect(seen.some((e) => e.id === ev.id)).toBe(false);
   });
 
   it("hides a required-flag event until the flag is present (the chain mechanism)", () => {
-    const ev = EVENTS.find((e) => e.requires && e.requires.length > 0);
-    expect(ev, "some event has a prerequisite").toBeTruthy();
-    const act = ev!.activities[0] ?? "";
-    const without = eligibleEvents(ev!.location, act, [], []);
-    expect(without.some((e) => e.id === ev!.id)).toBe(false);
-    const withFlags = eligibleEvents(ev!.location, act, ev!.requires!, []);
-    expect(withFlags.some((e) => e.id === ev!.id)).toBe(true);
+    const ev = FIXTURES[1];
+    const act = tavernAct();
+    const without = eligibleEvents(ev.location, act, [], []);
+    expect(without.some((e) => e.id === ev.id)).toBe(false);
+    const withFlags = eligibleEvents(ev.location, act, ev.requires!, []);
+    expect(withFlags.some((e) => e.id === ev.id)).toBe(true);
   });
 
   it("blocks a forbidden-flag event once the flag is present", () => {
@@ -80,14 +100,13 @@ describe("eligibility rules", () => {
   });
 
   it("only returns events bound to the chosen activity", () => {
-    const ev = EVENTS.find((e) => e.activities.length === 1);
-    expect(ev).toBeTruthy();
+    const ev = FIXTURES[2];
     const otherAct = ACTIVITIES.find(
-      (a) => a.location === ev!.location && a.id !== ev!.activities[0],
+      (a) => a.location === ev.location && a.id !== ev.activities[0],
     );
-    if (!otherAct) return;
-    const elsewhere = eligibleEvents(ev!.location, otherAct.id, [], []);
-    expect(elsewhere.some((e) => e.id === ev!.id)).toBe(false);
+    expect(otherAct, "tavern has a second activity").toBeTruthy();
+    const elsewhere = eligibleEvents(ev.location, otherAct!.id, [], []);
+    expect(elsewhere.some((e) => e.id === ev.id)).toBe(false);
   });
 });
 

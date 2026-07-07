@@ -106,6 +106,18 @@ export interface StatCheck {
   dc: number;
 }
 
+/**
+ * A note that lands on the player's phone — their standing leads, shown on
+ * the waiting and choose-location screens ("a big shipment lands at the
+ * docks come week 3"). Setting a note with the same id REPLACES the old
+ * one; empty text clears it. Storyline beats key notes by their chain slug,
+ * so each storyline holds one live lead at a time.
+ */
+export interface QuestNote {
+  id: string;
+  text: string;
+}
+
 /** The result of an event branch: prose, a host line, and what it changes. */
 export interface EventEffect {
   /** Prose shown to the player for this branch. */
@@ -118,6 +130,8 @@ export interface EventEffect {
   flags?: string[];
   /** Threat deltas this branch applies to the town's tracks. */
   threats?: ThreatDeltas;
+  /** A note set on (or, with empty text, cleared from) the player's phone. */
+  note?: QuestNote;
 }
 
 /** One weighted outcome inside a choice's `random` pool (weight default 1). */
@@ -206,6 +220,23 @@ export interface StoryletResult {
   flagsSet: string[];
   /** Threat deltas this night's outcome applies to the town. */
   threats?: ThreatDeltas;
+  /** A note the night left on (or cleared from) the player's phone. */
+  note?: QuestNote;
+}
+
+/**
+ * A registered storyline: a hand-written chain of events whose completion
+ * (its doneFlag landing in a player's flags) earns that player the
+ * storyline's ending panel at the game's epilogue. Registered by the
+ * Storyline Scribe alongside its beats; lives in content/data/storylines.json.
+ */
+export interface StorylineDef {
+  id: string;
+  title: string;
+  /** The flag the storyline's final beat sets on completion. */
+  doneFlag: string;
+  /** The ending panel shown at the epilogue to anyone who completed it. */
+  ending: string;
 }
 
 /** One finished night, appended to the player's week history. */

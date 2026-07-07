@@ -30,6 +30,7 @@ export const KEY_RESULT = "result";
 export const KEY_VOTE = "vote";
 export const KEY_HISTORY = "history";
 export const KEY_CHARACTER = "character";
+export const KEY_NOTES = "notes";
 
 export interface Ping {
   count: number;
