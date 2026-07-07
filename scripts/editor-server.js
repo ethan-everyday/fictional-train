@@ -84,7 +84,7 @@ function branches(ev) {
   return ev.effect ? [ev.effect] : [];
 }
 
-function validate(locations, origins) {
+function validate(locations, origins, storylines) {
   const errors = [];
   const allEvents = [];
   const allActivities = [];
@@ -222,6 +222,15 @@ function validate(locations, origins) {
           errors.push(`${ev.id}: threat "${t}" delta must be a non-zero integer in -2..+2 (got ${v})`);
         }
       }
+      // Optional note: an id keying the lead + display text (empty = clears).
+      if (b.note !== undefined) {
+        if (typeof b.note.id !== "string" || !b.note.id.trim()) {
+          errors.push(`${ev.id}: a note needs a non-empty id`);
+        }
+        if (typeof b.note.text !== "string") {
+          errors.push(`${ev.id}: a note's text must be a string`);
+        }
+      }
     }
     for (const f of ev.requires ?? []) {
       if (!producible.has(f)) errors.push(`${ev.id}: requires "${f}" which nothing ever sets (orphan prerequisite)`);
@@ -230,12 +239,40 @@ function validate(locations, origins) {
       if (!producible.has(f)) errors.push(`${ev.id}: forbids "${f}" which is never set (typo?)`);
     }
   }
+
+  // Storylines: unique ids; a title and an ending panel; a doneFlag some
+  // event actually sets (or the epilogue could never award the ending).
+  // A save that doesn't carry storylines (the editor never sends them) is
+  // still checked against the ON-DISK registry, so deleting a storyline's
+  // final beat in the editor can't silently orphan its ending.
+  if (storylines === undefined) {
+    try { storylines = readStorylines(); } catch { storylines = []; }
+  }
+  {
+    if (!Array.isArray(storylines)) {
+      errors.push("storylines must be an array");
+    } else {
+      const ids = storylines.map((s) => s.id);
+      if (new Set(ids).size !== ids.length) errors.push("duplicate storyline ids exist");
+      for (const s of storylines) {
+        const sid = s.id || "?";
+        if (typeof s.id !== "string" || !s.id.trim()) errors.push("a storyline has no id");
+        if (typeof s.title !== "string" || !s.title.trim()) errors.push(`storyline ${sid}: no title`);
+        if (typeof s.ending !== "string" || !s.ending.trim()) errors.push(`storyline ${sid}: no ending panel`);
+        if (typeof s.doneFlag !== "string" || !s.doneFlag.trim()) {
+          errors.push(`storyline ${sid}: no doneFlag`);
+        } else if (!producible.has(s.doneFlag)) {
+          errors.push(`storyline ${sid}: doneFlag "${s.doneFlag}" is never set by any event`);
+        }
+      }
+    }
+  }
   return errors;
 }
 
 // --- io --------------------------------------------------------------
 
-const CONTENT_FILES = [...LOCATIONS.map((l) => `${l}.json`), "origins.json"];
+const CONTENT_FILES = [...LOCATIONS.map((l) => `${l}.json`), "origins.json", "storylines.json"];
 
 function readContent() {
   const out = {};
@@ -250,7 +287,13 @@ function readOrigins() {
   return JSON.parse(fs.readFileSync(originsFile(), "utf8"));
 }
 
-function writeContent(locations, origins) {
+function readStorylines() {
+  const file = path.join(dataDir(), "storylines.json");
+  if (!fs.existsSync(file)) return [];
+  return JSON.parse(fs.readFileSync(file, "utf8"));
+}
+
+function writeContent(locations, origins, storylines) {
   for (const loc of LOCATIONS) {
     if (!locations[loc]) continue;
     const file = path.join(dataDir(), `${loc}.json`);
@@ -258,6 +301,12 @@ function writeContent(locations, origins) {
   }
   if (origins) {
     fs.writeFileSync(originsFile(), JSON.stringify(origins, null, 2) + "\n");
+  }
+  // Explicitly gate on undefined: an empty array is a real (deliberate)
+  // registry state, but an ABSENT field means "don't touch the registry" —
+  // only the Scribe ever writes storylines.
+  if (storylines !== undefined) {
+    fs.writeFileSync(path.join(dataDir(), "storylines.json"), JSON.stringify(storylines, null, 2) + "\n");
   }
 }
 
@@ -316,6 +365,7 @@ function contentPayload() {
   return {
     locations: readContent(),
     origins: readOrigins(),
+    storylines: readStorylines(),
     stats: STAT_IDS,
     statCap: STAT_CAP,
   };
@@ -325,9 +375,43 @@ const server = http.createServer((req, res) => {
   if (req.method === "GET" && (req.url === "/" || req.url === "/index.html")) {
     return send(res, 200, fs.readFileSync(EDITOR_HTML, "utf8"), "text/html; charset=utf-8");
   }
+  // The Storyline Scribe: the guided, write-it-by-hand companion page.
+  if (req.method === "GET" && (req.url === "/write" || req.url === "/write.html")) {
+    return send(res, 200, fs.readFileSync(path.join(__dirname, "write.html"), "utf8"), "text/html; charset=utf-8");
+  }
   if (req.method === "GET" && req.url === "/favicon.ico") {
     res.writeHead(204);
     return res.end();
+  }
+  // Static assets so the tools can dress like the game: the chronicle fonts
+  // (whitelisted filenames only) and the woodcut plates (resolved + prefix
+  // checked — no path traversal). Everything else stays API-only.
+  if (req.method === "GET" && req.url.startsWith("/fonts/")) {
+    const FONT_FILES = ["Cinzel-Variable.ttf", "IMFellEnglish-Regular.ttf", "IMFellEnglish-Italic.ttf"];
+    const name = decodeURIComponent(req.url.slice("/fonts/".length).split("?")[0]);
+    if (!FONT_FILES.includes(name)) return send(res, 404, { error: "not found" });
+    try {
+      const buf = fs.readFileSync(path.join(ROOT, "app", "fonts", name));
+      res.writeHead(200, { "Content-Type": "font/ttf" });
+      return res.end(buf);
+    } catch {
+      return send(res, 404, { error: "not found" });
+    }
+  }
+  if (req.method === "GET" && req.url.startsWith("/images/")) {
+    const base = path.join(ROOT, "public", "images");
+    const rel = decodeURIComponent(req.url.slice("/images/".length).split("?")[0]);
+    const full = path.resolve(base, rel);
+    if (!full.startsWith(base + path.sep) || !full.toLowerCase().endsWith(".png")) {
+      return send(res, 404, { error: "not found" });
+    }
+    try {
+      const buf = fs.readFileSync(full);
+      res.writeHead(200, { "Content-Type": "image/png" });
+      return res.end(buf);
+    } catch {
+      return send(res, 404, { error: "not found" });
+    }
   }
   if (req.method === "GET" && req.url === "/api/content") {
     try {
@@ -361,19 +445,20 @@ const server = http.createServer((req, res) => {
     let raw = "";
     req.on("data", (c) => (raw += c));
     req.on("end", () => {
-      let locations, origins;
+      let locations, origins, storylines;
       try {
         const parsed = JSON.parse(raw);
         locations = parsed.locations;
         origins = parsed.origins;
+        storylines = parsed.storylines;
       } catch {
         return send(res, 400, { error: "bad JSON" });
       }
-      const errors = validate(locations, origins);
+      const errors = validate(locations, origins, storylines);
       if (errors.length) return send(res, 400, { errors });
       try {
         snapshot(); // the state being overwritten is always recoverable
-        writeContent(locations, origins);
+        writeContent(locations, origins, storylines);
         return send(res, 200, { ok: true });
       } catch (err) {
         return send(res, 500, { error: String(err.message ?? err) });
@@ -399,6 +484,7 @@ module.exports = {
   branches,
   readContent,
   readOrigins,
+  readStorylines,
   writeContent,
   snapshot,
   restoreBackup,

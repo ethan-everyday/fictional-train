@@ -113,6 +113,33 @@ Ground rules: multiplayer goes through `/lib/game`, all content is data in
 `/lib/game/content`, and every architectural choice gets a line in
 `DECISIONS.md`.
 
+## Writing a storyline by hand (the Scribe)
+
+Double-click **`write-storyline.bat`** (→ `http://localhost:4100/write`).
+A guided, step-by-step page for writing one storyline from scratch — you
+write every word; the Scribe walks the beats in order (where → doing what →
+the scene → how it resolves → outcomes → rewards → timing, with the house
+writing rules as prompts) and handles only the bookkeeping. The story
+model it builds:
+
+- Each beat **returns weekly until it advances** — you tick which written
+  outcome carries the story forward (a choice can hide its own stat test:
+  the barrels-in-the-cellar pattern), and every other outcome is colour
+  the player can come back from next week.
+- An advancing outcome can leave a **note on the player's phone** ("the
+  barman's shipment lands at the docks come week 3") — their standing
+  lead, shown while they wait and while they choose where to go, replaced
+  by the next beat and cleared on completion.
+- Beats take week windows ("weeks 1–3" makes an offer the town can miss)
+  and the wiring never lets a later beat open before the one it needs.
+- Finishing registers the storyline with your **ending panel** — anyone
+  who completes it sees that panel under their name at the epilogue.
+
+Drafts autosave to the browser, so a half-written storyline survives
+closing the window. Since the 2026-07-03 clean slate the story is written
+this way, storyline by storyline; empty pools fall back to a quiet night,
+so the game is playable at every stage of the rewrite.
+
 ## Editing the story (visual editor)
 
 Double-click **`edit-story.bat`**, or:
@@ -206,11 +233,18 @@ editor or the JSON).
       ```
 - Every branch (`effect`/`pass`/`fail`/`choices[].effect`/`random[].effect`)
   sets `text` (the prose the player reads), `outcome` (one short host line:
-  "<name> <outcome>"), optional `stats` deltas, optional `flags`, and optional
+  "<name> <outcome>"), optional `stats` deltas, optional `flags`, optional
   `threats` deltas — a partial map of `plague`/`starvation`/`war`/`devils` to a
   small number (**negative relieves** the town, positive feeds the doom; never
-  0). Threats are the town's four doom dials; the host applies each night's
-  deltas before the week ticks up.
+  0) — and an optional `note` (`{ id, text }`): the player's standing lead,
+  shown on their waiting and choose screens. The same id replaces; empty
+  text clears. Threats are the town's four doom dials; the host applies
+  each night's deltas before the week ticks up.
+- **Storylines** are registered in `data/storylines.json`
+  (`{ id, title, doneFlag, ending }`): a player whose flags carry the
+  `doneFlag` at the epilogue is shown the `ending` panel. The Scribe
+  registers these automatically; the contract insists every `doneFlag` is
+  actually set by some event.
 - **Chaining**: an event's `flags` unlock later events via their `requires`
   (and `forbids`) — works across locations and nights (e.g. tavern's
   `met_steward` → castle's `audience_with_lord`). `repeatable` events can
@@ -235,6 +269,16 @@ do this rarely and deliberately:
    same for `LOCS` in `scripts/editor.html`.
 5. Check `DRAMA_EVENTS` (`closedLocation`) and any host copy that says
    "seven"; run `npm test` and one full e2e.
+
+## Art (optional, like sound)
+
+`public/images/` holds 23 generated woodcut plates — 7 locations, 6 role
+portraits, 4 threat emblems, 6 scene backdrops — all rendered through
+`components/Art.tsx`, which hides itself when a file is missing, so the
+game is unaffected by absent art. Regenerate any image with the nano-banana
+MCP using the same filename and the engraving style string recorded in
+DECISIONS.md. Art is baked in at build time: run `start-game.bat --rebuild`
+after changing images.
 
 ## Sound (optional)
 

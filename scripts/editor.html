@@ -5,30 +5,44 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Seven Nights — Story Editor</title>
 <style>
+  @font-face { font-family: "Cinzel"; src: url("/fonts/Cinzel-Variable.ttf") format("truetype");
+    font-weight: 400 900; font-display: swap; }
+  @font-face { font-family: "IM Fell English"; src: url("/fonts/IMFellEnglish-Regular.ttf") format("truetype");
+    font-style: normal; font-display: swap; }
+  @font-face { font-family: "IM Fell English"; src: url("/fonts/IMFellEnglish-Italic.ttf") format("truetype");
+    font-style: italic; font-display: swap; }
   :root {
     --night: #0f0b07; --oak: #26190f; --bark: #46351f; --bark2: #604b2e;
     --p100: #f2e8ce; --p300: #dcc99f; --p400: #c3aa7d; --p500: #9d8459; --p600: #7c6845;
-    --gold: #d4a937; --amber: #f59e0b; --red: #ef4444; --green: #34d399; --blue: #60a5fa;
+    --gold: #d4a937; --gold-dim: #a8842c; --amber: #f59e0b; --red: #ef4444; --green: #34d399; --blue: #60a5fa;
+    --display: "Cinzel", Georgia, serif;
+    --prose: "IM Fell English", Georgia, serif;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--night); color: var(--p100);
     font: 14px/1.5 -apple-system, system-ui, "Segoe UI", sans-serif; }
-  h1, h2, h3 { font-family: Georgia, serif; }
+  h1, h2, h3 { font-family: var(--display); font-weight: 600; }
   header { display: flex; align-items: center; gap: 16px; padding: 10px 16px;
-    background: var(--oak); border-bottom: 1px solid var(--bark); position: sticky; top: 0; z-index: 10; }
-  header h1 { margin: 0; font-size: 18px; color: var(--gold); }
+    background: var(--oak); border-bottom: 1px solid var(--bark);
+    box-shadow: 0 1px 0 rgba(212,169,55,.12); position: sticky; top: 0; z-index: 10; }
+  header h1 { margin: 0; font-size: 14px; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); }
   .tabs { display: flex; gap: 6px; }
-  .tab { padding: 6px 14px; border: 1px solid var(--bark2); border-radius: 8px;
+  .tab { font-family: var(--display); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    padding: 7px 14px; border: 1px solid var(--bark2); border-radius: 7px;
     background: var(--night); color: var(--p300); cursor: pointer; }
+  .tab:hover { border-color: var(--gold-dim); }
   .tab.active { background: var(--amber); color: var(--night); border-color: var(--amber); font-weight: 700; }
   .spacer { flex: 1; }
   button { font: inherit; cursor: pointer; }
-  .btn { padding: 6px 14px; border-radius: 8px; border: 1px solid var(--bark2);
+  .btn { padding: 6px 14px; border-radius: 7px; border: 1px solid var(--bark2);
     background: var(--night); color: var(--p100); }
   .btn:hover { border-color: var(--amber); }
-  .btn.primary { background: var(--amber); color: var(--night); border-color: var(--amber); font-weight: 700; }
+  .btn:active { transform: translateY(1px); }
+  .btn.primary { font-family: var(--display); font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+    background: var(--amber); color: var(--night); border-color: rgba(252,211,77,.5); font-weight: 700; }
+  .btn.primary:hover { background: #fbbf24; }
   .btn.danger { color: var(--red); border-color: #6b1d1d; }
-  .btn:disabled { opacity: .4; cursor: default; }
+  .btn:disabled { opacity: .4; cursor: default; transform: none; }
   #status { font-size: 13px; }
   .ok { color: var(--green); } .err { color: var(--red); }
 
@@ -45,13 +59,28 @@
   #fcount { font-size: 11px; }
   .node.dim { opacity: 0.18; }
   .node.draft rect { stroke: var(--amber); stroke-dasharray: 4 3; }
+  .bdg { font-size: 9px; font-family: Consolas, monospace; }
+  .sv-green { fill: var(--green); } .sv-blue { fill: var(--blue); } .sv-gold { fill: var(--gold); }
+  .sv-dim { fill: var(--p500); } .sv-neg { fill: var(--green); } .sv-pos { fill: var(--red); }
+  /* the inspector strip as a parchment info bar — the same colour variables,
+     re-pitched for ink on vellum, so the inline styles inside just work */
+  #inspector { border: 1px solid var(--bark); border-radius: 8px;
+    background: linear-gradient(#f2e8ce, #dcc99f);
+    --p100: #241708; --p300: #3a2812; --p400: #4a3418; --p500: #6b5330; --p600: #8a7455;
+    --gold: #8a6410; --green: #166534; --red: #b91c1c;
+    color: #241708; padding: 8px 13px; margin: 0 0 10px; font-size: 12px; min-height: 48px;
+    box-shadow: 0 1px 0 rgba(242,232,206,.12) inset, 0 4px 12px rgba(0,0,0,.35); }
+  #inspector .flag { color: var(--gold); font-family: monospace; }
+  #inspector .neg { color: var(--green); } #inspector .pos { color: var(--red); }
+  #inspector .prose { color: var(--p500); font-style: italic; font-family: var(--prose); }
 
   /* modals */
   .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 50;
     display: flex; align-items: flex-start; justify-content: center; padding-top: 8vh; }
   .modal { background: var(--oak); border: 1px solid var(--bark2); border-radius: 12px;
     padding: 16px 18px; width: 540px; max-height: 80vh; overflow: auto; }
-  .modal h2 { margin: 0 0 10px; font-size: 16px; color: var(--gold); font-family: Georgia, serif; }
+  .modal h2 { margin: 0 0 10px; font-size: 13px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--gold); font-family: var(--display); }
   #drafts { font-size: 12px; color: var(--amber); cursor: pointer; }
   details.gate { border: 1px solid var(--bark2); border-radius: 8px; padding: 8px 10px; margin-top: 12px; }
   details.gate summary { cursor: pointer; font-size: 12px; list-style-position: inside; }
@@ -63,21 +92,26 @@
   #problems div { font-size: 12px; color: var(--red); padding: 3px 0; cursor: pointer; }
   #problems div:hover { color: var(--p100); }
   .node { cursor: pointer; }
-  .node rect { fill: var(--oak); stroke: var(--bark2); rx: 6; }
-  .node:hover rect { stroke: var(--amber); }
+  .node rect { fill: var(--oak); stroke: var(--bark2); rx: 8; transition: stroke .12s, fill .12s; }
+  .node:hover rect { stroke: var(--amber); fill: #2d1f11; }
   .node.sel rect { stroke: var(--amber); stroke-width: 2; fill: #33240f; }
   .node text { fill: var(--p100); font-size: 11px; }
   .node .sub { fill: var(--p500); font-size: 9px; }
-  .col-head { fill: var(--gold); font-family: Georgia, serif; font-size: 13px; }
+  .col-head { fill: var(--gold); font-family: var(--display); font-size: 11px;
+    letter-spacing: .25em; text-transform: uppercase; }
 
   /* edit */
-  .edit-grid { display: grid; grid-template-columns: 260px 1fr 280px; gap: 14px; align-items: start; }
-  .panel { border: 1px solid var(--bark); border-radius: 10px; background: var(--oak); padding: 12px; }
-  .panel h2 { margin: 0 0 8px; font-size: 15px; color: var(--p300); }
+  .edit-grid { display: grid; grid-template-columns: 260px 1fr 280px; gap: 16px; align-items: start; }
+  .panel { border: 1px solid var(--bark); border-radius: 10px; background: var(--oak); padding: 14px; }
+  .panel h2 { margin: 0 0 10px; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--p400); }
   .loc-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
-  .loc-tab { padding: 4px 9px; border-radius: 7px; border: 1px solid var(--bark2);
-    background: var(--night); color: var(--p400); font-size: 12px; cursor: pointer; }
+  .loc-tab { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border-radius: 7px;
+    border: 1px solid var(--bark2); background: var(--night); color: var(--p400); font-size: 12px; cursor: pointer; }
+  .loc-tab:hover { border-color: var(--gold-dim); }
   .loc-tab.active { background: var(--bark); color: var(--p100); border-color: var(--amber); }
+  .loc-tab .swatch { width: 12px; height: 12px; border-radius: 50%; flex: none;
+    background-size: cover; background-position: center; border: 1px solid var(--bark2); }
+  .loc-tab.active .swatch { border-color: var(--amber); }
   .evlist { display: flex; flex-direction: column; gap: 4px; max-height: 60vh; overflow: auto; }
   .evrow { padding: 6px 8px; border-radius: 7px; border: 1px solid transparent; background: var(--night);
     cursor: pointer; font-size: 12px; }
@@ -116,7 +150,11 @@
   .tchip.neg { background: #10251a; color: var(--green); }
   .tchip.pos { background: #2b1212; color: var(--red); }
   .budget { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .budget th, .budget td { padding: 3px 6px; text-align: right; border-bottom: 1px solid var(--bark); }
+  .budget th, .budget td { padding: 4px 6px; text-align: right; border-bottom: 1px solid rgba(70,53,31,.6); }
+  .budget th { font-family: var(--display); font-weight: 600; font-size: 10px; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--p500); border-bottom: 1px solid rgba(212,169,55,.35); }
+  .budget td:first-child { font-family: var(--display); font-size: 11px; letter-spacing: .08em; color: var(--p300); }
+  .budget tr:last-child td { border-bottom: none; }
   .budget th:first-child, .budget td:first-child { text-align: left; }
   .budget .neg { color: var(--green); } .budget .pos { color: var(--red); }
   #backup-wrap { display: none; align-items: center; gap: 6px; }
@@ -598,8 +636,53 @@ function renderMap() {
   const view = document.getElementById("view");
   view.innerHTML = "";
   view.appendChild(filterBar());
+  view.appendChild(el("div", { id: "inspector" }));
   view.appendChild(el("div", { id: "map-wrap" }));
+  setInspector(null);
   drawMap();
+}
+
+/** The inspector strip above the map: the hovered node's details, spelled
+ * out in words instead of a cryptic sub-line and a hover tooltip. */
+function setInspector(ev) {
+  const box = document.getElementById("inspector");
+  if (!box) return;
+  box.innerHTML = "";
+  if (!ev) {
+    box.appendChild(el("div", { class: "muted", style: "padding-top:7px" },
+      "Hover an event for its full details · click = edit · alt-click = isolate its chain · esc = clear filters"));
+    return;
+  }
+  const shape = shapeOf(ev);
+  const head = [
+    shape === "choices" ? `choice of ${ev.choices.length}`
+      : shape === "check" ? `hidden ${ev.check.stat} check (dc ${ev.check.dc})`
+      : "flat outcome",
+    (ev.minWeek !== undefined || ev.maxWeek !== undefined) ? `weeks ${ev.minWeek ?? 1}–${ev.maxWeek ?? 7}` : "any week",
+    ev.weight !== undefined ? `weight ${ev.weight}` : null,
+    ev.repeatable ? "repeatable" : null,
+    (ev.activities || []).length ? `via ${ev.activities.join(", ")}` : "any activity here",
+  ].filter(Boolean).join(" · ");
+  box.appendChild(el("div", {},
+    el("span", { style: "color:var(--p100);font-weight:600" }, (isDraft(ev) ? "✎ " : "") + ev.id),
+    el("span", { class: "muted" }, `   ${head}`)));
+  const line = el("div", { style: "margin-top:2px" });
+  const addFlags = (label, flags) => {
+    if (!flags.length) return;
+    line.appendChild(el("span", { class: "muted" }, (line.childNodes.length ? "  ·  " : "") + label + " "));
+    line.appendChild(el("span", { class: "flag" }, flags.join(", ")));
+  };
+  addFlags("needs", ev.requires || []);
+  addFlags("not if", ev.forbids || []);
+  addFlags("sets", setterFlags(ev));
+  if (!line.childNodes.length) line.appendChild(el("span", { class: "muted" }, "no flag wiring"));
+  for (const [t, m] of Object.entries(threatMarks(ev))) {
+    if (m.neg) { line.appendChild(el("span", { class: "muted" }, "  ·  ")); line.appendChild(el("span", { class: "neg" }, `${THREAT_NAMES[t]} ${m.neg}`)); }
+    if (m.pos) { line.appendChild(el("span", { class: "muted" }, "  ·  ")); line.appendChild(el("span", { class: "pos" }, `${THREAT_NAMES[t]} +${m.pos}`)); }
+  }
+  const prose = (ev.text || "").replace(/\s+/g, " ");
+  line.appendChild(el("span", { class: "prose" }, `  —  “${prose.slice(0, 96)}${prose.length > 96 ? "…" : ""}”`));
+  box.appendChild(line);
 }
 
 function drawMap() {
@@ -624,12 +707,12 @@ function drawMap() {
       }).filter(Boolean).join(" · ");
       fcount.textContent = `${matched.size} of ${allEvents().length}` + (contrib ? ` · ${contrib}` : "");
     } else {
-      fcount.textContent = "click = edit · alt-click = isolate its chain · esc = clear filters";
+      fcount.textContent = "";
     }
     if (fclear) fclear.style.display = active ? "" : "none";
   }
 
-  const colW = 210, nodeW = 168, nodeH = 38, vGap = 10, top = 44, padL = 20;
+  const colW = 210, nodeW = 168, nodeH = 42, vGap = 10, top = 44, padL = 20;
   const positions = {}; // eventId -> {x,y,cx of right, lx of left}
   let maxRows = 0;
   LOCS.forEach((loc, ci) => {
@@ -689,25 +772,34 @@ function drawMap() {
 
   const nodes = allEvents().map(ev => {
     const p = positions[ev.id];
-    const sets = setterFlags(ev);
-    const marks = Object.entries(threatMarks(ev));
-    // One dot per touched threat: green = offers relief, red = only worsens.
-    const dots = marks.map(([t, m], k) =>
-      svg("circle", { cx: nodeW - 8 - k * 9, cy: 8, r: 3,
-        fill: m.neg ? "var(--green)" : "var(--red)", opacity: 0.9 }));
-    const weeks = ev.minWeek || ev.maxWeek
-      ? `  [wk ${ev.minWeek ?? 1}–${ev.maxWeek ?? 7}]` : "";
-    const tip = [
-      ev.id + weeks + (ev.repeatable ? "  (repeatable)" : ""),
-      ev.requires && ev.requires.length ? "needs: " + ev.requires.join(", ") : null,
-      ev.forbids && ev.forbids.length ? "forbids: " + ev.forbids.join(", ") : null,
-      sets.length ? "sets: " + sets.join(", ") : null,
-      marks.length ? "threats: " + marks.map(([t, m]) =>
-        [m.neg ? `${t} ${m.neg}` : null, m.pos ? `${t} +${m.pos}` : null].filter(Boolean).join(", ")).join(", ") : null,
-    ].filter(Boolean).join("\n");
+    // Title: the column already names the location, so strip the id's
+    // prefix and read the rest as words.
+    let title = ev.id.startsWith(ev.location + "_") ? ev.id.slice(ev.location.length + 1) : ev.id;
+    title = (isDraft(ev) ? "✎ " : "") + title.replace(/_/g, " ");
+    if (title.length > 27) title = title.slice(0, 26) + "…";
+    // Badge row: shape · week gate · repeatable · threat deltas — the same
+    // vocabulary as the Edit list. Wiring lives in the edges + inspector.
+    const badges = [];
+    const shape = shapeOf(ev);
+    badges.push(shape === "choices" ? ["choice", "sv-gold"] : shape === "check" ? ["check", "sv-blue"] : ["flat", "sv-green"]);
+    if (ev.minWeek !== undefined || ev.maxWeek !== undefined) {
+      badges.push([`wk${ev.minWeek ?? 1}${(ev.maxWeek ?? 7) !== 7 ? "–" + ev.maxWeek : "+"}`, "sv-dim"]);
+    }
+    if (ev.repeatable) badges.push(["↻", "sv-dim"]);
+    for (const [t, m] of Object.entries(threatMarks(ev))) {
+      if (m.neg) badges.push([`${THREAT_NAMES[t][0]}${m.neg}`, "sv-neg"]);
+      if (m.pos) badges.push([`${THREAT_NAMES[t][0]}+${m.pos}`, "sv-pos"]);
+    }
+    let bx = 8;
+    const badgeEls = badges.map(([t, cls]) => {
+      const b = svg("text", { class: "bdg " + cls, x: bx, y: 32 }, t);
+      bx += t.length * 5.6 + 8;
+      return b;
+    });
     const g = svg("g", {
       class: "node" + (STATE.sel === ev.id ? " sel" : "") + (matched.has(ev.id) ? "" : " dim") + (isDraft(ev) ? " draft" : ""),
       transform: `translate(${p.x},${p.y})`,
+      onmouseenter: () => setInspector(ev),
       onclick: (e) => {
         if (e.altKey) {
           // Alt-click: isolate this event's whole chain (plain click edits).
@@ -719,12 +811,8 @@ function drawMap() {
       },
     },
       svg("rect", { width: nodeW, height: nodeH }),
-      svg("title", {}, tip),
-      svg("text", { x: 8, y: 15 }, ev.id.length > 24 ? ev.id.slice(0,23)+"…" : ev.id),
-      svg("text", { class: "sub", x: 8, y: 29 },
-        (ev.requires&&ev.requires.length ? "↳ needs "+ev.requires.join(", ") : sets.length ? "sets "+sets.join(", ") : shapeOf(ev))
-          .slice(0, 32)),
-      ...dots,
+      svg("text", { x: 8, y: 16 }, title),
+      ...badgeEls,
     );
     return g;
   });
@@ -818,7 +906,7 @@ function renderEdit() {
     ...LOCS.map(loc => el("button", {
       class: "loc-tab" + (STATE.loc === loc ? " active" : ""),
       onclick: () => { STATE.loc = loc; STATE.sel = null; render(); }
-    }, locName(loc)))));
+    }, el("span", { class: "swatch", style: `background-image:url('/images/locations/${loc}.png')` }), locName(loc)))));
 
   // location identity + activities — edited rarely, so they fold away
   const acts = locActs(STATE.loc);
@@ -1207,6 +1295,9 @@ function cleanupData() {
 
 async function save() {
   cleanupData();
+  // The editor never edits storylines, so it never SENDS them — otherwise a
+  // stale tab's copy would clobber whatever the Scribe registered since it
+  // loaded. The server validates against the on-disk registry regardless.
   const res = await fetch("/api/content", { method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ locations: STATE.data.locations, origins: STATE.data.origins }) });
   const body = await res.json();

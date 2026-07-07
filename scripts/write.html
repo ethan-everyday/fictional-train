@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Seven Nights — Storyline Scribe</title>
+<style>
+  @font-face { font-family: "Cinzel"; src: url("/fonts/Cinzel-Variable.ttf") format("truetype");
+    font-weight: 400 900; font-display: swap; }
+  @font-face { font-family: "IM Fell English"; src: url("/fonts/IMFellEnglish-Regular.ttf") format("truetype");
+    font-style: normal; font-display: swap; }
+  @font-face { font-family: "IM Fell English"; src: url("/fonts/IMFellEnglish-Italic.ttf") format("truetype");
+    font-style: italic; font-display: swap; }
+  :root {
+    --night: #0f0b07; --oak: #26190f; --bark: #46351f; --bark2: #604b2e;
+    --p100: #f2e8ce; --p300: #dcc99f; --p400: #c3aa7d; --p500: #9d8459; --p600: #7c6845;
+    --gold: #d4a937; --gold-dim: #a8842c; --amber: #f59e0b; --red: #ef4444; --green: #34d399; --blue: #60a5fa;
+    --ink: #2a1c0a; --ink-soft: #5c4526;
+    --display: "Cinzel", Georgia, serif;
+    --prose: "IM Fell English", Georgia, serif;
+    --sans: -apple-system, system-ui, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: var(--p100);
+    background: radial-gradient(1100px 700px at 50% -10%, #1b120a, var(--night) 72%) fixed var(--night);
+    font: 16px/1.65 var(--prose); }
+  h1, h2, h3 { font-family: var(--display); font-weight: 600; }
+  #wrap { max-width: 720px; margin: 0 auto; padding: 34px 20px 90px; }
+
+  /* the vellum header plate */
+  header { position: relative; text-align: center; padding: 24px 20px 20px;
+    background: linear-gradient(var(--p100), var(--p300)); color: var(--ink);
+    border: 1px solid var(--bark); border-radius: 4px;
+    box-shadow: 0 1px 0 rgba(242,232,206,.14) inset, 0 12px 32px rgba(0,0,0,.5); }
+  header::after { content: ""; position: absolute; inset: 5px; border: 1px solid rgba(70,53,31,.35);
+    border-radius: 2px; pointer-events: none; }
+  header .kicker { margin: 0 0 7px; font-family: var(--display); font-size: 10px;
+    letter-spacing: .35em; text-transform: uppercase; color: #6b4f22; }
+  header h1 { margin: 0; font-size: 25px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink); }
+  header p { margin: 7px 0 0; color: var(--ink-soft); font-size: 15px; font-style: italic; }
+  .fleuron { display: flex; align-items: center; justify-content: center; gap: 12px;
+    max-width: 230px; margin: 9px auto 0; color: rgba(107,79,34,.75); font-size: 13px; }
+  .fleuron::before, .fleuron::after { content: ""; flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(107,79,34,.5)); }
+  .fleuron::after { background: linear-gradient(90deg, rgba(107,79,34,.5), transparent); }
+
+  /* the crumb rail as chronicle tabs */
+  #rail { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 22px 0 26px; }
+  .crumb { font-family: var(--display); font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+    padding: 6px 13px; border-radius: 3px 3px 0 0; border: 1px solid var(--bark);
+    color: var(--p500); background: transparent; }
+  .crumb.done { color: var(--p300); background: var(--oak); cursor: pointer; }
+  .crumb.done:hover { border-color: var(--gold-dim); color: var(--p100); }
+  .crumb.now { background: var(--amber); color: var(--night); border-color: var(--amber); font-weight: 700; }
+
+  /* parchment-panel questions */
+  .q { margin: 28px 0 0; padding: 16px 18px 18px; background: rgba(38,25,15,.55);
+    border: 1px solid var(--bark); border-radius: 6px; box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+  .q h2 { margin: 0 0 4px; font-size: 17px; letter-spacing: .04em; color: var(--p100); }
+  .q h2::first-letter { color: var(--gold); font-size: 1.3em; }
+  .coach { margin: 0 0 12px; color: var(--p500); font-size: 15px; font-style: italic; }
+  .coach b { color: var(--p400); font-weight: 600; font-style: normal; }
+  input[type=text], input[type=number], textarea, select {
+    width: 100%; padding: 10px 12px; background: var(--night); color: var(--p100);
+    border: 1px solid var(--bark2); border-radius: 6px; font: inherit; }
+  textarea { min-height: 110px; resize: vertical; line-height: 1.6; }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--amber);
+    box-shadow: 0 0 0 1px rgba(245,158,11,.3); }
+  button { font: inherit; cursor: pointer; }
+  .btn { font-family: var(--display); font-size: 12.5px; letter-spacing: .12em; text-transform: uppercase;
+    padding: 10px 18px; border-radius: 8px; border: 1px solid var(--bark2);
+    background: rgba(38,25,15,.85); color: var(--p300); }
+  .btn:hover { border-color: rgba(245,158,11,.6); color: var(--p100); }
+  .btn:active { transform: translateY(1px); }
+  .btn.primary { background: var(--amber); color: var(--night); border-color: rgba(252,211,77,.5);
+    font-weight: 700; box-shadow: 0 3px 10px rgba(0,0,0,.4); }
+  .btn.primary:hover { background: #fbbf24; color: var(--night); }
+  .btn.quiet { background: none; border: none; color: var(--p500); text-decoration: underline dotted;
+    padding: 8px 4px; font-family: var(--sans); font-size: 11px; letter-spacing: normal; text-transform: none; }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .card { position: relative; overflow: hidden; text-align: left; padding: 12px 14px; border-radius: 6px;
+    border: 1px solid var(--bark2); background: var(--oak); color: var(--p100); }
+  .card:hover { border-color: rgba(245,158,11,.6); }
+  .card.picked { border-color: var(--amber); background: #33240f;
+    box-shadow: 0 0 0 1px rgba(245,158,11,.3) inset; }
+  .card b { display: block; position: relative; font-family: var(--display); font-size: 12.5px;
+    letter-spacing: .1em; text-transform: uppercase; }
+  .card span { display: block; position: relative; font-size: 14px; font-style: italic;
+    color: var(--p500); margin-top: 2px; }
+  /* woodcut location cards: the plate at low opacity behind the label */
+  .loc-card { min-height: 74px; }
+  .loc-card::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: var(--art) right center / cover no-repeat; opacity: .14; }
+  .loc-card:hover::before { opacity: .24; }
+  .loc-card.picked::before { opacity: .3; }
+  .branch { border: 1px solid var(--bark2); border-radius: 8px; padding: 14px; margin: 12px 0; background: rgba(15,11,7,.45); }
+  .branch h3 { margin: 0 0 8px; font-size: 11px; text-transform: uppercase; letter-spacing: .22em; color: var(--gold); }
+  label { display: block; font-family: var(--sans); font-size: 10.5px; letter-spacing: .07em;
+    text-transform: uppercase; color: var(--p500); margin: 13px 0 4px; }
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+  .statgrid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+  .statgrid label { margin: 0 0 2px; text-align: center; font-size: 10px; }
+  .statgrid input { padding: 5px; text-align: center; }
+  .hostline { font-size: 14px; color: var(--p500); margin-top: 4px; font-style: italic; }
+  .wire { margin: 14px 0 0; padding: 9px 12px; border-left: 3px solid var(--gold); background: rgba(212,169,55,0.07);
+    font-size: 14px; font-style: italic; color: var(--p400); }
+  .wire code { color: var(--gold); font-style: normal; }
+  .next { margin-top: 18px; }
+  .missing { color: var(--red); font-size: 14px; margin-top: 8px; font-style: italic; }
+  /* fleuron divider between manuscript entries */
+  .rule { display: flex; align-items: center; justify-content: center; gap: 14px;
+    max-width: 300px; margin: 22px auto 0; color: rgba(212,169,55,.5); font-size: 14px; }
+  .rule::before, .rule::after { content: ""; flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(212,169,55,.35)); }
+  .rule::after { background: linear-gradient(90deg, rgba(212,169,55,.35), transparent); }
+  /* the review screen: beats as manuscript entries */
+  .review-beat { position: relative; overflow: hidden; border: 1px solid var(--bark); border-radius: 6px;
+    padding: 16px 18px; margin: 14px 0 0; background: var(--oak); }
+  .review-beat::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: var(--art) right -24px center / 46% auto no-repeat; opacity: .09; }
+  .review-beat > * { position: relative; }
+  .review-beat h3 { margin: 0; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); }
+  .review-beat .where { font-family: var(--sans); font-size: 11px; color: var(--p500); margin: 3px 0 8px; }
+  .review-beat p { margin: 7px 0; font-size: 15px; }
+  .review-beat .out { color: var(--p400); font-size: 14px; padding-left: 12px; border-left: 2px solid var(--bark2); }
+  /* the ending panel as the sealed letter it becomes in-game */
+  .q.sealed { background: linear-gradient(var(--p100), var(--p300)); border-color: var(--bark);
+    color: var(--ink); box-shadow: 0 10px 26px rgba(0,0,0,.5); position: relative; }
+  .q.sealed::after { content: ""; position: absolute; top: -10px; right: 24px; width: 32px; height: 32px;
+    border-radius: 50%; border: 1px solid rgba(0,0,0,.3);
+    background: radial-gradient(circle at 35% 30%, #c9a13d, var(--gold-dim) 62%, #6b4f22);
+    box-shadow: 0 3px 8px rgba(0,0,0,.45); }
+  .q.sealed h2 { color: var(--ink); }
+  .q.sealed h2::first-letter { color: #8a6410; }
+  .q.sealed .coach { color: var(--ink-soft); }
+  .q.sealed .coach b { color: #4a3418; }
+  .q.sealed textarea { background: rgba(255,252,240,.55); color: #241708;
+    border-color: rgba(70,53,31,.45); font-style: italic; }
+  .q.sealed textarea:focus { border-color: var(--gold-dim); box-shadow: 0 0 0 1px rgba(168,132,44,.4); }
+  .pill { display: inline-block; font-family: var(--sans); font-style: normal; font-size: 11px;
+    padding: 1px 7px; border-radius: 6px; margin-left: 6px; }
+  .pill.neg { background: #10251a; color: var(--green); }
+  .pill.pos { background: #2b1212; color: var(--red); }
+  .ok { color: var(--green); } .err { color: var(--red); }
+  footer { margin-top: 38px; font-family: var(--sans); font-size: 12px; color: var(--p600); text-align: center; }
+  footer a { color: var(--p500); }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <header>
+    <p class="kicker">The Chronicle of St Sebastian</p>
+    <h1>The Storyline Scribe</h1>
+    <div class="fleuron">&#10086;</div>
+    <p>Write a storyline for St Sebastian by hand, one beat at a time. Nothing is written for you.</p>
+  </header>
+  <div id="rail"></div>
+  <div id="main"></div>
+  <footer>Saved to this browser as you type · the full editor lives at <a href="/">the map</a></footer>
+</div>
+
+<script>
+const DRAFT_KEY = "7n:scribe:draft2";
+const MAX_BEATS = 6;
+
+function el(tag, props = {}, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === "class") n.setAttribute("class", v);
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else if (v === true) n.setAttribute(k, "");
+    else if (v !== false && v != null) n.setAttribute(k, v);
+  }
+  for (const kid of kids.flat()) {
+    if (kid == null || kid === false) continue;
+    n.appendChild(typeof kid === "string" ? document.createTextNode(kid) : kid);
+  }
+  return n;
+}
+
+const STAT_GUIDE = [
+  ["intelligence", "Int", "reading people, plans, lore"],
+  ["strength", "Str", "muscle, labour, violence"],
+  ["agility", "Agi", "speed, stealth, sure feet"],
+  ["craft", "Craft", "making, mending, trades"],
+  ["will", "Will", "nerve, presence, persuasion"],
+  ["wealth", "Gold", "coin — spendable"],
+];
+const DC_GUIDE = [
+  [3, "Easy — most characters pass"],
+  [4, "Fair — a coin-flip for the unsuited"],
+  [5, "Hard — needs the right character"],
+  [6, "Cruel — specialists only"],
+  [7, "Heroic — only after a week of growth"],
+];
+const THREAT_NAMES = { plague: "Plague", starvation: "Starvation", war: "War", devils: "Devils" };
+const THREATS = Object.keys(THREAT_NAMES);
+
+let DATA = null;   // /api/content payload
+let S = { step: "premise", title: "", pitch: "", threat: "", ending: "", beats: [], cur: 0 };
+
+const slugOf = () => (S.title.trim() || "storyline").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "storyline";
+const locName = (loc) => (DATA.locations[loc].meta && DATA.locations[loc].meta.name) || loc;
+const locBlurb = (loc) => (DATA.locations[loc].meta && DATA.locations[loc].meta.blurb) || "";
+const LOCS = ["church", "tavern", "market", "farms", "castle", "slums", "docks"];
+
+// A branch: one written outcome. `advance` = this outcome carries the story
+// forward (the chain flag + the note); the rest are colour the player can
+// come back from — the beat stays repeatable until an advancing branch fires.
+function blankBranch(advance) {
+  return { text: "", outcome: "", stats: {}, threat: "", delta: 0, advance: !!advance, noteText: "" };
+}
+// A choice: the button label plus HOW it resolves — a plain outcome, or a
+// hidden test with its own pass/fail (the barrels-in-the-cellar pattern).
+function blankChoice() {
+  return { label: "", mode: "flat", check: { stat: "strength", dc: 4 },
+    flat: blankBranch(false), pass: blankBranch(true), fail: blankBranch(false) };
+}
+function blankBeat() {
+  return { loc: null, activity: undefined, text: "", shape: null,
+    check: { stat: "will", dc: 4 }, effect: blankBranch(true),
+    pass: blankBranch(true), fail: blankBranch(false),
+    choices: [ blankChoice(), blankChoice() ],
+    week: "", weekTo: "", progress: 1 };
+}
+
+/** Every written branch in a beat, with its owning choice (if any). */
+function beatBranches(b) {
+  if (b.shape === "flat") return [{ br: b.effect, label: "the outcome" }];
+  if (b.shape === "check") return [{ br: b.pass, label: "pass" }, { br: b.fail, label: "fail" }];
+  if (b.shape === "choices") {
+    return b.choices.flatMap((c, i) => c.mode === "test"
+      ? [{ br: c.pass, label: `“${c.label || `choice ${i + 1}`}” pass`, choice: c },
+         { br: c.fail, label: `“${c.label || `choice ${i + 1}`}” fail`, choice: c }]
+      : [{ br: c.flat, label: `“${c.label || `choice ${i + 1}`}”`, choice: c }]);
+  }
+  return [];
+}
+
+function persist() { try { localStorage.setItem(DRAFT_KEY, JSON.stringify(S)); } catch {} }
+function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch {} }
+
+// ---------- rail ----------
+function rail() {
+  const r = document.getElementById("rail");
+  r.innerHTML = "";
+  const crumbs = [["premise", "Premise"]];
+  S.beats.forEach((b, i) => crumbs.push([`beat${i}`, `Beat ${i + 1}`]));
+  if (S.beats.length >= 2) crumbs.push(["review", "Read it back"]);
+  const now = S.step === "beat" ? `beat${S.cur}` : S.step;
+  for (const [key, label] of crumbs) {
+    const reachable = key === "premise" || key.startsWith("beat") || (key === "review" && S.beats.length >= 2);
+    r.appendChild(el("button", {
+      class: "crumb" + (key === now ? " now" : reachable ? " done" : ""),
+      onclick: () => {
+        if (key === "premise") S.step = "premise";
+        else if (key === "review") S.step = "review";
+        else { S.step = "beat"; S.cur = Number(key.slice(4)); }
+        persist(); render();
+      },
+    }, label));
+  }
+}
+
+// ---------- screens ----------
+function render() {
+  rail();
+  const m = document.getElementById("main");
+  m.innerHTML = "";
+  if (S.step === "premise") renderPremise(m);
+  else if (S.step === "beat") renderBeat(m, S.cur);
+  else if (S.step === "review") renderReview(m);
+  else if (S.step === "done") renderDone(m);
+}
+
+function q(m, title, coachBits, ...body) {
+  const s = el("div", { class: "q" }, el("h2", {}, title));
+  if (coachBits) s.appendChild(el("p", { class: "coach" }, ...(Array.isArray(coachBits) ? coachBits : [coachBits])));
+  body.flat().forEach(b => b && s.appendChild(b));
+  m.appendChild(s);
+  return s;
+}
+
+function renderPremise(m) {
+  q(m, "What is this storyline called?",
+    ["A short title in plain words — it becomes the flags that wire the beats together. ",
+     el("b", {}, "You'll write every beat yourself; the Scribe only keeps the bookkeeping.")],
+    el("input", { type: "text", value: S.title, placeholder: "The Smuggler's Debt",
+      oninput: e => { S.title = e.target.value; persist(); wirePreview(); } }),
+    el("div", { class: "wire", id: "wire-preview" }));
+  q(m, "One line: what happens across it?",
+    "Just for you — shown at the top of every beat while you write, never saved into the game.",
+    el("input", { type: "text", value: S.pitch, placeholder: "A smuggler calls in a favour that gets darker each time you pay it",
+      oninput: e => { S.pitch = e.target.value; persist(); } }));
+  q(m, "Which of the town's troubles does it mostly serve?",
+    "Optional. The four doom dials climb every week; storylines are how players push back. This just reminds you where the relief should land.",
+    el("select", { onchange: e => { S.threat = e.target.value; persist(); } },
+      el("option", { value: "" }, "None in particular — it's colour and character"),
+      ...THREATS.map(t => el("option", { value: t, selected: S.threat === t ? true : false }, `${THREAT_NAMES[t]} — the town's ${t === "war" ? "defences" : t} story`))));
+  m.appendChild(el("div", { class: "next" },
+    el("button", { class: "btn primary", onclick: () => {
+      if (!S.title.trim()) { flashMissing(m, "Give it a title first — the flags need a name."); return; }
+      if (!S.beats.length) S.beats.push(blankBeat());
+      S.step = "beat"; S.cur = 0; persist(); render();
+    } }, S.beats.length ? "Back to the beats →" : "Begin beat 1 →")));
+  wirePreview();
+}
+
+function wirePreview() {
+  const w = document.getElementById("wire-preview");
+  if (!w) return;
+  w.innerHTML = "";
+  w.appendChild(el("span", {}, "Beat 1 will set "));
+  w.appendChild(el("code", {}, `${slugOf()}_1`));
+  w.appendChild(el("span", {}, " — beat 2 needs it, and so on down the chain."));
+}
+
+function flashMissing(m, text) {
+  const old = m.querySelector(".missing");
+  if (old) old.remove();
+  m.appendChild(el("p", { class: "missing" }, text));
+}
+
+function renderBeat(m, i) {
+  const b = S.beats[i];
+  const reveal = (n) => b.progress >= n;
+  const advance = (n) => { if (b.progress < n) { b.progress = n; persist(); render(); } };
+
+  m.appendChild(el("p", { class: "coach" },
+    el("b", {}, S.title || "Untitled"), S.pitch ? ` — ${S.pitch}` : "",
+    `  ·  beat ${i + 1} of ${S.beats.length}`));
+  if (i > 0) {
+    m.appendChild(el("div", { class: "wire" },
+      "Only a player who has lived beat ", String(i), " will ever find this one — it needs ",
+      el("code", {}, `${slugOf()}_${i}`), "."));
+  }
+
+  // 1 — where
+  q(m, i === 0 ? "Where does the story begin?" : "Where does the player pick up the thread?",
+    "Storylines feel biggest when they move — a rumour at the docks that pays off in the market.",
+    el("div", { class: "cards" }, ...LOCS.map(loc => el("button", {
+      class: "card loc-card" + (b.loc === loc ? " picked" : ""),
+      style: `--art:url('/images/locations/${loc}.png')`,
+      onclick: () => { if (b.loc !== loc) { b.loc = loc; b.activity = undefined; } advance(2); persist(); render(); },
+    }, el("b", {}, locName(loc)), el("span", {}, locBlurb(loc))))));
+
+  // 2 — doing what
+  if (reveal(2) && b.loc) {
+    const acts = DATA.locations[b.loc].activities;
+    q(m, "What must they be doing there?",
+      "The beat fires while the player does one of this location's activities. “Any” casts the widest net; a specific activity makes it feel earned.",
+      el("div", { class: "cards" },
+        el("button", { class: "card" + (b.activity === "" ? " picked" : ""),
+          onclick: () => { b.activity = ""; advance(3); persist(); render(); } },
+          el("b", {}, "Any activity here"), el("span", {}, "whatever brings them through the door")),
+        ...acts.map(a => el("button", { class: "card" + (b.activity === a.id ? " picked" : ""),
+          onclick: () => { b.activity = a.id; advance(3); persist(); render(); } },
+          el("b", {}, a.name), el("span", {}, a.blurb)))));
+  }
+
+  // 3 — the scene
+  if (reveal(3) && b.activity !== undefined) {
+    q(m, "Write the scene.",
+      ["This is what the player reads on their phone when the beat finds them. ",
+       el("b", {}, "Second person, present tense"), ", the grim 1348 register — two to four sentences, ending on the pressure to act. Never name a stat or a number."],
+      el("textarea", { placeholder: "A hard woman with a riverman's hands works a corner where no torch reaches…",
+        oninput: e => { b.text = e.target.value; persist(); } }, b.text));
+    if (!reveal(4)) m.appendChild(el("div", { class: "next" },
+      el("button", { class: "btn", onclick: () => {
+        if (!b.text.trim()) { flashMissing(m, "Write the scene first — it's the heart of the beat."); return; }
+        advance(4);
+      } }, "Next: how it resolves ↓")));
+  }
+
+  // 4 — shape
+  if (reveal(4)) {
+    q(m, "How does this beat resolve?",
+      "Three shapes. Pick for the moment, not variety's sake — a quiet beat can just happen; a dangerous one deserves dice or a dilemma.",
+      el("div", { class: "cards", style: "grid-template-columns:1fr" },
+        shapeCard(b, "flat", "It simply happens", "One outcome, no dice. Good for hooks, meetings, and pure story."),
+        shapeCard(b, "check", "A hidden test", "You pick a stat and a difficulty; the player never sees either. You write what passing and failing look like."),
+        shapeCard(b, "choices", "The player decides", "Two or three plain choices — each with its own outcome you write. Labels never reveal stats.")));
+  }
+
+  // 5 — branches
+  if (reveal(5) && b.shape) {
+    if (b.shape === "flat") {
+      m.appendChild(branchEditor(b.effect, "What happens",
+        "They did it, saw it, or heard it — write it as it lands.", { only: true }));
+    } else if (b.shape === "check") {
+      q(m, "The hidden test.",
+        "Players never see the stat or the number — the prose has to carry the sense of being tested. Failing doesn't end the storyline: this beat quietly returns until they pass.",
+        el("div", { class: "row" },
+          el("div", {}, el("label", {}, "Stat tested"),
+            el("select", { onchange: e => { b.check.stat = e.target.value; persist(); } },
+              ...STAT_GUIDE.map(([id, short, guide]) =>
+                el("option", { value: id, selected: b.check.stat === id ? true : false }, `${short} — ${guide}`)))),
+          el("div", {}, el("label", {}, "Difficulty"),
+            el("select", { onchange: e => { b.check.dc = Number(e.target.value); persist(); } },
+              ...DC_GUIDE.map(([dc, guide]) =>
+                el("option", { value: dc, selected: b.check.dc === dc ? true : false }, `${dc} — ${guide}`))))));
+      m.appendChild(branchEditor(b.pass, "If they pass", "Reward the attempt — and push the story on.", {}));
+      m.appendChild(branchEditor(b.fail, "If they fail", "Failing should sting, not stall: something still happens, just worse — and they can try again another week.", {}));
+    } else {
+      q(m, "The choices.",
+        ["Plain actions a person might take — never “use strength”, always “put your back into it”. ",
+         "Each choice resolves as a plain outcome or its own hidden test (the barrels in the cellar). ",
+         el("b", {}, "Tick which outcome carries the story forward"), " — the rest are colour, and the beat returns until the story moves."]);
+      b.choices.forEach((c, ci) => {
+        const box = el("div", { class: "branch" },
+          el("h3", {}, `Choice ${ci + 1}`,
+            b.choices.length > 2 ? el("button", { class: "btn quiet", style: "float:right;font-size:11px",
+              onclick: () => { b.choices.splice(ci, 1); persist(); render(); } }, "remove") : null),
+          el("label", {}, "The button they press"),
+          el("input", { type: "text", value: c.label, placeholder: "Change the barrels in the cellar",
+            oninput: e => { c.label = e.target.value; persist(); } }),
+          el("label", {}, "This choice resolves as"),
+          el("div", { class: "row" },
+            el("button", { class: "btn" + (c.mode === "flat" ? " primary" : ""),
+              onclick: () => { if (c.mode !== "flat") { c.mode = "flat"; persist(); render(); } } }, "A plain outcome"),
+            el("button", { class: "btn" + (c.mode === "test" ? " primary" : ""),
+              onclick: () => { if (c.mode !== "test") { c.mode = "test"; persist(); render(); } } }, "A hidden test")));
+        if (c.mode === "flat") {
+          box.appendChild(branchFields(c.flat, {}));
+        } else {
+          box.appendChild(el("div", { class: "row", style: "margin-top:10px" },
+            el("div", {}, el("label", {}, "Stat tested"),
+              el("select", { onchange: e => { c.check.stat = e.target.value; persist(); } },
+                ...STAT_GUIDE.map(([id, short, guide]) =>
+                  el("option", { value: id, selected: c.check.stat === id ? true : false }, `${short} — ${guide}`)))),
+            el("div", {}, el("label", {}, "Difficulty"),
+              el("select", { onchange: e => { c.check.dc = Number(e.target.value); persist(); } },
+                ...DC_GUIDE.map(([dc, guide]) =>
+                  el("option", { value: dc, selected: c.check.dc === dc ? true : false }, `${dc} — ${guide}`))))));
+          box.appendChild(el("div", { class: "branch" }, el("h3", {}, "If they pass"), branchFields(c.pass, {})));
+          box.appendChild(el("div", { class: "branch" }, el("h3", {}, "If they fail"), branchFields(c.fail, {})));
+        }
+        m.appendChild(box);
+      });
+      if (b.choices.length < 3) m.appendChild(el("button", { class: "btn", style: "margin-top:2px",
+        onclick: () => { b.choices.push(blankChoice()); persist(); render(); } }, "+ a third choice"));
+    }
+
+    // 6 — timing + finish
+    const prevWeek = i > 0 ? Number(S.beats[i - 1].week) || 1 : 1;
+    q(m, "When can it appear?",
+      i > 0 ? `Beat ${i} opens at week ${prevWeek} — this one can't come earlier. A closing week (“weeks 1–3”) makes an offer the town can miss.`
+            : "“From the start” is fine for openers. A closing week (“weeks 1–3”) makes an offer the town can miss; payoffs usually sit late.",
+      el("div", { class: "row" },
+        el("div", {}, el("label", {}, "From week"),
+          el("select", { onchange: e => { b.week = e.target.value; persist(); render(); } },
+            el("option", { value: "" }, i > 0 ? `Whenever beat ${i} is done` : "The very start"),
+            ...[1,2,3,4,5,6,7].filter(w => i === 0 || w >= prevWeek).map(w =>
+              el("option", { value: String(w), selected: String(b.week) === String(w) ? true : false }, `Week ${w}`)))),
+        el("div", {}, el("label", {}, "Until week (blank = the end)"),
+          el("select", { onchange: e => { b.weekTo = e.target.value; persist(); } },
+            el("option", { value: "" }, "The very end"),
+            ...[1,2,3,4,5,6,7].filter(w => w >= (Number(b.week) || 1)).map(w =>
+              el("option", { value: String(w), selected: String(b.weekTo) === String(w) ? true : false }, `Week ${w}`))))));
+
+    const missing = beatMissing(b);
+    m.appendChild(el("div", { class: "next", style: "display:flex;gap:10px" },
+      S.beats.length < MAX_BEATS ? el("button", { class: "btn primary", onclick: () => {
+        if (missing) { flashMissing(m, missing); return; }
+        if (i === S.beats.length - 1) S.beats.push(blankBeat());
+        S.cur = i + 1; S.step = i === S.beats.length - 1 ? "beat" : (S.cur < S.beats.length ? "beat" : "beat");
+        persist(); render(); window.scrollTo(0, 0);
+      } }, i === S.beats.length - 1 ? "Write the next beat →" : "On to beat " + (i + 2) + " →") : null,
+      S.beats.length >= 2 || i >= 1 ? el("button", { class: "btn", onclick: () => {
+        if (missing) { flashMissing(m, missing); return; }
+        S.step = "review"; persist(); render(); window.scrollTo(0, 0);
+      } }, "That was the last beat — read it back") : null,
+      S.beats.length > 1 ? el("button", { class: "btn quiet", onclick: () => {
+        if (!confirm(`Cut beat ${i + 1} from the storyline?`)) return;
+        S.beats.splice(i, 1); S.cur = Math.max(0, i - 1); persist(); render();
+      } }, "cut this beat") : null));
+  }
+}
+
+function shapeCard(b, shape, title, blurb) {
+  return el("button", { class: "card" + (b.shape === shape ? " picked" : ""),
+    onclick: () => { b.shape = shape; if (b.progress < 5) b.progress = 5; persist(); render(); } },
+    el("b", {}, title), el("span", {}, blurb));
+}
+
+function branchEditor(branch, title, coach, ctx) {
+  const box = el("div", { class: "branch" }, el("h3", {}, title), el("p", { class: "coach", style: "margin-bottom:0" }, coach));
+  box.appendChild(branchFields(branch, ctx));
+  return box;
+}
+
+function branchFields(branch, ctx = {}) {
+  const wrap = el("div", {});
+  wrap.appendChild(el("label", {}, "What the player reads"));
+  wrap.appendChild(el("textarea", { style: "min-height:80px", placeholder: "You meet her eye and give nothing away…",
+    oninput: e => { branch.text = e.target.value; persist(); } }, branch.text));
+  wrap.appendChild(el("label", {}, "The town hears (one short line)"));
+  const preview = el("div", { class: "hostline" });
+  const updatePreview = () => { preview.textContent = `On the big screen: “Meg ${branch.outcome.trim() || "…"}”`; };
+  wrap.appendChild(el("input", { type: "text", value: branch.outcome,
+    placeholder: "won a smuggler's trust and a road to grain.",
+    oninput: e => { branch.outcome = e.target.value; persist(); updatePreview(); } }));
+  wrap.appendChild(preview);
+  updatePreview();
+  wrap.appendChild(el("label", {}, "What changes for them (leave 0 for none)"));
+  wrap.appendChild(el("div", { class: "statgrid" }, ...STAT_GUIDE.map(([id, short]) =>
+    el("div", {},
+      el("label", {}, short),
+      el("input", { type: "number", min: -3, max: 3, value: branch.stats[id] ?? 0,
+        oninput: e => { const v = parseInt(e.target.value, 10) || 0; if (v) branch.stats[id] = v; else delete branch.stats[id]; persist(); } })))));
+  wrap.appendChild(el("label", {}, "Does it move a doom dial?"));
+  const deltaSel = el("select", { style: branch.threat ? "" : "display:none", onchange: e => { branch.delta = Number(e.target.value); persist(); } },
+    ...[-2, -1, 1, 2].map(d => el("option", { value: d, selected: branch.delta === d ? true : false },
+      d < 0 ? `${d} — eases it${d === -2 ? " (a storyline's final payoff only)" : ""}` : `+${d} — feeds it (a reckless price)`)));
+  wrap.appendChild(el("div", { class: "row" },
+    el("select", { onchange: e => { branch.threat = e.target.value; if (branch.threat && !branch.delta) branch.delta = -1; deltaSel.style.display = branch.threat ? "" : "none"; persist(); render(); } },
+      el("option", { value: "" }, "No — it's personal, not the town's"),
+      ...THREATS.map(t => el("option", { value: t, selected: branch.threat === t ? true : false }, THREAT_NAMES[t]))),
+    deltaSel));
+
+  // Does this outcome carry the story forward? Advancing branches get the
+  // chain flag and (between beats) leave a note on the player's phone.
+  const noteWrap = el("div", { style: branch.advance && !ctx.final ? "" : "display:none" },
+    el("label", {}, "The note it leaves on their phone (their standing lead)"),
+    el("input", { type: "text", value: branch.noteText,
+      placeholder: "A big shipment of beer lands at the docks come week 3.",
+      oninput: e => { branch.noteText = e.target.value; persist(); } }),
+    el("p", { class: "coach", style: "margin:4px 0 0" },
+      "Shown on their waiting and choose-a-location screens until the next beat replaces it. Leave blank for no note."));
+  if (ctx.only) {
+    branch.advance = true;
+    wrap.appendChild(el("p", { class: "coach", style: "margin:12px 0 0" },
+      ctx.final ? "This outcome completes the storyline." : "This outcome carries the story to the next beat."));
+  } else {
+    wrap.appendChild(el("label", { style: "display:flex;align-items:center;gap:8px;margin-top:14px;cursor:pointer" },
+      el("input", { type: "checkbox", checked: branch.advance ? true : false, style: "width:auto",
+        onchange: e => { branch.advance = e.target.checked; noteWrap.style.display = branch.advance && !ctx.final ? "" : "none"; persist(); } }),
+      el("span", {}, ctx.final
+        ? "This outcome completes the storyline (earns the ending panel)"
+        : "This outcome advances the storyline (unlocks the next beat)")));
+  }
+  wrap.appendChild(noteWrap);
+  return wrap;
+}
+
+function beatMissing(b) {
+  if (!b.loc) return "Pick where it happens.";
+  if (b.activity === undefined) return "Pick what they must be doing.";
+  if (!b.text.trim()) return "The scene is still blank.";
+  if (!b.shape) return "Pick how it resolves.";
+  if (b.shape === "choices") {
+    for (let i = 0; i < b.choices.length; i++) {
+      if (!b.choices[i].label.trim()) return `Choice ${i + 1} needs its button label.`;
+    }
+  }
+  for (const { br, label } of beatBranches(b)) {
+    if (!br.text.trim()) return `The ${label} outcome still needs its prose.`;
+    if (!br.outcome.trim()) return `The ${label} outcome needs its one-line “the town hears”.`;
+  }
+  if (!beatBranches(b).some(({ br }) => br.advance)) {
+    return "Tick at least one outcome that carries the story forward — otherwise the storyline can never move.";
+  }
+  return null;
+}
+
+// ---------- review + save ----------
+function renderReview(m) {
+  q(m, "Read it back.", "The whole storyline as the game will hold it. Anything wrong, click its crumb above and fix it in place.");
+  S.beats.forEach((b, i) => {
+    const isFinal = i === S.beats.length - 1;
+    if (i > 0) m.appendChild(el("div", { class: "rule" }, "❦"));
+    const box = el("div", { class: "review-beat", style: `--art:url('/images/locations/${b.loc}.png')` },
+      el("h3", {}, `Beat ${i + 1} — ${locName(b.loc)}`),
+      el("div", { class: "where" },
+        (b.activity ? `while ${actName(b.loc, b.activity)}` : "any activity") +
+        (b.week ? ` · from week ${b.week}` : "") +
+        (b.weekTo ? ` · until week ${b.weekTo}` : "") +
+        (i > 0 ? ` · needs ${slugOf()}_${i}` : "") +
+        " · returns weekly until it " + (isFinal ? "completes" : "advances")),
+      el("p", {}, b.text));
+    for (const { br, label } of beatBranches(b)) {
+      box.appendChild(el("p", { class: "out" }, `${label} — ${br.text}`));
+      const line = el("p", { class: "out", style: "font-style:italic" }, `“…${br.outcome}”`);
+      const rw = Object.entries(br.stats).map(([s, v]) => `${v > 0 ? "+" : ""}${v} ${s}`).join(", ");
+      if (rw) line.appendChild(el("span", { class: "pill neg" }, rw));
+      if (br.threat) line.appendChild(el("span", { class: "pill " + (br.delta < 0 ? "neg" : "pos") },
+        `${THREAT_NAMES[br.threat]} ${br.delta > 0 ? "+" : ""}${br.delta}`));
+      if (br.advance) line.appendChild(el("span", { class: "pill neg" },
+        isFinal ? "✓ completes the storyline" : "→ advances"));
+      if (br.advance && !isFinal && br.noteText.trim()) {
+        box.appendChild(el("p", { class: "out", style: "color:var(--amber)" }, `✎ note: “${br.noteText}”`));
+      }
+      box.appendChild(line);
+    }
+    m.appendChild(box);
+  });
+
+  q(m, "The ending panel.",
+    ["Anyone who sees this storyline through gets this panel at the end of the game, under their name on the big screen. ",
+     el("b", {}, "Write it as what the town remembers of them.")],
+    el("textarea", { style: "min-height:80px",
+      placeholder: "When the hunger came, there was beer and bread in the cellars of the Broken Wheel — because someone had shifted barrels until their back sang, and listened.",
+      oninput: e => { S.ending = e.target.value; persist(); } }, S.ending)).classList.add("sealed");
+
+  m.appendChild(el("div", { class: "next", style: "display:flex;gap:10px;align-items:center" },
+    el("button", { class: "btn primary", id: "commit", onclick: () => {
+      if (!S.ending.trim()) { flashMissing(m, "Write the ending panel — it's the storyline's reward."); return; }
+      saveToGame();
+    } }, "Add it to St Sebastian"),
+    el("span", { id: "save-note", class: "coach", style: "margin:0" },
+      "Saves through the same contract as the editor — it can't break the game.")));
+}
+
+function actName(loc, actId) {
+  const a = DATA.locations[loc].activities.find(x => x.id === actId);
+  return a ? a.name.toLowerCase() : actId;
+}
+
+function buildEvents(fresh) {
+  // Dedupe the slug against every flag anything sets and every registered
+  // storyline — two same-named storylines must never share wiring.
+  const taken = new Set();
+  for (const loc of LOCS) for (const ev of fresh.locations[loc].events) {
+    const brs = [];
+    const push = x => x && brs.push(x);
+    push(ev.effect); push(ev.pass); push(ev.fail);
+    (ev.choices || []).forEach(c => { push(c.effect); push(c.pass); push(c.fail); (c.random || []).forEach(r => push(r.effect)); });
+    for (const br of brs) (br.flags || []).forEach(f => taken.add(f));
+  }
+  const registered = (fresh.storylines || []).map(s => s.id);
+  let slug = slugOf();
+  for (let n = 2; taken.has(`${slug}_1`) || taken.has(`${slug}_done`) || registered.includes(slug); n++) {
+    slug = `${slugOf()}${n}`;
+  }
+  const ids = new Set();
+  for (const loc of LOCS) for (const ev of fresh.locations[loc].events) ids.add(ev.id);
+
+  const events = S.beats.map((b, i) => {
+    const isFinal = i === S.beats.length - 1;
+    // Advancing = the branch the story rides: it sets the chain flag (or the
+    // done flag on the final beat) and leaves/clears the phone note. The
+    // beat itself returns weekly (repeatable) until that happens (forbids).
+    const advanceFlag = isFinal ? `${slug}_done` : `${slug}_${i + 1}`;
+    let id = `${b.loc}_${slug}_${i + 1}`;
+    for (let n = 2; ids.has(id); n++) id = `${b.loc}_${slug}_${i + 1}_${n}`;
+    ids.add(id);
+    const mkBranch = (br) => {
+      const out = { text: br.text.trim(), outcome: br.outcome.trim() };
+      if (Object.keys(br.stats).length) out.stats = { ...br.stats };
+      if (br.threat && br.delta) out.threats = { [br.threat]: br.delta };
+      if (br.advance) {
+        out.flags = [advanceFlag];
+        if (isFinal) out.note = { id: slug, text: "" };  // completing clears the lead
+        else if (br.noteText.trim()) out.note = { id: slug, text: br.noteText.trim() };
+      }
+      return out;
+    };
+    const ev = {
+      id, location: b.loc,
+      activities: b.activity ? [b.activity] : [],
+      repeatable: true,
+      forbids: [advanceFlag],
+      text: b.text.trim(),
+    };
+    if (i > 0) ev.requires = [`${slug}_${i}`];
+    const from = parseInt(b.week, 10);
+    if (from >= 1 && from <= 7) ev.minWeek = from;
+    const until = parseInt(b.weekTo, 10);
+    if (until >= 1 && until <= 7) ev.maxWeek = Math.max(until, from || 1);
+    if (b.shape === "flat") {
+      ev.effect = mkBranch(b.effect);
+    } else if (b.shape === "check") {
+      ev.check = { stat: b.check.stat, dc: b.check.dc };
+      ev.pass = mkBranch(b.pass);
+      ev.fail = mkBranch(b.fail);
+    } else {
+      ev.choices = b.choices.map(c => c.mode === "test"
+        ? { label: c.label.trim(), check: { stat: c.check.stat, dc: c.check.dc },
+            pass: mkBranch(c.pass), fail: mkBranch(c.fail) }
+        : { label: c.label.trim(), effect: mkBranch(c.flat) });
+    }
+    return ev;
+  });
+  return { events, slug };
+}
+
+async function saveToGame() {
+  const btn = document.getElementById("commit");
+  const note = document.getElementById("save-note");
+  btn.disabled = true;
+  note.textContent = "Saving…";
+  try {
+    const fresh = await (await fetch("/api/content")).json();
+    const { events, slug } = buildEvents(fresh);
+    for (const ev of events) fresh.locations[ev.location].events.push(ev);
+    const storylines = [...(fresh.storylines || []),
+      { id: slug, title: S.title.trim(), doneFlag: `${slug}_done`, ending: S.ending.trim() }];
+    const res = await fetch("/api/content", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ locations: fresh.locations, origins: fresh.origins, storylines }) });
+    const body = await res.json();
+    if (!res.ok) {
+      note.className = "err";
+      note.textContent = (body.errors ? body.errors.slice(0, 2).join(" · ") : body.error) || "save failed";
+      btn.disabled = false;
+      return;
+    }
+    S.savedIds = events.map(e => e.id);
+    S.step = "done";
+    clearDraft();
+    render();
+  } catch (err) {
+    note.className = "err";
+    note.textContent = "Couldn't reach the editor server — is it still running?";
+    btn.disabled = false;
+  }
+}
+
+function renderDone(m) {
+  q(m, "It's in the game.",
+    ["The beats live in the content now, wired in order", S.savedIds ? ` (${S.savedIds.join(", ")})` : "",
+     ", and the storyline is registered — anyone who completes it gets your ending panel at the epilogue. ",
+     "The editor's map will show the new chain, and every save is snapshotted, so nothing here is irreversible."]);
+  m.appendChild(el("div", { class: "next", style: "display:flex;gap:10px" },
+    el("button", { class: "btn primary", onclick: () => {
+      S = { step: "premise", title: "", pitch: "", threat: "", ending: "", beats: [], cur: 0 };
+      persist(); render(); window.scrollTo(0, 0);
+    } }, "Write another storyline"),
+    el("button", { class: "btn", onclick: () => { window.location.href = "/"; } }, "Open the full editor")));
+}
+
+// ---------- boot ----------
+async function load() {
+  const m = document.getElementById("main");
+  try {
+    const res = await fetch("/api/content");
+    if (!res.ok) throw new Error(`server said ${res.status}`);
+    DATA = await res.json();
+  } catch (err) {
+    m.appendChild(el("p", { class: "err" }, "Couldn't load the story data. Is the editor server running? Start it with edit-story.bat, then reload."));
+    return;
+  }
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(DRAFT_KEY)); } catch {}
+  if (saved && saved.title && saved.step !== "done") {
+    S = saved;
+    // A draft in progress: pick up exactly where it was left.
+  }
+  render();
+}
+load();
+</script>
+</body>
+</html>
